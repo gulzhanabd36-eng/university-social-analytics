@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>University Social Analytics</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
+<style>*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13px;min-height:100vh}
 .setup-overlay{position:fixed;inset:0;background:#FAFAF8;display:flex;align-items:center;justify-content:center;z-index:200}
-.setup-card{background:white;border:1px solid #eee;border-radius:14px;padding:40px 44px;width:440px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
+.setup-card{background:white;border:1px solid #eee;border-radius:14px;padding:40px 44px;width:460px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
 .setup-card h2{font-size:19px;font-weight:700;margin-bottom:4px}
 .setup-card .sub{font-size:12px;color:#888;margin-bottom:28px}
 .setup-field{margin-bottom:15px}
@@ -19,7 +18,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .sep{border:none;border-top:1px solid #f0f0f0;margin:20px 0}
 .btn-start{width:100%;padding:12px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .15s}
 .btn-start:hover{background:#333}
-
+.btn-start:disabled{background:#999;cursor:not-allowed}
 #app{display:none}
 .header{background:#1a1a1a;color:#FAFAF8;padding:0 28px;display:flex;justify-content:space-between;align-items:center;height:58px}
 .header-left{display:flex;align-items:center;gap:12px}
@@ -29,6 +28,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .header-right{display:flex;align-items:center;gap:12px}
 .refresh-btn{background:#C57E33;color:white;border:none;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s}
 .refresh-btn:hover{opacity:.85}
+.refresh-btn:disabled{opacity:.5;cursor:not-allowed}
 .settings-btn{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);padding:6px 12px;border-radius:7px;font-size:11px;cursor:pointer}
 .settings-btn:hover{border-color:rgba(255,255,255,.4);color:white}
 .last-update{font-size:10px;color:rgba(255,255,255,.35)}
@@ -139,16 +139,19 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 .hidden{display:none!important}
-</style>
+.empty-state{text-align:center;padding:60px 20px;color:#aaa}
+.empty-state .es-icon{font-size:48px;margin-bottom:14px}
+.empty-state .es-text{font-size:14px;margin-bottom:8px}
+.empty-state .es-sub{font-size:12px;color:#bbb}
+.error-bar{background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin:14px 28px;font-size:12px;color:#DC2626;display:none}</style>
 </head>
 <body>
 
-<!-- SETUP — только форма, без превью -->
+<!-- SETUP -->
 <div class="setup-overlay" id="setupOverlay">
   <div class="setup-card">
     <h2>Настройка дашборда</h2>
     <p class="sub">Заполните один раз — данные сохраняются в браузере</p>
-
     <div class="setup-field">
       <label>Название университета</label>
       <input type="text" id="uniName" placeholder="Almaty Management University">
@@ -157,9 +160,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <label>Аббревиатура</label>
       <input type="text" id="uniAbbr" placeholder="AlmaU" maxlength="6">
     </div>
-
     <hr class="sep">
-
     <div class="setup-field">
       <label>Instagram аккаунт</label>
       <input type="text" id="igHandle" placeholder="@university">
@@ -167,14 +168,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="setup-field">
       <label>TikTok аккаунт</label>
       <input type="text" id="ttHandle" placeholder="@university_tiktok">
-    </div>
-
-    <hr class="sep">
-
-    <div class="setup-field">
-      <label>Apify API Token</label>
-      <input type="password" id="apifyToken" placeholder="apify_api_xxxxxxxxxxxxxxxx">
-      <div class="hint">Для сбора данных Instagram, TikTok и мониторинга интернета</div>
     </div>
 
     <button class="btn-start" onclick="startDashboard()">Открыть дашборд →</button>
@@ -188,12 +181,12 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="header-abbr" id="headerAbbr">A</div>
       <div class="header-text">
         <h1 id="headerTitle">University — Analytics</h1>
-        <div class="sub">Instagram · TikTok · Интернет-мониторинг · Общий профиль</div>
+        <div class="sub">Instagram · TikTok · Интернет-мониторинг · 2026</div>
       </div>
     </div>
     <div class="header-right">
       <span class="last-update" id="lastUpdate">—</span>
-      <button class="refresh-btn" onclick="simulateRefresh()"><span id="refreshIcon">↻</span> Обновить</button>
+      <button class="refresh-btn" onclick="realRefresh()"><span id="refreshIcon">↻</span> Обновить</button>
       <button class="settings-btn" onclick="document.getElementById('setupOverlay').style.display='flex'">⚙ Настройки</button>
     </div>
   </div>
@@ -206,25 +199,26 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
   </div>
 
   <div class="loading-bar hidden" id="loadingBar">
-    <span class="spin">⟳</span> <span id="loadingText">Обновляем данные...</span>
+    <span class="spin">⟳</span> <span id="loadingText">Загружаем данные...</span>
   </div>
+  <div class="error-bar" id="errorBar"></div>
 
-  <!-- ══ INSTAGRAM ══ -->
+  <!-- INSTAGRAM -->
   <div class="tab-panel active" id="panel-instagram">
     <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="stat"><div class="v">282</div><div class="l">Постов</div></div>
-      <div class="stat"><div class="v">39 331</div><div class="l">Лайков</div></div>
-      <div class="stat"><div class="v">2 630</div><div class="l">Комментариев</div></div>
-      <div class="stat"><div class="v">139.5</div><div class="l">Ср. ❤</div></div>
-      <div class="stat"><div class="v">152</div><div class="l">Профиль</div><div class="s" id="igStatHandle">@almau_edu</div></div>
-      <div class="stat"><div class="v">129</div><div class="l">Упоминания</div><div class="s">внешние</div></div>
+      <div class="stat"><div class="v" id="ig-stat-posts">—</div><div class="l">Постов 2026</div></div>
+      <div class="stat"><div class="v" id="ig-stat-likes">—</div><div class="l">Лайков</div></div>
+      <div class="stat"><div class="v" id="ig-stat-comments">—</div><div class="l">Комментариев</div></div>
+      <div class="stat"><div class="v" id="ig-stat-avg">—</div><div class="l">Ср. ❤</div></div>
+      <div class="stat"><div class="v" id="ig-stat-new">—</div><div class="l">Новых</div><div class="s" id="igStatHandle">@—</div></div>
+      <div class="stat"><div class="v">2026</div><div class="l">Период</div><div class="s">только 2026 год</div></div>
     </div>
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск по тексту или автору...">
       <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
       <select><option>Любой тон</option><option>😊 Позитив</option><option>😠 Негатив</option><option>😐 Нейтрально</option></select>
-      <select><option>По лайкам ↓</option><option>По дате ↓</option><option>По комментариям ↓</option></select>
-      <div class="cnt">282 постов · 5 новых</div>
+      <select><option>По лайкам ↓</option><option>По дате ↓</option></select>
+      <div class="cnt" id="ig-count">— постов</div>
     </div>
     <div class="cat-nav">
       <div class="cat-tab active">Все</div>
@@ -235,154 +229,504 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="cat-tab">🌍 Международка</div>
       <div class="cat-tab">🔥 Вирусный</div>
     </div>
-    <div class="content">
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новое — появилось с 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="grid">
-        <div class="card is-new"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">3 июня 2026</div></div><div class="badges"><span class="b b-new">🆕 Новое</span><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">Data Fest 2026 в AlmaU — крупнейшее событие для Data Science и AI специалистов. Более 300 участников, 6 компаний-докладчиков: Verigram, Freedom Lifestyle, EY и другие 🚀</div><div class="card-foot"><div class="meta"><span class="likes">❤ 204</span><span>💬 12</span></div><a class="open-link" href="#">Открыть →</a></div></div>
-        <div class="card is-new"><div class="card-head"><div><div class="author">sdte_almau</div><div class="date-sm">2 июня 2026</div></div><div class="badges"><span class="b b-new">🆕 Новое</span><span class="b b-mention">упоминание</span><span class="b b-pos">позитив</span></div></div><div class="caption">Студенты SDTE AlmaU успешно сдали международный сертификационный экзамен CaPEN по безопасности веб-приложений. Сертификаты получили 12 студентов 🔐</div><div class="card-foot"><div class="meta"><span class="likes">❤ 88</span><span>💬 5</span></div><a class="open-link" href="#">Открыть →</a></div></div>
-      </div>
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="grid">
-        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">25 мая 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">🥉 Студенты ОП «Учет и аудит» AlmaU заняли III место на XVIII Республиканской студенческой предметной олимпиаде. Команда «AlmaU team» достойно представила университет!</div><div class="card-foot"><div class="meta"><span class="likes">❤ 238</span><span>💬 8</span></div><a class="open-link" href="#">Открыть →</a></div></div>
-        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">1 апреля 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-viral">вирусный</span></div></div><div class="caption">Қуанып үлгердіңіз бе? 1 сәуір құтты болсын! 🤭 Бірақ шынын айтсақ, емтихандар мен рубежкалар бізді шыңдайды 💙</div><div class="card-foot"><div class="meta"><span class="likes">❤ 1 424</span><span>💬 56</span></div><a class="open-link" href="#">Открыть →</a></div></div>
-        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">13 марта 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">Новый ректор AlmaU — Тимур Булдыбаев. По итогам заседания Попечительского совета в Южной Корее назначен на должность ректора университета.</div><div class="card-foot"><div class="meta"><span class="likes">❤ 517</span><span>💬 73</span></div><a class="open-link" href="#">Открыть →</a></div></div>
-        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">22 апреля 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">AlmaU — первый университет Центральной Азии, получивший THE Awards Asia 2026. Программа Tolyq Adam победила в номинации Teaching and Learning Strategy of the Year 🏆</div><div class="card-foot"><div class="meta"><span class="likes">❤ 411</span><span>💬 27</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+    <div class="content" id="ig-content">
+      <div class="empty-state">
+        <div class="es-icon">📸</div>
+        <div class="es-text">Нажмите «Обновить» для загрузки данных Instagram</div>
+        <div class="es-sub">Будут загружены посты за 2026 год через Apify</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ TIKTOK ══ -->
+  <!-- TIKTOK -->
   <div class="tab-panel" id="panel-tiktok">
     <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="stat"><div class="v">47</div><div class="l">Видео</div></div>
-      <div class="stat"><div class="v">1.2M</div><div class="l">Просмотров</div></div>
-      <div class="stat"><div class="v">84K</div><div class="l">Лайков</div></div>
-      <div class="stat"><div class="v">25.5K</div><div class="l">Ср. просм.</div></div>
-      <div class="stat"><div class="v">12.4K</div><div class="l">Подписчики</div><div class="s" id="ttStatHandle">@almau.official</div></div>
-      <div class="stat"><div class="v">3.2%</div><div class="l">ER</div><div class="s">выше среднего</div></div>
+      <div class="stat"><div class="v" id="tt-stat-videos">—</div><div class="l">Видео 2026</div></div>
+      <div class="stat"><div class="v" id="tt-stat-views">—</div><div class="l">Просмотров</div></div>
+      <div class="stat"><div class="v" id="tt-stat-likes">—</div><div class="l">Лайков</div></div>
+      <div class="stat"><div class="v" id="tt-stat-avg">—</div><div class="l">Ср. просм.</div></div>
+      <div class="stat"><div class="v" id="tt-stat-er">—</div><div class="l">ER</div><div class="s" id="ttStatHandle">@—</div></div>
+      <div class="stat"><div class="v">2026</div><div class="l">Период</div><div class="s">только 2026 год</div></div>
     </div>
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск по видео...">
       <select><option>По просмотрам ↓</option><option>По дате ↓</option><option>По лайкам ↓</option></select>
-      <div class="cnt">47 видео · 2 новых</div>
+      <div class="cnt" id="tt-count">— видео</div>
     </div>
-    <div class="content">
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новое — появилось с 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="tiktok-grid">
-        <div class="tt-card is-new"><div class="tt-thumb">🎓<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div><div class="tt-views">41 200</div><div class="tt-lbl">просмотров · 2 июня 2026</div><div class="tt-desc">Data Fest 2026 в AlmaU — лучшие Data Science специалисты Казахстана 📊</div><div class="tt-meta"><span>❤ 3.1K</span><span>💬 178</span><span>↗ 820</span></div></div></div>
-        <div class="tt-card is-new"><div class="tt-thumb">🏆<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div><div class="tt-views">28 700</div><div class="tt-lbl">просмотров · 1 июня 2026</div><div class="tt-desc">Наши студенты — победители олимпиады! Финансы и учёт в Тұран 🥈🥉</div><div class="tt-meta"><span>❤ 2.4K</span><span>💬 91</span><span>↗ 560</span></div></div></div>
-      </div>
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="tiktok-grid">
-        <div class="tt-card"><div class="tt-thumb">💃<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">312 000</div><div class="tt-lbl">просмотров · 5 мая 2026</div><div class="tt-desc">AlmaU Dance 2026 — Coachella в университете! ✨</div><div class="tt-meta"><span>❤ 22.1K</span><span>💬 891</span><span>↗ 5.4K</span></div></div></div>
-        <div class="tt-card"><div class="tt-thumb">🎓<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">195 000</div><div class="tt-lbl">просмотров · 28 апр 2026</div><div class="tt-desc">Один день из жизни студента AlmaU 🏫</div><div class="tt-meta"><span>❤ 14.2K</span><span>💬 621</span><span>↗ 3.9K</span></div></div></div>
-        <div class="tt-card"><div class="tt-thumb">🌍<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">88 900</div><div class="tt-lbl">просмотров · 22 апр 2026</div><div class="tt-desc">THE Awards Asia 2026 — первый в Центральной Азии! 🏅</div><div class="tt-meta"><span>❤ 7.8K</span><span>💬 445</span><span>↗ 2.3K</span></div></div></div>
-        <div class="tt-card"><div class="tt-thumb">📚<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">41 800</div><div class="tt-lbl">просмотров · 15 апр 2026</div><div class="tt-desc">Студент с 100% грантом из Якутии — его история</div><div class="tt-meta"><span>❤ 3.1K</span><span>💬 212</span><span>↗ 670</span></div></div></div>
+    <div class="content" id="tt-content">
+      <div class="empty-state">
+        <div class="es-icon">🎵</div>
+        <div class="es-text">Нажмите «Обновить» для загрузки данных TikTok</div>
+        <div class="es-sub">Будут загружены видео за 2026 год через Apify</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ WEB ══ -->
+  <!-- WEB -->
   <div class="tab-panel" id="panel-web">
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="stat"><div class="v">24</div><div class="l">Уникальных тем</div></div>
-      <div class="stat"><div class="v" style="color:#C57E33">5</div><div class="l">Новых тем</div><div class="s">с 03.06.2026</div></div>
-      <div class="stat"><div class="v">67</div><div class="l">Упоминаний</div><div class="s">в разных источниках</div></div>
-      <div class="stat"><div class="v">19</div><div class="l">Источников</div><div class="s">СМИ, блоги, edu</div></div>
-      <div class="stat"><div class="v">91%</div><div class="l">Тональность</div><div class="s">позитив</div></div>
+      <div class="stat"><div class="v" id="web-stat-topics">—</div><div class="l">Упоминаний</div></div>
+      <div class="stat"><div class="v" style="color:#C57E33" id="web-stat-new">—</div><div class="l">Новых</div></div>
+      <div class="stat"><div class="v" id="web-stat-mentions">—</div><div class="l">Всего</div><div class="s">в разных источниках</div></div>
+      <div class="stat"><div class="v" id="web-stat-sources">—</div><div class="l">Источников</div><div class="s">СМИ, блоги, edu</div></div>
+      <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div><div class="s">тональность</div></div>
     </div>
     <div class="web-toolbar">
       <input type="text" placeholder="🔍 Поиск по теме...">
-      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги / Форумы</option><option>🔗 LinkedIn</option><option>🎓 Edu-сайты</option></select>
-      <select><option>Все даты</option><option>Сегодня</option><option>Эта неделя</option><option>Этот месяц</option></select>
-      <select><option>Все темы</option><option>Только новые 🆕</option><option>По кол-ву источников ↓</option></select>
+      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги</option><option>🔗 LinkedIn</option></select>
+      <select><option>Все темы</option><option>Только новые 🆕</option></select>
       <div class="sync-info">
-        <div class="sync-badge">🆕 5 новых тем</div>
-        <span class="last-sync">Проверено: 03.06.2026, 11:14</span>
+        <div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
+        <span class="last-sync" id="web-last-sync">Ещё не проверено</span>
       </div>
     </div>
-    <div class="content">
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новые темы — появились с 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="web-grid">
-        <div class="web-card is-new">
-          <div class="wc-body"><div class="web-source-icon">🏆</div><div class="web-main"><div class="web-title">Студенты AlmaU заняли призовые места на XVIII Республиканской предметной олимпиаде</div><div class="web-tags"><span class="web-tag wt-new">🆕 Новое</span><span class="web-tag wt-award">Достижение</span></div><div class="web-snippet">Команды по направлениям «Финансы» и «Учёт и аудит» завоевали II и III места. Олимпиада прошла в университете Тұран, участвовали команды из 6 регионов Казахстана.</div></div></div>
-          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">3 издания:</span><a class="source-pill" href="#">📰 edu.gov.kz <span class="sp-date">25 мая</span></a><a class="source-pill" href="#">📰 Zakon.kz <span class="sp-date">25 мая</span></a><a class="source-pill" href="#">📝 univer_turan (IG) <span class="sp-date">26 мая</span></a></div>
-        </div>
-        <div class="web-card is-new">
-          <div class="wc-body"><div class="web-source-icon">🔐</div><div class="web-main"><div class="web-title">Студенты AlmaU и курсанты МВД сдали международный экзамен CaPEN по кибербезопасности</div><div class="web-tags"><span class="web-tag wt-new">🆕 Новое</span><span class="web-tag wt-award">Сертификация</span></div><div class="web-snippet">12 студентов AlmaU и курсанты Академии МВД подтвердили практические навыки в области безопасности веб-приложений, получив международный сертификат CaPEN.</div></div></div>
-          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">2 издания:</span><a class="source-pill" href="#">🏛 qr_iim_almaty (IG) <span class="sp-date">15 мая</span></a><a class="source-pill" href="#">📝 sdte_almau (IG) <span class="sp-date">16 мая</span></a></div>
-        </div>
-      </div>
-      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
-      <div class="web-grid">
-        <div class="web-card">
-          <div class="wc-body"><div class="web-source-icon">🏅</div><div class="web-main"><div class="web-title">AlmaU — победитель THE Awards Asia 2026 в номинации Teaching and Learning Strategy of the Year</div><div class="web-tags"><span class="web-tag wt-award">Награда</span><span class="web-tag wt-news">Топ-тема</span></div><div class="web-snippet">Almaty Management University стал первым университетом Центральной Азии. Программа Tolyq Adam основана на философии Абая и охватывает 1000+ студентов ежегодно.</div></div></div>
-          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">6 изданий:</span><a class="source-pill" href="#">📰 Forbes Kazakhstan <span class="sp-date">22 мая</span></a><a class="source-pill" href="#">📰 Tengrinews <span class="sp-date">22 мая</span></a><a class="source-pill" href="#">📰 Kapital.kz <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">📰 Informburo <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">🔗 LinkedIn <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">🌐 timeshighereducation.com <span class="sp-date">22 мая</span></a></div>
-        </div>
-        <div class="web-card">
-          <div class="wc-body"><div class="web-source-icon">🌍</div><div class="web-main"><div class="web-title">AlmaU проведёт Babson Collaborative Global Summit 2027 — впервые в Центральной Азии</div><div class="web-tags"><span class="web-tag wt-news">Новость</span><span class="web-tag wt-event">Событие</span></div><div class="web-snippet">В 2027 году Алматы станет площадкой для Babson Global Summit. AlmaU является членом сети с 2017 года и выбран принимающим университетом юбилейного 10-го саммита.</div></div></div>
-          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">4 издания:</span><a class="source-pill" href="#">📰 Profit.kz <span class="sp-date">6 мая</span></a><a class="source-pill" href="#">📰 nur.kz <span class="sp-date">7 мая</span></a><a class="source-pill" href="#">📰 Zakon.kz <span class="sp-date">7 мая</span></a><a class="source-pill" href="#">🔗 Babson.edu <span class="sp-date">6 мая</span></a></div>
-        </div>
-        <div class="web-card">
-          <div class="wc-body"><div class="web-source-icon">🎓</div><div class="web-main"><div class="web-title">Тимур Булдыбаев назначен новым ректором Almaty Management University</div><div class="web-tags"><span class="web-tag wt-news">Новость</span></div><div class="web-snippet">По итогам заседания Попечительского совета в Южной Корее, Тимур Булдыбаев назначен ректором AlmaU. Рассказал о стратегии развития до 2030 года.</div></div></div>
-          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">5 изданий:</span><a class="source-pill" href="#">📰 Informburo <span class="sp-date">13 марта</span></a><a class="source-pill" href="#">📰 Хабар 24 <span class="sp-date">13 марта</span></a><a class="source-pill" href="#">📰 KZ News <span class="sp-date">14 марта</span></a><a class="source-pill" href="#">📰 Kapital.kz <span class="sp-date">14 марта</span></a><a class="source-pill" href="#">🌐 almau.edu.kz <span class="sp-date">13 марта</span></a></div>
-        </div>
+    <div class="content" id="web-content">
+      <div class="empty-state">
+        <div class="es-icon">🌐</div>
+        <div class="es-text">Нажмите «Обновить» для поиска упоминаний в интернете</div>
+        <div class="es-sub">Google Search Scraper найдёт упоминания университета за 2026 год</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ GENERAL ══ -->
+  <!-- GENERAL -->
   <div class="tab-panel" id="panel-general">
     <div class="content" style="max-width:1050px">
       <div class="sec-label" style="margin-bottom:20px">Публичная информация — из открытых источников</div>
       <div class="info-grid">
-        <div class="info-card"><h3>🏛 Основные данные</h3><div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div><div class="info-row"><span class="info-key">Год основания</span><span class="info-val">1988</span></div><div class="info-row"><span class="info-key">Тип</span><span class="info-val">Частный университет</span></div><div class="info-row"><span class="info-key">Город</span><span class="info-val">Алматы, Казахстан</span></div><div class="info-row"><span class="info-key">Студентов</span><span class="info-val">~6 000</span></div><div class="info-row"><span class="info-key">Сайт</span><span class="info-val gold">almau.edu.kz</span></div></div>
-        <div class="info-card"><h3>🏆 Рейтинги и аккредитации</h3><div class="info-row"><span class="info-key">QS Stars</span><span class="info-val"><span class="rank-badge">4 ★★★★</span></span></div><div class="info-row"><span class="info-key">THE Awards Asia 2026</span><span class="info-val gold">Победитель</span></div><div class="info-row"><span class="info-key">FIBAA</span><span class="info-val">✓ Активна</span></div><div class="info-row"><span class="info-key">AMBA / BGA</span><span class="info-val">✓ Активна</span></div><div class="info-row"><span class="info-key">Babson Collaborative</span><span class="info-val">С 2017 года</span></div><div class="info-row"><span class="info-key">Партнёры</span><span class="info-val">70+ ун-тов, 40+ стран</span></div></div>
-        <div class="info-card"><h3>📡 Соцсети</h3><div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div><div class="info-row"><span class="info-key">Подписчики IG</span><span class="info-val">38 400</span></div><div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">—</span></div><div class="info-row"><span class="info-key">Подписчики TT</span><span class="info-val">12 400</span></div><div class="info-row"><span class="info-key">YouTube</span><span class="info-val gold">AlmaU TV</span></div><div class="info-row"><span class="info-key">Telegram</span><span class="info-val">t.me/almau_edu</span></div></div>
-        <div class="info-card"><h3>📰 Медиа-активность (30 дней)</h3><div class="info-row"><span class="info-key">Уникальных тем</span><span class="info-val gold">24</span></div><div class="info-row"><span class="info-key">Всего упоминаний</span><span class="info-val">67 <span style="color:#aaa;font-weight:400;font-size:11px">(в разных изданиях)</span></span></div><div class="info-row"><span class="info-key">Макс. охват темы</span><span class="info-val">THE Awards — 6 изданий</span></div><div class="info-row"><span class="info-key">Топ источник</span><span class="info-val">Forbes Kazakhstan</span></div><div class="info-row"><span class="info-key">Главная тема</span><span class="info-val">THE Awards Asia 2026</span></div><div class="info-row"><span class="info-key">Тональность</span><span class="info-val gold">91% позитив</span></div></div>
+        <div class="info-card"><h3>🏛 Основные данные</h3>
+          <div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div>
+          <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div>
+          <div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">—</span></div>
+        </div>
+        <div class="info-card"><h3>📰 Мониторинг 2026</h3>
+          <div class="info-row"><span class="info-key">Постов Instagram</span><span class="info-val gold" id="gen-ig-posts">—</span></div>
+          <div class="info-row"><span class="info-key">Видео TikTok</span><span class="info-val gold" id="gen-tt-videos">—</span></div>
+          <div class="info-row"><span class="info-key">Упоминаний в СМИ</span><span class="info-val gold" id="gen-web-mentions">—</span></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-function startDashboard(){
-  const name=document.getElementById('uniName').value||'University';
-  const abbr=document.getElementById('uniAbbr').value||'U';
-  const ig=document.getElementById('igHandle').value||'';
-  const tt=document.getElementById('ttHandle').value||'';
-  document.getElementById('headerTitle').textContent=name+' — Analytics';
-  document.getElementById('headerAbbr').textContent=abbr.charAt(0).toUpperCase();
-  document.getElementById('igStatHandle').textContent=ig;
-  document.getElementById('ttStatHandle').textContent=tt;
-  document.getElementById('genFullName').textContent=name;
-  document.getElementById('genIG').textContent=ig;
-  document.getElementById('genTT').textContent=tt;
-  document.getElementById('setupOverlay').style.display='none';
-  document.getElementById('app').style.display='block';
-  simulateRefresh();
+
+var CFG = {};
+var isLoading = false;
+var EMOJIS = ['🎓','🏆','🌍','📚','🎉','🔥','💡','🎯','🌟','💫'];
+
+// ===== INIT =====
+window.onload = function() {
+  var saved = localStorage.getItem('uni_cfg_v2');
+  if (saved) {
+    try {
+      CFG = JSON.parse(saved);
+      if (CFG.name) document.getElementById('uniName').value = CFG.name;
+      if (CFG.abbr) document.getElementById('uniAbbr').value = CFG.abbr;
+      if (CFG.ig) document.getElementById('igHandle').value = '@' + CFG.ig;
+      if (CFG.tt) document.getElementById('ttHandle').value = '@' + CFG.tt;
+    } catch(e) {}
+  }
+};
+
+// ===== SETUP =====
+function startDashboard() {
+  var name = document.getElementById('uniName').value.trim() || 'University';
+  var abbr = document.getElementById('uniAbbr').value.trim() || name.charAt(0);
+  var ig = document.getElementById('igHandle').value.trim().replace('@','');
+  var tt = document.getElementById('ttHandle').value.trim().replace('@','');
+
+  if (!ig && !tt) { alert('Укажите хотя бы один аккаунт (Instagram или TikTok)'); return; }
+
+  CFG = { name: name, abbr: abbr, ig: ig, tt: tt };
+  localStorage.setItem('uni_cfg_v2', JSON.stringify(CFG));
+
+  document.getElementById('headerTitle').textContent = name + ' \u2014 Analytics';
+  document.getElementById('headerAbbr').textContent = abbr.charAt(0).toUpperCase();
+  document.getElementById('genFullName').textContent = name;
+  document.getElementById('genIG').textContent = ig ? '@' + ig : '\u2014';
+  document.getElementById('genTT').textContent = tt ? '@' + tt : '\u2014';
+  document.getElementById('setupOverlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  realRefresh();
 }
-function switchTab(tab,el){
-  document.querySelectorAll('.plat-tab').forEach(t=>t.classList.remove('active'));
+
+// ===== UTILS =====
+function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+function fmtNum(n) {
+  n = Number(n) || 0;
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '\u2014';
+  try {
+    var d = new Date(iso);
+    return d.toLocaleDateString('ru', {day:'numeric', month:'long', year:'numeric'});
+  } catch(e) { return iso; }
+}
+
+function isNewItem(isoDate, lastVisit) {
+  if (!isoDate) return false;
+  try { return new Date(isoDate) > new Date(lastVisit); } catch(e) { return false; }
+}
+
+function sentiment(text) {
+  if (!text) return 'neu';
+  var t = text.toLowerCase();
+  var pos = ['победит','лучш','достиж','отлич','поздрав','спасиб','рост','успех','горд','лидер','наград','первый','топ','рекорд','круто','молодц','призов','победа','чемпион','золот'];
+  var neg = ['скандал','критик','провал','плохо','ужас','проблем','жалоб','негатив','плохой','ошибк','аварий','утечк','штраф'];
+  if (pos.some(function(w){ return t.indexOf(w) >= 0; })) return 'pos';
+  if (neg.some(function(w){ return t.indexOf(w) >= 0; })) return 'neg';
+  return 'neu';
+}
+
+function sentLabel(s) { return {pos:'позитив', neg:'негатив', neu:'нейтрально'}[s] || 'нейтрально'; }
+function sentClass(s) { return {pos:'b-pos', neg:'b-neg', neu:'b-neu'}[s] || 'b-neu'; }
+
+function sepNew(label) {
+  return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">' + label + '</div><div class="date-sep-line"></div></div>';
+}
+function sepOld(label) {
+  return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">' + label + '</div><div class="date-sep-line"></div></div>';
+}
+function emptyState(msg, icon, sub) {
+  return '<div class="empty-state"><div class="es-icon">' + icon + '</div><div class="es-text">' + msg + '</div>' + (sub ? '<div class="es-sub">' + sub + '</div>' : '') + '</div>';
+}
+
+// ===== LOADING =====
+function setLoadingText(msg) {
+  document.getElementById('loadingText').textContent = msg;
+}
+function showLoadingBar(msg) {
+  document.getElementById('loadingBar').classList.remove('hidden');
+  document.getElementById('refreshIcon').style.animation = 'spin 1s linear infinite';
+  document.querySelector('.refresh-btn').disabled = true;
+  setLoadingText(msg);
+  document.getElementById('errorBar').style.display = 'none';
+}
+function hideLoadingBar() {
+  document.getElementById('loadingBar').classList.add('hidden');
+  document.getElementById('refreshIcon').style.animation = '';
+  document.querySelector('.refresh-btn').disabled = false;
+}
+function showError(msg) {
+  var el = document.getElementById('errorBar');
+  el.textContent = '\u274C ' + msg;
+  el.style.display = 'block';
+}
+
+// ===== APIFY =====
+async function apifyRun(actorId, input, label) {
+  setLoadingText(label + ' — запускаем...');
+  console.log('[Fn] actor:', actorId);
+
+  var startRes = await fetch('/.netlify/functions/apify-start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ actorId: actorId, input: input })
+  });
+  if (!startRes.ok) {
+    var et = await startRes.text();
+    throw new Error(label + ': HTTP ' + startRes.status + ' ' + et.substring(0, 120));
+  }
+  var sd = await startRes.json();
+  if (sd.error) throw new Error(label + ': ' + sd.error);
+  var runId = sd.runId;
+  console.log('[Fn] runId:', runId);
+
+  for (var i = 0; i < 72; i++) {
+    await sleep(5000);
+    setLoadingText(label + ' — ' + ((i + 1) * 5) + 'с... (ожидаем завершения)');
+    var pollRes = await fetch('/.netlify/functions/apify-poll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ runId: runId, getItems: true })
+    });
+    var pd = await pollRes.json();
+    console.log('[Fn] status:', pd.status);
+    if (pd.status === 'SUCCEEDED') return pd.items || [];
+    if (['FAILED', 'ABORTED', 'TIMED-OUT'].indexOf(pd.status) >= 0) {
+      throw new Error(label + ': актор ' + pd.status);
+    }
+  }
+  throw new Error(label + ': timeout 6 мин');
+}
+
+// ===== MAIN REFRESH =====
+async function realRefresh() {
+  if (isLoading) return;
+  if (!CFG.token) { document.getElementById('setupOverlay').style.display = 'flex'; return; }
+
+  isLoading = true;
+  var lastKey = 'last_visit_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_');
+  var lastVisit = localStorage.getItem(lastKey) || '2025-12-31T23:59:59Z';
+  var lastVisitDisp = fmtDate(lastVisit);
+
+  showLoadingBar('Подготовка...');
+
+  try {
+    // ── 1. INSTAGRAM ─────────────────────────────
+    if (CFG.ig) {
+      var igItems = await apifyRun(
+        'apify/instagram-scraper',
+        {
+          directUrls: ['https://www.instagram.com/' + CFG.ig + '/'],
+          resultsType: 'posts',
+          resultsLimit: 100,
+          addParentData: false
+        },
+        CFG.token, '\u{1F4F8} Instagram'
+      );
+      // Filter 2026
+      var posts2026 = igItems.filter(function(p) {
+        return p.timestamp && p.timestamp >= '2026-01-01';
+      });
+      renderInstagram(posts2026, lastVisit, lastVisitDisp);
+    } else {
+      document.getElementById('ig-content').innerHTML = emptyState('Instagram аккаунт не указан', '\u{1F4F8}', 'Откройте настройки и добавьте @handle');
+    }
+
+    // ── 2. TIKTOK ────────────────────────────────
+    if (CFG.tt) {
+      var ttItems = await apifyRun(
+        'clockworks/free-tiktok-scraper',
+        {
+          profiles: [CFG.tt],
+          resultsPerPage: 100,
+          shouldDownloadVideos: false,
+          shouldDownloadCovers: false,
+          shouldDownloadSubtitles: false,
+          shouldDownloadSlideshowImages: false
+        },
+        CFG.token, '\u{1F3B5} TikTok'
+      );
+      var videos2026 = ttItems.filter(function(v) {
+        if (!v.createTime) return false;
+        return new Date(v.createTime * 1000).getFullYear() === 2026;
+      });
+      renderTikTok(videos2026, lastVisit, lastVisitDisp);
+    } else {
+      document.getElementById('tt-content').innerHTML = emptyState('TikTok аккаунт не указан', '\u{1F3B5}', 'Откройте настройки и добавьте @handle');
+    }
+
+    // ── 3. WEB MONITORING ────────────────────────
+    var webItems = await apifyRun(
+      'apify/google-search-scraper',
+      {
+        queries: '"' + CFG.name + '" 2026',
+        maxPagesPerQuery: 3,
+        resultsPerPage: 10,
+        languageCode: 'ru',
+        countryCode: 'kz'
+      },
+      CFG.token, '\u{1F310} Интернет'
+    );
+    renderWeb(webItems, lastVisit, lastVisitDisp);
+
+    // Save last visit only after successful load
+    localStorage.setItem(lastKey, new Date().toISOString());
+
+  } catch(e) {
+    console.error('[realRefresh error]', e);
+    showError(e.message);
+  } finally {
+    isLoading = false;
+    hideLoadingBar();
+    document.getElementById('lastUpdate').textContent = 'Обновлено: ' +
+      new Date().toLocaleString('ru', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ===== RENDER INSTAGRAM =====
+function renderInstagram(posts, lastVisit, lastVisitDisp) {
+  var newPosts = posts.filter(function(p){ return isNewItem(p.timestamp, lastVisit); });
+  var oldPosts = posts.filter(function(p){ return !isNewItem(p.timestamp, lastVisit); });
+
+  var totalLikes = posts.reduce(function(s,p){ return s + (p.likesCount||0); }, 0);
+  var totalComments = posts.reduce(function(s,p){ return s + (p.commentsCount||0); }, 0);
+  var avgLikes = posts.length ? Math.round(totalLikes / posts.length) : 0;
+  var followers = posts.length > 0 && posts[0].ownerFullName ? posts[0].followersCount || '—' : '—';
+
+  document.getElementById('ig-stat-posts').textContent = posts.length;
+  document.getElementById('ig-stat-likes').textContent = fmtNum(totalLikes);
+  document.getElementById('ig-stat-comments').textContent = fmtNum(totalComments);
+  document.getElementById('ig-stat-avg').textContent = avgLikes;
+  document.getElementById('igStatHandle').textContent = CFG.ig ? '@' + CFG.ig : '—';
+  document.getElementById('ig-stat-new').textContent = newPosts.length;
+  document.getElementById('ig-count').textContent = posts.length + ' постов · ' + newPosts.length + ' новых';
+
+  var html = '';
+  if (newPosts.length) {
+    html += sepNew('\u{1F4F8} Новое в Instagram — с ' + lastVisitDisp);
+    html += '<div class="grid">' + newPosts.map(function(p){ return igCard(p, true); }).join('') + '</div>';
+  }
+  if (oldPosts.length) {
+    html += sepOld('Было при прошлом обновлении');
+    html += '<div class="grid">' + oldPosts.map(function(p){ return igCard(p, false); }).join('') + '</div>';
+  }
+  if (!posts.length) html = emptyState('Нет постов за 2026 год', '\u{1F4F8}', 'Данные загружены, но нет публикаций за 2026');
+
+  document.getElementById('ig-content').innerHTML = html;
+}
+
+function igCard(p, isN) {
+  var s = sentiment(p.caption);
+  var viral = (p.likesCount||0) > 500;
+  var isProfile = (p.ownerUsername||'').toLowerCase() === CFG.ig.toLowerCase();
+  var caption = (p.caption || '').substring(0, 300);
+  return '<div class="card' + (isN ? ' is-new' : '') + '">'
+    + '<div class="card-head"><div><div class="author">' + (p.ownerUsername || CFG.ig) + '</div>'
+    + '<div class="date-sm">' + fmtDate(p.timestamp) + '</div></div>'
+    + '<div class="badges">'
+    + (isN ? '<span class="b b-new">\u{1F195} Новое</span>' : '')
+    + (viral ? '<span class="b b-viral">вирусный</span>' : '')
+    + '<span class="b ' + (isProfile ? 'b-profile' : 'b-mention') + '">' + (isProfile ? 'профиль' : 'упоминание') + '</span>'
+    + '<span class="b ' + sentClass(s) + '">' + sentLabel(s) + '</span>'
+    + '</div></div>'
+    + '<div class="caption">' + caption + '</div>'
+    + '<div class="card-foot"><div class="meta">'
+    + '<span class="likes">\u2764 ' + fmtNum(p.likesCount) + '</span>'
+    + '<span>\u{1F4AC} ' + fmtNum(p.commentsCount) + '</span>'
+    + '</div><a class="open-link" href="' + (p.url||'#') + '" target="_blank">Открыть \u2192</a></div>'
+    + '</div>';
+}
+
+// ===== RENDER TIKTOK =====
+function renderTikTok(videos, lastVisit, lastVisitDisp) {
+  var newVideos = videos.filter(function(v){
+    return isNewItem(new Date(v.createTime*1000).toISOString(), lastVisit);
+  });
+  var oldVideos = videos.filter(function(v){
+    return !isNewItem(new Date(v.createTime*1000).toISOString(), lastVisit);
+  });
+
+  var totalViews = videos.reduce(function(s,v){ return s + (v.stats&&v.stats.playCount||0); }, 0);
+  var totalLikes = videos.reduce(function(s,v){ return s + (v.stats&&v.stats.diggCount||0); }, 0);
+  var avgViews = videos.length ? Math.round(totalViews/videos.length) : 0;
+  var followers = videos.length > 0 ? (videos[0].authorMeta&&videos[0].authorMeta.fans || '—') : '—';
+  var er = videos.length && totalViews > 0 ? ((totalLikes/totalViews)*100).toFixed(1) + '%' : '—';
+
+  document.getElementById('tt-stat-videos').textContent = videos.length;
+  document.getElementById('tt-stat-views').textContent = fmtNum(totalViews);
+  document.getElementById('tt-stat-likes').textContent = fmtNum(totalLikes);
+  document.getElementById('tt-stat-avg').textContent = fmtNum(avgViews);
+  document.getElementById('ttStatHandle').textContent = CFG.tt ? '@' + CFG.tt : '—';
+  document.getElementById('tt-stat-er').textContent = er;
+  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + newVideos.length + ' новых';
+
+  var html = '';
+  if (newVideos.length) {
+    html += sepNew('\u{1F3B5} Новое в TikTok — с ' + lastVisitDisp);
+    html += '<div class="tiktok-grid">' + newVideos.map(function(v){ return ttCard(v, true); }).join('') + '</div>';
+  }
+  if (oldVideos.length) {
+    html += sepOld('Было при прошлом обновлении');
+    html += '<div class="tiktok-grid">' + oldVideos.map(function(v){ return ttCard(v, false); }).join('') + '</div>';
+  }
+  if (!videos.length) html = emptyState('Нет видео за 2026 год', '\u{1F3B5}', 'Данные загружены, но нет публикаций за 2026');
+
+  document.getElementById('tt-content').innerHTML = html;
+}
+
+function ttCard(v, isN) {
+  var d = new Date(v.createTime * 1000);
+  var emoji = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  var desc = (v.desc || '').substring(0, 100);
+  return '<div class="tt-card' + (isN ? ' is-new' : '') + '">'
+    + '<div class="tt-thumb">' + emoji + '<div class="tt-play"><span>\u25B6</span></div></div>'
+    + '<div class="tt-info">'
+    + (isN ? '<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">\u{1F195} Новое</span></div>' : '')
+    + '<div class="tt-views">' + fmtNum(v.stats&&v.stats.playCount) + '</div>'
+    + '<div class="tt-lbl">просмотров · ' + d.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'}) + '</div>'
+    + '<div class="tt-desc">' + desc + '</div>'
+    + '<div class="tt-meta">'
+    + '<span>\u2764 ' + fmtNum(v.stats&&v.stats.diggCount) + '</span>'
+    + '<span>\u{1F4AC} ' + fmtNum(v.stats&&v.stats.commentCount) + '</span>'
+    + '<span>\u2197 ' + fmtNum(v.stats&&v.stats.shareCount) + '</span>'
+    + '</div></div></div>';
+}
+
+// ===== RENDER WEB =====
+function renderWeb(items, lastVisit, lastVisitDisp) {
+  // Filter: mention uni name + 2026
+  var filtered = items.filter(function(item) {
+    var text = (item.title||'') + ' ' + (item.description||'');
+    return text.toLowerCase().indexOf(CFG.name.toLowerCase().split(' ')[0].toLowerCase()) >= 0;
+  });
+
+  var newItems = filtered.filter(function(item){
+    return item.date && isNewItem(item.date, lastVisit);
+  });
+  var oldItems = filtered.filter(function(item){
+    return !item.date || !isNewItem(item.date, lastVisit);
+  });
+
+  var hostSet = {};
+  filtered.forEach(function(i){ try { hostSet[new URL(i.url||'http://x').hostname] = 1; } catch(e){} });
+  var sourcesCount = Object.keys(hostSet).length;
+
+  var posCount = filtered.filter(function(i){ return sentiment((i.title||'')+(i.description||'')) === 'pos'; }).length;
+  var sentPct = filtered.length ? Math.round(posCount/filtered.length*100) : 0;
+
+  document.getElementById('web-stat-topics').textContent = filtered.length;
+  document.getElementById('web-stat-new').textContent = newItems.length;
+  document.getElementById('web-stat-mentions').textContent = filtered.length;
+  document.getElementById('web-stat-sources').textContent = sourcesCount;
+  document.getElementById('web-stat-sentiment').textContent = sentPct + '%';
+  document.getElementById('web-sync-badge').textContent = '\u{1F195} ' + newItems.length + ' новых';
+  document.getElementById('web-last-sync').textContent = 'Проверено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  var html = '';
+  if (newItems.length) {
+    html += sepNew('\u{1F310} Интернет — новое с ' + lastVisitDisp);
+    html += '<div class="web-grid">' + newItems.map(function(i){ return webCard(i, true); }).join('') + '</div>';
+  }
+  if (oldItems.length) {
+    html += sepOld('Ранее найденное');
+    html += '<div class="web-grid">' + oldItems.map(function(i){ return webCard(i, false); }).join('') + '</div>';
+  }
+  if (!filtered.length) html = emptyState('Нет упоминаний в интернете за 2026 год', '\u{1F310}', 'Попробуйте обновить позже');
+
+  document.getElementById('web-content').innerHTML = html;
+}
+
+function webCard(item, isN) {
+  var host = '—';
+  try { host = new URL(item.url||'http://x').hostname; } catch(e){}
+  var s = sentiment((item.title||'') + (item.description||''));
+  return '<div class="web-card' + (isN ? ' is-new' : '') + '">'
+    + '<div class="wc-body"><div class="web-source-icon">\u{1F4F0}</div>'
+    + '<div class="web-main">'
+    + '<div class="web-title">' + (item.title||'\u2014') + '</div>'
+    + '<div class="web-tags">'
+    + (isN ? '<span class="web-tag wt-new">\u{1F195} Новое</span>' : '')
+    + '<span class="web-tag wt-news">Новость</span>'
+    + '<span class="b ' + sentClass(s) + '" style="font-size:10px;padding:2px 7px">' + sentLabel(s) + '</span>'
+    + '</div>'
+    + '<div class="web-snippet">' + (item.description||'').substring(0,250) + '</div>'
+    + '</div></div>'
+    + '<div class="sources-strip">'
+    + '<span class="sources-label">Источник</span>'
+    + '<span class="sources-count">1 издание:</span>'
+    + '<a class="source-pill" href="' + (item.url||'#') + '" target="_blank">'
+    + '\u{1F4F0} ' + host
+    + (item.date ? ' <span class="sp-date">' + item.date + '</span>' : '')
+    + '</a></div></div>';
+}
+
+// ===== SWITCH TAB =====
+function switchTab(tab, el) {
+  document.querySelectorAll('.plat-tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+tab).classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('panel-' + tab).classList.add('active');
 }
-function simulateRefresh(){
-  const bar=document.getElementById('loadingBar');
-  const icon=document.getElementById('refreshIcon');
-  bar.classList.remove('hidden');
-  icon.style.animation='spin 1s linear infinite';
-  const msgs=['Проверяем Instagram через Apify...','Загружаем TikTok данные...','Сканируем интернет: новости, блоги, LinkedIn...','Группируем одинаковые новости из разных источников...','Определяем новое с даты последнего визита...','Готово ✓'];
-  let i=0;
-  const iv=setInterval(()=>{document.getElementById('loadingText').textContent=msgs[Math.min(i,msgs.length-1)];i++;},600);
-  setTimeout(()=>{
-    clearInterval(iv);
-    bar.classList.add('hidden');
-    icon.style.animation='';
-    document.getElementById('lastUpdate').textContent='Обновлено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  },4000);
-}
+
 </script>
 </body>
 </html>
