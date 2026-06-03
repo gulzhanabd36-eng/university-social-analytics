@@ -8,30 +8,30 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: h, body: JSON.stringify({ error: 'POST only' }) };
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { actorId, input } = body;
-    const token = (body.token || '').trim();
+    const { actorId, input, token } = JSON.parse(event.body || '{}');
 
-    if (!token)   return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Apify token not provided' }) };
+    if (!token) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'Apify token not provided' }) };
     if (!actorId) return { statusCode: 400, headers: h, body: JSON.stringify({ error: 'actorId not provided' }) };
 
-    // Use Authorization header — safe for all token formats (avoids URL encoding bugs)
+    console.log('Starting actor:', actorId, 'input:', JSON.stringify(input).substring(0, 200));
+
     const r = await fetch(
-      'https://api.apify.com/v2/acts/' + encodeURIComponent(actorId) + '/runs',
+      'https://api.apify.com/v2/acts/' + encodeURIComponent(actorId) + '/runs?token=' + token,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input || {})
       }
     );
-
     const data = await r.json();
+    console.log('Apify response:', r.status, JSON.stringify(data).substring(0, 300));
+
     if (!r.ok) return {
-      statusCode: r.status, headers: h,
-      body: JSON.stringify({ error: (data.error && data.error.message) || 'Apify error', detail: JSON.stringify(data).substring(0, 300) })
+      statusCode: 400, headers: h,
+      body: JSON.stringify({
+        error: (data.error && data.error.message) || 'Apify start failed',
+        detail: JSON.stringify(data).substring(0, 300)
+      })
     };
 
     return {
@@ -39,6 +39,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({ runId: data.data.id, status: data.data.status })
     };
   } catch (e) {
+    console.error('Exception:', e.message);
     return { statusCode: 500, headers: h, body: JSON.stringify({ error: e.message }) };
   }
 };
