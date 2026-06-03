@@ -142,6 +142,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .empty-state .es-text{font-size:14px;margin-bottom:8px;color:#666}
 .empty-state .es-sub{font-size:12px}
 .error-bar{background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin:14px 28px;font-size:12px;color:#DC2626;display:none}
+.warn-bar{background:#FFF8EE;border:1px solid #F5D5A0;border-radius:8px;padding:10px 16px;margin:10px 28px;font-size:12px;color:#C57E33;display:none}
 </style>
 </head>
 <body>
@@ -210,6 +211,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
   </div>
   <div class="error-bar" id="errorBar"></div>
+  <div class="warn-bar" id="warnBar"></div>
 
   <div class="tab-panel active" id="panel-instagram">
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
@@ -321,14 +323,13 @@ function openSettings() { document.getElementById('setupOverlay').style.display 
 function startDashboard() {
   var name  = document.getElementById('uniName').value.trim();
   var abbr  = document.getElementById('uniAbbr').value.trim();
-  // Strip @ and whitespace
   var ig    = document.getElementById('igHandle').value.trim().replace(/^@+/, '').trim();
   var tt    = document.getElementById('ttHandle').value.trim().replace(/^@+/, '').trim();
   var token = document.getElementById('apifyToken').value.trim();
 
   if (!name)  { alert('Введите название университета'); return; }
   if (!token) { alert('Введите Apify API Token'); return; }
-  if (!ig && !tt) { alert('Укажите хотя бы один аккаунт (Instagram или TikTok)'); return; }
+  if (!ig && !tt) { alert('Укажите хотя бы один аккаунт'); return; }
 
   CFG = { name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token };
   localStorage.setItem('uni_cfg_v4', JSON.stringify({ name: name, abbr: CFG.abbr, ig: ig, tt: tt }));
@@ -347,163 +348,162 @@ function startDashboard() {
 }
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
-
-function fmtNum(n) {
-  n = Number(n) || 0;
-  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
-  return String(n);
-}
-function fmtDate(iso) {
-  if (!iso) return '—';
-  try { return new Date(iso).toLocaleDateString('ru', {day:'numeric',month:'long',year:'numeric'}); }
-  catch(e) { return iso; }
-}
-function isNew(d, lv) {
-  if (!d) return false;
-  try { return new Date(d) > new Date(lv); } catch(e) { return false; }
-}
+function fmtNum(n) { n=Number(n)||0; if(n>=1000000)return(n/1000000).toFixed(1)+'M'; if(n>=1000)return(n/1000).toFixed(1)+'K'; return String(n); }
+function fmtDate(iso) { if(!iso)return'—'; try{return new Date(iso).toLocaleDateString('ru',{day:'numeric',month:'long',year:'numeric'});}catch(e){return iso;} }
+function isNew(d,lv) { if(!d)return false; try{return new Date(d)>new Date(lv);}catch(e){return false;} }
 function sentiment(text) {
-  if (!text) return 'neu';
-  var t = text.toLowerCase();
-  var pos = ['победит','лучш','достиж','отлич','поздрав','успех','наград','первый','топ','рекорд','победа','золот','лидер'];
-  var neg = ['скандал','провал','плох','ужас','проблем','жалоб','негатив','ошибк','штраф','критик'];
-  if (pos.some(function(w){ return t.indexOf(w) >= 0; })) return 'pos';
-  if (neg.some(function(w){ return t.indexOf(w) >= 0; })) return 'neg';
-  return 'neu';
+  if(!text)return'neu'; var t=text.toLowerCase();
+  var pos=['победит','лучш','достиж','отлич','поздрав','успех','наград','первый','топ','рекорд','победа','золот','лидер'];
+  var neg=['скандал','провал','плох','ужас','проблем','жалоб','негатив','ошибк','штраф','критик'];
+  if(pos.some(function(w){return t.indexOf(w)>=0;}))return'pos';
+  if(neg.some(function(w){return t.indexOf(w)>=0;}))return'neg';
+  return'neu';
 }
-function sLbl(s) { return {pos:'позитив',neg:'негатив',neu:'нейтрально'}[s]||'нейтрально'; }
-function sCls(s) { return {pos:'b-pos',neg:'b-neg',neu:'b-neu'}[s]||'b-neu'; }
-function sepNew(l) { return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">' + l + '</div><div class="date-sep-line"></div></div>'; }
-function sepOld(l) { return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">' + l + '</div><div class="date-sep-line"></div></div>'; }
-function emptyState(msg, icon, sub) { return '<div class="empty-state"><div class="es-icon">' + icon + '</div><div class="es-text">' + msg + '</div>' + (sub?'<div class="es-sub">' + sub + '</div>':'') + '</div>'; }
+function sLbl(s){return{pos:'позитив',neg:'негатив',neu:'нейтрально'}[s]||'нейтрально';}
+function sCls(s){return{pos:'b-pos',neg:'b-neg',neu:'b-neu'}[s]||'b-neu';}
+function sepNew(l){return'<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">'+l+'</div><div class="date-sep-line"></div></div>';}
+function sepOld(l){return'<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">'+l+'</div><div class="date-sep-line"></div></div>';}
+function emptyState(msg,icon,sub){return'<div class="empty-state"><div class="es-icon">'+icon+'</div><div class="es-text">'+msg+'</div>'+(sub?'<div class="es-sub">'+sub+'</div>':'')+' </div>';}
 
-function setStep(id, state) { var el = document.getElementById('step-' + id); if (el) el.className = 'step ' + state; }
-function showLoading(msg) {
+function setStep(id,state){var el=document.getElementById('step-'+id);if(el)el.className='step '+state;}
+function showLoading(msg){
   document.getElementById('loadingBar').classList.remove('hidden');
-  document.getElementById('refreshIcon').style.animation = 'spin 1s linear infinite';
-  document.querySelector('.refresh-btn').disabled = true;
-  document.getElementById('loadingText').textContent = msg;
-  document.getElementById('errorBar').style.display = 'none';
+  document.getElementById('refreshIcon').style.animation='spin 1s linear infinite';
+  document.querySelector('.refresh-btn').disabled=true;
+  document.getElementById('loadingText').textContent=msg;
+  document.getElementById('errorBar').style.display='none';
+  document.getElementById('warnBar').style.display='none';
 }
-function hideLoading() {
+function hideLoading(){
   document.getElementById('loadingBar').classList.add('hidden');
-  document.getElementById('refreshIcon').style.animation = '';
-  document.querySelector('.refresh-btn').disabled = false;
+  document.getElementById('refreshIcon').style.animation='';
+  document.querySelector('.refresh-btn').disabled=false;
 }
-function showError(msg) {
-  var el = document.getElementById('errorBar');
-  el.textContent = '❌ ' + msg;
-  el.style.display = 'block';
-}
+function showError(msg){var el=document.getElementById('errorBar');el.textContent='❌ '+msg;el.style.display='block';}
+function showWarn(msg){var el=document.getElementById('warnBar');el.textContent='⚠️ '+msg;el.style.display='block';}
 
 async function apifyRun(actorId, input, stepId, label) {
-  setStep(stepId, 'active');
-  document.getElementById('loadingText').textContent = label + ' — запускаем...';
+  setStep(stepId,'active');
+  document.getElementById('loadingText').textContent=label+' — запускаем...';
 
-  var startRes = await fetch('/.netlify/functions/apify-start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ actorId: actorId, input: input, token: CFG.token })
+  var startRes = await fetch('/.netlify/functions/apify-start',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({actorId:actorId,input:input,token:CFG.token})
   });
-  var sd;
-  try { sd = await startRes.json(); } catch(e) { throw new Error(label + ': неверный ответ от функции'); }
-  if (!startRes.ok || sd.error) throw new Error(label + ': ' + (sd.error || startRes.status));
-  var runId = sd.runId;
+  var sd; try{sd=await startRes.json();}catch(e){throw new Error(label+': неверный ответ от функции');}
+  if(!startRes.ok||sd.error) throw new Error(label+': '+(sd.error||sd.detail||startRes.status));
+  var runId=sd.runId;
 
-  for (var i = 0; i < 72; i++) {
+  for(var i=0;i<72;i++){
     await sleep(5000);
-    document.getElementById('loadingText').textContent = label + ' — ' + ((i+1)*5) + 'с...';
-    var pr = await fetch('/.netlify/functions/apify-poll', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ runId: runId, token: CFG.token, getItems: true })
+    document.getElementById('loadingText').textContent=label+' — '+((i+1)*5)+'с...';
+    var pr=await fetch('/.netlify/functions/apify-poll',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({runId:runId,token:CFG.token,getItems:true})
     });
-    var pd;
-    try { pd = await pr.json(); } catch(e) { continue; }
-    if (pd.status === 'SUCCEEDED') { setStep(stepId, 'done'); return pd.items || []; }
-    if (['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status) >= 0) throw new Error(label + ': актор ' + pd.status);
+    var pd; try{pd=await pr.json();}catch(e){continue;}
+    if(pd.status==='SUCCEEDED'){setStep(stepId,'done');return pd.items||[];}
+    if(['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status)>=0) throw new Error(label+': актор '+pd.status);
   }
-  throw new Error(label + ': timeout 6 мин');
+  throw new Error(label+': timeout 6 мин');
 }
 
 async function realRefresh() {
-  if (isLoading) return;
-  if (!CFG.token) { openSettings(); return; }
-  isLoading = true;
-  var lastKey   = 'lv_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  var lastVisit = localStorage.getItem(lastKey) || '2025-12-31T23:59:59Z';
-  var lastDisp  = fmtDate(lastVisit);
-  setStep('ig',''); setStep('tt',''); setStep('web','');
+  if(isLoading) return;
+  if(!CFG.token){openSettings();return;}
+  isLoading=true;
+  var lastKey='lv_'+(CFG.ig||CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  var lastVisit=localStorage.getItem(lastKey)||'2025-12-31T23:59:59Z';
+  var lastDisp=fmtDate(lastVisit);
+  setStep('ig','');setStep('tt','');setStep('web','');
   showLoading('Подготовка...');
   try {
-    if (CFG.ig) {
-      // FIX: use usernames[] array — correct format for apify/instagram-scraper
-      var igItems = await apifyRun(
-        'apify/instagram-scraper',
-        {
-          usernames: [CFG.ig],
-          resultsType: 'posts',
-          resultsLimit: 100
-        },
-        'ig', '📸 Instagram'
-      );
-      var posts = igItems.filter(function(p){ return p.timestamp && p.timestamp >= '2026-01-01'; });
-      renderIG(posts, lastVisit, lastDisp);
-      document.getElementById('gen-ig-posts').textContent = posts.length;
+    // 1. Instagram
+    if(CFG.ig){
+      var igItems=await apifyRun('apify/instagram-scraper',{usernames:[CFG.ig],resultsType:'posts',resultsLimit:100},'ig','📸 Instagram');
+      var posts=igItems.filter(function(p){return p.timestamp&&p.timestamp>='2026-01-01';});
+      renderIG(posts,lastVisit,lastDisp);
+      document.getElementById('gen-ig-posts').textContent=posts.length;
     } else {
-      document.getElementById('ig-content').innerHTML = emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
+      document.getElementById('ig-content').innerHTML=emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
     }
-    if (CFG.tt) {
-      var ttItems = await apifyRun(
-        'clockworks/free-tiktok-scraper',
-        { profiles: [CFG.tt], resultsPerPage: 100, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false, shouldDownloadSlideshowImages: false },
-        'tt', '🎵 TikTok'
-      );
-      var videos = ttItems.filter(function(v){ return v.createTime && new Date(v.createTime*1000).getFullYear()===2026; });
-      renderTT(videos, lastVisit, lastDisp);
-      document.getElementById('gen-tt-videos').textContent = videos.length;
+
+    // 2. TikTok — clockworks/tiktok-scraper, input: profiles array with @ prefix
+    if(CFG.tt){
+      var ttItems;
+      try {
+        ttItems=await apifyRun(
+          'clockworks/tiktok-scraper',
+          {
+            profiles: ['@' + CFG.tt],
+            resultsPerPage: 30,
+            shouldDownloadVideos: false,
+            shouldDownloadCovers: false,
+            shouldDownloadSubtitles: false,
+            shouldDownloadSlideshowImages: false
+          },
+          'tt','🎵 TikTok'
+        );
+      } catch(e) {
+        // Fallback: try without @ prefix
+        showWarn('TikTok: перехожу на запасный вариант...');
+        try {
+          ttItems=await apifyRun(
+            'clockworks/tiktok-scraper',
+            { profiles: [CFG.tt], resultsPerPage: 30, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false, shouldDownloadSlideshowImages: false },
+            'tt','🎵 TikTok'
+          );
+          document.getElementById('warnBar').style.display='none';
+        } catch(e2) {
+          ttItems=[];
+          showWarn('TikTok недоступен — актор не ответил. Instagram и интернет загружены.');
+          setStep('tt','done');
+        }
+      }
+      var videos=ttItems.filter(function(v){return v.createTime&&new Date(v.createTime*1000).getFullYear()===2026;});
+      renderTT(videos,lastVisit,lastDisp);
+      document.getElementById('gen-tt-videos').textContent=videos.length;
     } else {
-      document.getElementById('tt-content').innerHTML = emptyState('TikTok аккаунт не указан','🎵','Откройте настройки');
+      document.getElementById('tt-content').innerHTML=emptyState('TikTok аккаунт не указан','🎵','Откройте настройки');
     }
-    var webItems = await apifyRun(
-      'apify/google-search-scraper',
-      { queries: '"' + CFG.name + '" 2026', maxPagesPerQuery: 3, resultsPerPage: 10, languageCode: 'ru', countryCode: 'kz' },
-      'web', '🌐 Интернет'
-    );
-    renderWeb(webItems, lastVisit, lastDisp);
-    localStorage.setItem(lastKey, new Date().toISOString());
+
+    // 3. Web
+    var webItems=await apifyRun('apify/google-search-scraper',{queries:'"'+CFG.name+'" 2026',maxPagesPerQuery:3,resultsPerPage:10,languageCode:'ru',countryCode:'kz'},'web','🌐 Интернет');
+    renderWeb(webItems,lastVisit,lastDisp);
+    localStorage.setItem(lastKey,new Date().toISOString());
   } catch(e) {
     console.error(e);
     showError(e.message);
   } finally {
-    isLoading = false;
+    isLoading=false;
     hideLoading();
-    document.getElementById('lastUpdate').textContent = 'Обновлено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent='Обновлено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   }
 }
 
-function renderIG(posts, lv, ld) {
-  var nP = posts.filter(function(p){ return isNew(p.timestamp, lv); });
-  var oP = posts.filter(function(p){ return !isNew(p.timestamp, lv); });
-  var tL = posts.reduce(function(s,p){ return s+(p.likesCount||0); },0);
-  var tC = posts.reduce(function(s,p){ return s+(p.commentsCount||0); },0);
-  document.getElementById('ig-stat-posts').textContent    = posts.length;
-  document.getElementById('ig-stat-likes').textContent    = fmtNum(tL);
-  document.getElementById('ig-stat-comments').textContent = fmtNum(tC);
-  document.getElementById('ig-stat-avg').textContent      = posts.length ? Math.round(tL/posts.length) : 0;
-  document.getElementById('ig-stat-new').textContent      = nP.length;
-  document.getElementById('ig-count').textContent         = posts.length + ' постов · ' + nP.length + ' новых';
-  var h = '';
-  if (nP.length) h += sepNew('📸 Новое в Instagram — с ' + ld) + '<div class="grid">' + nP.map(function(p){ return igCard(p,true); }).join('') + '</div>';
-  if (oP.length) h += sepOld('Было при прошлом обновлении') + '<div class="grid">' + oP.map(function(p){ return igCard(p,false); }).join('') + '</div>';
-  if (!posts.length) h = emptyState('Нет постов за 2026 год','📸','Данные загружены, но публикаций за 2026 не найдено');
-  document.getElementById('ig-content').innerHTML = h;
+function renderIG(posts,lv,ld){
+  var nP=posts.filter(function(p){return isNew(p.timestamp,lv);});
+  var oP=posts.filter(function(p){return!isNew(p.timestamp,lv);});
+  var tL=posts.reduce(function(s,p){return s+(p.likesCount||0);},0);
+  var tC=posts.reduce(function(s,p){return s+(p.commentsCount||0);},0);
+  document.getElementById('ig-stat-posts').textContent=posts.length;
+  document.getElementById('ig-stat-likes').textContent=fmtNum(tL);
+  document.getElementById('ig-stat-comments').textContent=fmtNum(tC);
+  document.getElementById('ig-stat-avg').textContent=posts.length?Math.round(tL/posts.length):0;
+  document.getElementById('ig-stat-new').textContent=nP.length;
+  document.getElementById('ig-count').textContent=posts.length+' постов · '+nP.length+' новых';
+  var h='';
+  if(nP.length)h+=sepNew('📸 Новое в Instagram — с '+ld)+'<div class="grid">'+nP.map(function(p){return igCard(p,true);}).join('')+'</div>';
+  if(oP.length)h+=sepOld('Было при прошлом обновлении')+'<div class="grid">'+oP.map(function(p){return igCard(p,false);}).join('')+'</div>';
+  if(!posts.length)h=emptyState('Нет постов за 2026','📸','Данные загружены');
+  document.getElementById('ig-content').innerHTML=h;
 }
-function igCard(p, isN) {
-  var s = sentiment(p.caption); var vr = (p.likesCount||0)>500;
-  var ip = (p.ownerUsername||'').toLowerCase()===CFG.ig.toLowerCase();
-  return '<div class="card'+(isN?' is-new':'')+'">'
+function igCard(p,isN){
+  var s=sentiment(p.caption);var vr=(p.likesCount||0)>500;
+  var ip=(p.ownerUsername||'').toLowerCase()===CFG.ig.toLowerCase();
+  return'<div class="card'+(isN?' is-new':'')+'">'
     +'<div class="card-head"><div><div class="author">'+(p.ownerUsername||CFG.ig)+'</div><div class="date-sm">'+fmtDate(p.timestamp)+'</div></div>'
     +'<div class="badges">'+(isN?'<span class="b b-new">🆕 Новое</span>':'')+(vr?'<span class="b b-viral">вирусный</span>':'')
     +'<span class="b '+(ip?'b-profile':'b-mention')+'">'+(ip?'профиль':'упоминание')+'</span>'
@@ -513,27 +513,27 @@ function igCard(p, isN) {
     +'<a class="open-link" href="'+(p.url||'#')+'" target="_blank">Открыть →</a></div></div>';
 }
 
-function renderTT(videos, lv, ld) {
-  var nV = videos.filter(function(v){ return isNew(new Date(v.createTime*1000).toISOString(), lv); });
-  var oV = videos.filter(function(v){ return !isNew(new Date(v.createTime*1000).toISOString(), lv); });
-  var tViews = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.playCount)||0); },0);
-  var tLikes = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.diggCount)||0); },0);
-  document.getElementById('tt-stat-videos').textContent = videos.length;
-  document.getElementById('tt-stat-views').textContent  = fmtNum(tViews);
-  document.getElementById('tt-stat-likes').textContent  = fmtNum(tLikes);
-  document.getElementById('tt-stat-avg').textContent    = videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;
-  document.getElementById('tt-stat-er').textContent     = videos.length&&tViews ? ((tLikes/tViews)*100).toFixed(1)+'%' : '—';
-  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + nV.length + ' новых';
-  var h = '';
-  if (nV.length) h += sepNew('🎵 Новое в TikTok — с ' + ld) + '<div class="tiktok-grid">' + nV.map(function(v){ return ttCard(v,true); }).join('') + '</div>';
-  if (oV.length) h += sepOld('Было при прошлом обновлении') + '<div class="tiktok-grid">' + oV.map(function(v){ return ttCard(v,false); }).join('') + '</div>';
-  if (!videos.length) h = emptyState('Нет видео за 2026','🎵','Данные загружены');
-  document.getElementById('tt-content').innerHTML = h;
+function renderTT(videos,lv,ld){
+  var nV=videos.filter(function(v){return isNew(new Date(v.createTime*1000).toISOString(),lv);});
+  var oV=videos.filter(function(v){return!isNew(new Date(v.createTime*1000).toISOString(),lv);});
+  var tViews=videos.reduce(function(s,v){return s+((v.stats&&v.stats.playCount)||0);},0);
+  var tLikes=videos.reduce(function(s,v){return s+((v.stats&&v.stats.diggCount)||0);},0);
+  document.getElementById('tt-stat-videos').textContent=videos.length;
+  document.getElementById('tt-stat-views').textContent=fmtNum(tViews);
+  document.getElementById('tt-stat-likes').textContent=fmtNum(tLikes);
+  document.getElementById('tt-stat-avg').textContent=videos.length?fmtNum(Math.round(tViews/videos.length)):0;
+  document.getElementById('tt-stat-er').textContent=videos.length&&tViews?((tLikes/tViews)*100).toFixed(1)+'%':'—';
+  document.getElementById('tt-count').textContent=videos.length+' видео · '+nV.length+' новых';
+  var h='';
+  if(nV.length)h+=sepNew('🎵 Новое в TikTok — с '+ld)+'<div class="tiktok-grid">'+nV.map(function(v){return ttCard(v,true);}).join('')+'</div>';
+  if(oV.length)h+=sepOld('Было при прошлом обновлении')+'<div class="tiktok-grid">'+oV.map(function(v){return ttCard(v,false);}).join('')+'</div>';
+  if(!videos.length)h=emptyState('Нет видео за 2026','🎵','Данные загружены');
+  document.getElementById('tt-content').innerHTML=h;
 }
-function ttCard(v, isN) {
-  var d = new Date(v.createTime*1000);
-  var e = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  return '<div class="tt-card'+(isN?' is-new':'')+'">'
+function ttCard(v,isN){
+  var d=new Date(v.createTime*1000);
+  var e=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  return'<div class="tt-card'+(isN?' is-new':'')+'">'
     +'<div class="tt-thumb">'+e+'<div class="tt-play"><span>▶</span></div></div>'
     +'<div class="tt-info">'+(isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div>':'')
     +'<div class="tt-views">'+fmtNum(v.stats&&v.stats.playCount)+'</div>'
@@ -543,31 +543,31 @@ function ttCard(v, isN) {
     +'</div></div>';
 }
 
-function renderWeb(items, lv, ld) {
-  var kw = CFG.name.toLowerCase().split(' ')[0];
-  var f = items.filter(function(i){ return ((i.title||'')+(i.description||'')).toLowerCase().indexOf(kw)>=0; });
-  var nI = f.filter(function(i){ return i.date && isNew(i.date, lv); });
-  var oI = f.filter(function(i){ return !i.date || !isNew(i.date, lv); });
-  var hs = {}; f.forEach(function(i){ try{ hs[new URL(i.url||'http://x').hostname]=1; }catch(e){} });
-  var posC = f.filter(function(i){ return sentiment((i.title||'')+(i.description||')'))==='позитив'; }).length;
-  document.getElementById('web-stat-topics').textContent   = f.length;
-  document.getElementById('web-stat-new').textContent      = nI.length;
-  document.getElementById('web-stat-mentions').textContent = f.length;
-  document.getElementById('web-stat-sources').textContent  = Object.keys(hs).length;
-  document.getElementById('web-stat-sentiment').textContent= f.length ? Math.round(posC/f.length*100)+'%' : '—';
-  document.getElementById('web-sync-badge').textContent = '🆕 ' + nI.length + ' новых';
-  document.getElementById('web-last-sync').textContent  = 'Проверено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  document.getElementById('gen-web-mentions').textContent = f.length;
-  var h = '';
-  if (nI.length) h += sepNew('🌐 Интернет — новое с ' + ld) + '<div class="web-grid">' + nI.map(function(i){ return webCard(i,true); }).join('') + '</div>';
-  if (oI.length) h += sepOld('Ранее найденное') + '<div class="web-grid">' + oI.map(function(i){ return webCard(i,false); }).join('') + '</div>';
-  if (!f.length) h = emptyState('Нет упоминаний за 2026','🌐','Попробуйте обновить позже');
-  document.getElementById('web-content').innerHTML = h;
+function renderWeb(items,lv,ld){
+  var kw=CFG.name.toLowerCase().split(' ')[0];
+  var f=items.filter(function(i){return((i.title||'')+(i.description||'')).toLowerCase().indexOf(kw)>=0;});
+  var nI=f.filter(function(i){return i.date&&isNew(i.date,lv);});
+  var oI=f.filter(function(i){return!i.date||!isNew(i.date,lv);});
+  var hs={};f.forEach(function(i){try{hs[new URL(i.url||'http://x').hostname]=1;}catch(e){} });
+  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||')'))==='нейтрально';}).length;
+  document.getElementById('web-stat-topics').textContent=f.length;
+  document.getElementById('web-stat-new').textContent=nI.length;
+  document.getElementById('web-stat-mentions').textContent=f.length;
+  document.getElementById('web-stat-sources').textContent=Object.keys(hs).length;
+  document.getElementById('web-stat-sentiment').textContent=f.length?Math.round((f.length-posC)/f.length*100)+'%':'—';
+  document.getElementById('web-sync-badge').textContent='🆕 '+nI.length+' новых';
+  document.getElementById('web-last-sync').textContent='Проверено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('gen-web-mentions').textContent=f.length;
+  var h='';
+  if(nI.length)h+=sepNew('🌐 Интернет — новое с '+ld)+'<div class="web-grid">'+nI.map(function(i){return webCard(i,true);}).join('')+'</div>';
+  if(oI.length)h+=sepOld('Ранее найденное')+'<div class="web-grid">'+oI.map(function(i){return webCard(i,false);}).join('')+'</div>';
+  if(!f.length)h=emptyState('Нет упоминаний за 2026','🌐','Попробуйте обновить позже');
+  document.getElementById('web-content').innerHTML=h;
 }
-function webCard(item, isN) {
-  var host = '—'; try{ host = new URL(item.url||'http://x').hostname; }catch(e){}
-  var s = sentiment((item.title||'')+(item.description||''));
-  return '<div class="web-card'+(isN?' is-new':'')+'">'
+function webCard(item,isN){
+  var host='—';try{host=new URL(item.url||'http://x').hostname;}catch(e){}
+  var s=sentiment((item.title||'')+(item.description||''));
+  return'<div class="web-card'+(isN?' is-new':'')+'">'
     +'<div class="wc-body"><div class="web-source-icon">📰</div>'
     +'<div class="web-main"><div class="web-title">'+(item.title||'—')+'</div>'
     +'<div class="web-tags">'+(isN?'<span class="web-tag wt-new">🆕 Новое</span>':'')
@@ -582,11 +582,11 @@ function webCard(item, isN) {
     +'</a></div></div>';
 }
 
-function switchTab(tab, el) {
-  document.querySelectorAll('.plat-tab').forEach(function(t){ t.classList.remove('active'); });
+function switchTab(tab,el){
+  document.querySelectorAll('.plat-tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
-  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById('panel-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('panel-'+tab).classList.add('active');
 }
 </script>
 </body>
