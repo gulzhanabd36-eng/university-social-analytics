@@ -232,7 +232,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="content" id="ig-content">
       <div class="empty-state">
         <div class="es-icon">📸</div>
-        <div class="es-text">Нажмите «Обновить» для загрузки данных Instagram</div>
+        <div class="es-text">Загрузка данных Instagram...</div>
         <div class="es-sub">Будут загружены посты за 2026 год через Apify</div>
       </div>
     </div>
@@ -256,7 +256,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="content" id="tt-content">
       <div class="empty-state">
         <div class="es-icon">🎵</div>
-        <div class="es-text">Нажмите «Обновить» для загрузки данных TikTok</div>
+        <div class="es-text">Загрузка данных TikTok...</div>
         <div class="es-sub">Будут загружены видео за 2026 год через Apify</div>
       </div>
     </div>
@@ -283,7 +283,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="content" id="web-content">
       <div class="empty-state">
         <div class="es-icon">🌐</div>
-        <div class="es-text">Нажмите «Обновить» для поиска упоминаний в интернете</div>
+        <div class="es-text">Поиск упоминаний...</div>
         <div class="es-sub">Google Search Scraper найдёт упоминания университета за 2026 год</div>
       </div>
     </div>
@@ -460,7 +460,6 @@ async function apifyRun(actorId, input, label) {
 // ===== MAIN REFRESH =====
 async function realRefresh() {
   if (isLoading) return;
-  if (!CFG.token) { document.getElementById('setupOverlay').style.display = 'flex'; return; }
 
   isLoading = true;
   var lastKey = 'last_visit_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_');
