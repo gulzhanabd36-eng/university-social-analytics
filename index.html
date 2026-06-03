@@ -163,12 +163,12 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="setup-field">
       <label>Instagram аккаунт</label>
       <input type="text" id="igHandle" placeholder="almau_edu (без @)">
-      <div class="hint">Только логин, без @ и без ссылки</div>
+      <div class="hint">Логин аккаунта, без @ и без ссылки</div>
     </div>
     <div class="setup-field">
-      <label>TikTok аккаунт</label>
-      <input type="text" id="ttHandle" placeholder="almau.official (без @)">
-      <div class="hint">Только логин, без @</div>
+      <label>TikTok хэштег</label>
+      <input type="text" id="ttHandle" placeholder="almau (без #)">
+      <div class="hint">Основной хэштег университета, без # — например: almau</div>
     </div>
     <hr class="sep">
     <div class="setup-field">
@@ -248,7 +248,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="tt-stat-views">—</div><div class="l">Просмотров</div></div>
       <div class="stat"><div class="v" id="tt-stat-likes">—</div><div class="l">Лайков</div></div>
       <div class="stat"><div class="v" id="tt-stat-avg">—</div><div class="l">Ср. просм.</div></div>
-      <div class="stat"><div class="v" id="tt-stat-er">—</div><div class="l">ER</div><div class="s" id="ttStatHandle">@—</div></div>
+      <div class="stat"><div class="v" id="tt-stat-er">—</div><div class="l">ER</div><div class="s" id="ttStatHandle">#—</div></div>
     </div>
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск по видео...">
@@ -288,7 +288,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
         <div class="info-card"><h3>🏙 Основные данные</h3>
           <div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div>
           <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div>
-          <div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">—</span></div>
+          <div class="info-row"><span class="info-key">TikTok хэштег</span><span class="info-val gold" id="genTT">—</span></div>
         </div>
         <div class="info-card"><h3>📰 Мониторинг 2026</h3>
           <div class="info-row"><span class="info-key">Постов Instagram</span><span class="info-val gold" id="gen-ig-posts">—</span></div>
@@ -324,12 +324,13 @@ function startDashboard() {
   var name  = document.getElementById('uniName').value.trim();
   var abbr  = document.getElementById('uniAbbr').value.trim();
   var ig    = document.getElementById('igHandle').value.trim().replace(/^@+/, '').trim();
-  var tt    = document.getElementById('ttHandle').value.trim().replace(/^@+/, '').trim();
+  // TikTok: strip # if entered
+  var tt    = document.getElementById('ttHandle').value.trim().replace(/^#+/, '').trim();
   var token = document.getElementById('apifyToken').value.trim();
 
   if (!name)  { alert('Введите название университета'); return; }
   if (!token) { alert('Введите Apify API Token'); return; }
-  if (!ig && !tt) { alert('Укажите хотя бы один аккаунт'); return; }
+  if (!ig && !tt) { alert('Укажите хотя бы один аккаунт или хэштег'); return; }
 
   CFG = { name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token };
   localStorage.setItem('uni_cfg_v4', JSON.stringify({ name: name, abbr: CFG.abbr, ig: ig, tt: tt }));
@@ -338,9 +339,9 @@ function startDashboard() {
   document.getElementById('headerAbbr').textContent   = CFG.abbr.charAt(0).toUpperCase();
   document.getElementById('genFullName').textContent  = name;
   document.getElementById('genIG').textContent        = ig ? '@' + ig : '—';
-  document.getElementById('genTT').textContent        = tt ? '@' + tt : '—';
+  document.getElementById('genTT').textContent        = tt ? '#' + tt : '—';
   document.getElementById('igStatHandle').textContent = ig ? '@' + ig : '—';
-  document.getElementById('ttStatHandle').textContent = tt ? '@' + tt : '—';
+  document.getElementById('ttStatHandle').textContent = tt ? '#' + tt : '—';
 
   document.getElementById('setupOverlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -385,16 +386,14 @@ function showWarn(msg){var el=document.getElementById('warnBar');el.textContent=
 async function apifyRun(actorId, input, stepId, label) {
   setStep(stepId,'active');
   document.getElementById('loadingText').textContent=label+' — запускаем...';
-
   var startRes = await fetch('/.netlify/functions/apify-start',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({actorId:actorId,input:input,token:CFG.token})
   });
-  var sd; try{sd=await startRes.json();}catch(e){throw new Error(label+': неверный ответ от функции');}
+  var sd; try{sd=await startRes.json();}catch(e){throw new Error(label+': неверный ответ');}
   if(!startRes.ok||sd.error) throw new Error(label+': '+(sd.error||sd.detail||startRes.status));
   var runId=sd.runId;
-
   for(var i=0;i<72;i++){
     await sleep(5000);
     document.getElementById('loadingText').textContent=label+' — '+((i+1)*5)+'с...';
@@ -414,13 +413,13 @@ async function realRefresh() {
   if(isLoading) return;
   if(!CFG.token){openSettings();return;}
   isLoading=true;
-  var lastKey='lv_'+(CFG.ig||CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  var lastKey='lv_'+(CFG.ig||CFG.tt||CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
   var lastVisit=localStorage.getItem(lastKey)||'2025-12-31T23:59:59Z';
   var lastDisp=fmtDate(lastVisit);
   setStep('ig','');setStep('tt','');setStep('web','');
   showLoading('Подготовка...');
   try {
-    // 1. Instagram
+    // 1. Instagram — by profile username
     if(CFG.ig){
       var igItems=await apifyRun('apify/instagram-scraper',{usernames:[CFG.ig],resultsType:'posts',resultsLimit:100},'ig','📸 Instagram');
       var posts=igItems.filter(function(p){return p.timestamp&&p.timestamp>='2026-01-01';});
@@ -430,43 +429,28 @@ async function realRefresh() {
       document.getElementById('ig-content').innerHTML=emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
     }
 
-    // 2. TikTok — clockworks/tiktok-scraper, input: profiles array with @ prefix
+    // 2. TikTok — by HASHTAG (clockworks/tiktok-hashtag-scraper)
+    // Input: { hashtags: ['almau'], resultsPerPage: 30 }
     if(CFG.tt){
-      var ttItems;
-      try {
-        ttItems=await apifyRun(
-          'clockworks/tiktok-scraper',
-          {
-            profiles: ['@' + CFG.tt],
-            resultsPerPage: 30,
-            shouldDownloadVideos: false,
-            shouldDownloadCovers: false,
-            shouldDownloadSubtitles: false,
-            shouldDownloadSlideshowImages: false
-          },
-          'tt','🎵 TikTok'
-        );
-      } catch(e) {
-        // Fallback: try without @ prefix
-        showWarn('TikTok: перехожу на запасный вариант...');
-        try {
-          ttItems=await apifyRun(
-            'clockworks/tiktok-scraper',
-            { profiles: [CFG.tt], resultsPerPage: 30, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false, shouldDownloadSlideshowImages: false },
-            'tt','🎵 TikTok'
-          );
-          document.getElementById('warnBar').style.display='none';
-        } catch(e2) {
-          ttItems=[];
-          showWarn('TikTok недоступен — актор не ответил. Instagram и интернет загружены.');
-          setStep('tt','done');
-        }
-      }
-      var videos=ttItems.filter(function(v){return v.createTime&&new Date(v.createTime*1000).getFullYear()===2026;});
+      var ttItems=await apifyRun(
+        'clockworks/tiktok-hashtag-scraper',
+        {
+          hashtags: [CFG.tt],
+          resultsPerPage: 30
+        },
+        'tt','🎵 TikTok'
+      );
+      // Filter 2026
+      var videos=ttItems.filter(function(v){
+        var ts = v.createTime || v.createTimeISO || v.timestamp;
+        if(!ts) return false;
+        var d = typeof ts === 'number' ? new Date(ts*1000) : new Date(ts);
+        return d.getFullYear()===2026;
+      });
       renderTT(videos,lastVisit,lastDisp);
       document.getElementById('gen-tt-videos').textContent=videos.length;
     } else {
-      document.getElementById('tt-content').innerHTML=emptyState('TikTok аккаунт не указан','🎵','Откройте настройки');
+      document.getElementById('tt-content').innerHTML=emptyState('TikTok хэштег не указан','🎵','Откройте настройки');
     }
 
     // 3. Web
@@ -514,10 +498,25 @@ function igCard(p,isN){
 }
 
 function renderTT(videos,lv,ld){
-  var nV=videos.filter(function(v){return isNew(new Date(v.createTime*1000).toISOString(),lv);});
-  var oV=videos.filter(function(v){return!isNew(new Date(v.createTime*1000).toISOString(),lv);});
-  var tViews=videos.reduce(function(s,v){return s+((v.stats&&v.stats.playCount)||0);},0);
-  var tLikes=videos.reduce(function(s,v){return s+((v.stats&&v.stats.diggCount)||0);},0);
+  // Normalize timestamp field (different actors return different fields)
+  function getTs(v) {
+    if(v.createTime) return typeof v.createTime==='number' ? new Date(v.createTime*1000).toISOString() : v.createTime;
+    if(v.createTimeISO) return v.createTimeISO;
+    if(v.timestamp) return v.timestamp;
+    return null;
+  }
+  var nV=videos.filter(function(v){return isNew(getTs(v),lv);});
+  var oV=videos.filter(function(v){return!isNew(getTs(v),lv);});
+  // Stats fields vary: playCount / plays / videoPlayCount
+  function getPlays(v){return (v.stats&&v.stats.playCount)||(v.stats&&v.stats.plays)||v.playCount||v.plays||0;}
+  function getLikes(v){return (v.stats&&v.stats.diggCount)||(v.stats&&v.stats.likes)||v.diggCount||v.likes||0;}
+  function getComments(v){return (v.stats&&v.stats.commentCount)||(v.stats&&v.stats.comments)||v.commentCount||v.comments||0;}
+  function getShares(v){return (v.stats&&v.stats.shareCount)||(v.stats&&v.stats.shares)||v.shareCount||v.shares||0;}
+  function getDesc(v){return v.desc||v.text||v.description||'';}
+  function getUrl(v){return v.webVideoUrl||v.url||'#';}
+
+  var tViews=videos.reduce(function(s,v){return s+getPlays(v);},0);
+  var tLikes=videos.reduce(function(s,v){return s+getLikes(v);},0);
   document.getElementById('tt-stat-videos').textContent=videos.length;
   document.getElementById('tt-stat-views').textContent=fmtNum(tViews);
   document.getElementById('tt-stat-likes').textContent=fmtNum(tLikes);
@@ -525,21 +524,22 @@ function renderTT(videos,lv,ld){
   document.getElementById('tt-stat-er').textContent=videos.length&&tViews?((tLikes/tViews)*100).toFixed(1)+'%':'—';
   document.getElementById('tt-count').textContent=videos.length+' видео · '+nV.length+' новых';
   var h='';
-  if(nV.length)h+=sepNew('🎵 Новое в TikTok — с '+ld)+'<div class="tiktok-grid">'+nV.map(function(v){return ttCard(v,true);}).join('')+'</div>';
-  if(oV.length)h+=sepOld('Было при прошлом обновлении')+'<div class="tiktok-grid">'+oV.map(function(v){return ttCard(v,false);}).join('')+'</div>';
-  if(!videos.length)h=emptyState('Нет видео за 2026','🎵','Данные загружены');
+  if(nV.length)h+=sepNew('🎵 Новое в TikTok — с '+ld)+'<div class="tiktok-grid">'+nV.map(function(v){return ttCard(v,true,getTs,getPlays,getLikes,getComments,getShares,getDesc,getUrl);}).join('')+'</div>';
+  if(oV.length)h+=sepOld('Было при прошлом обновлении')+'<div class="tiktok-grid">'+oV.map(function(v){return ttCard(v,false,getTs,getPlays,getLikes,getComments,getShares,getDesc,getUrl);}).join('')+'</div>';
+  if(!videos.length)h=emptyState('Нет видео за 2026','🎵','Данные загружены — публикаций за 2026 не найдено');
   document.getElementById('tt-content').innerHTML=h;
 }
-function ttCard(v,isN){
-  var d=new Date(v.createTime*1000);
+function ttCard(v,isN,getTs,getPlays,getLikes,getComments,getShares,getDesc,getUrl){
+  var ts=getTs(v);
+  var d=ts?new Date(ts):new Date();
   var e=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
   return'<div class="tt-card'+(isN?' is-new':'')+'">'
     +'<div class="tt-thumb">'+e+'<div class="tt-play"><span>▶</span></div></div>'
     +'<div class="tt-info">'+(isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div>':'')
-    +'<div class="tt-views">'+fmtNum(v.stats&&v.stats.playCount)+'</div>'
+    +'<div class="tt-views">'+fmtNum(getPlays(v))+'</div>'
     +'<div class="tt-lbl">просмотров · '+d.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'})+'</div>'
-    +'<div class="tt-desc">'+(v.desc||'').substring(0,100)+'</div>'
-    +'<div class="tt-meta"><span>❤ '+fmtNum(v.stats&&v.stats.diggCount)+'</span><span>💬 '+fmtNum(v.stats&&v.stats.commentCount)+'</span><span>↗ '+fmtNum(v.stats&&v.stats.shareCount)+'</span></div>'
+    +'<div class="tt-desc">'+getDesc(v).substring(0,100)+'</div>'
+    +'<div class="tt-meta"><span>❤ '+fmtNum(getLikes(v))+'</span><span>💬 '+fmtNum(getComments(v))+'</span><span>↗ '+fmtNum(getShares(v))+'</span></div>'
     +'</div></div>';
 }
 
@@ -549,12 +549,12 @@ function renderWeb(items,lv,ld){
   var nI=f.filter(function(i){return i.date&&isNew(i.date,lv);});
   var oI=f.filter(function(i){return!i.date||!isNew(i.date,lv);});
   var hs={};f.forEach(function(i){try{hs[new URL(i.url||'http://x').hostname]=1;}catch(e){} });
-  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||')'))==='нейтрально';}).length;
+  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||''))==='pos';}).length;
   document.getElementById('web-stat-topics').textContent=f.length;
   document.getElementById('web-stat-new').textContent=nI.length;
   document.getElementById('web-stat-mentions').textContent=f.length;
   document.getElementById('web-stat-sources').textContent=Object.keys(hs).length;
-  document.getElementById('web-stat-sentiment').textContent=f.length?Math.round((f.length-posC)/f.length*100)+'%':'—';
+  document.getElementById('web-stat-sentiment').textContent=f.length?Math.round(posC/f.length*100)+'%':'—';
   document.getElementById('web-sync-badge').textContent='🆕 '+nI.length+' новых';
   document.getElementById('web-last-sync').textContent='Проверено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   document.getElementById('gen-web-mentions').textContent=f.length;
