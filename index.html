@@ -4,19 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>University Social Analytics</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13px;min-height:100vh}
 .setup-overlay{position:fixed;inset:0;background:#FAFAF8;display:flex;align-items:center;justify-content:center;z-index:200}
-.setup-card{background:white;border:1px solid #eee;border-radius:14px;padding:40px 44px;width:460px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
-.setup-card h2{font-size:19px;font-weight:700;margin-bottom:4px}
+.setup-card{background:white;border:1px solid #eee;border-radius:14px;padding:40px 44px;width:480px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
+.setup-card h2{font-size:20px;font-weight:700;margin-bottom:4px}
 .setup-card .sub{font-size:12px;color:#888;margin-bottom:28px}
 .setup-field{margin-bottom:15px}
 .setup-field label{display:block;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
-.setup-field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;background:#FAFAF8;transition:all .15s}
+.setup-field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;background:#FAFAF8;transition:border-color .15s}
 .setup-field input:focus{border-color:#C57E33;background:white}
 .hint{font-size:11px;color:#bbb;margin-top:4px}
 .sep{border:none;border-top:1px solid #f0f0f0;margin:20px 0}
-.btn-start{width:100%;padding:12px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .15s}
+.btn-start{width:100%;padding:13px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;transition:background .15s}
 .btn-start:hover{background:#333}
 .btn-start:disabled{background:#999;cursor:not-allowed}
 #app{display:none}
@@ -24,7 +25,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .header-left{display:flex;align-items:center;gap:12px}
 .header-abbr{width:34px;height:34px;border-radius:8px;background:#C57E33;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0}
 .header-text h1{font-size:16px;font-weight:700}
-.header-text .sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+.header-text .hsub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
 .header-right{display:flex;align-items:center;gap:12px}
 .refresh-btn{background:#C57E33;color:white;border:none;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s}
 .refresh-btn:hover{opacity:.85}
@@ -38,8 +39,12 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .plat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
 .plat-tab .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-ig{background:#E1306C}.dot-tt{background:#010101}.dot-web{background:#3B82F6}.dot-gen{background:#C57E33}
-.loading-bar{background:#FFF8EE;border-bottom:1px solid #F5D5A0;padding:10px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:#C57E33;font-weight:500}
+.loading-bar{background:#FFF8EE;border-bottom:1px solid #F5D5A0;padding:12px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:#C57E33;font-weight:600}
 .loading-bar.hidden{display:none}
+.loading-steps{display:flex;gap:16px;margin-left:auto;font-size:11px;color:#C57E33}
+.step{opacity:.35;transition:opacity .3s}
+.step.active{opacity:1;font-weight:700}
+.step.done{opacity:.6}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 .stats-row{display:grid;background:white;border-bottom:2px solid #eee}
@@ -58,7 +63,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .cat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
 .cat-tab:hover:not(.active){color:#555;background:#FAFAF8}
 .content{padding:20px 28px}
-.sec-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:14px}
 .date-sep{display:flex;align-items:center;gap:12px;margin:0 0 14px}
 .date-sep-line{flex:1;border-top:1px solid #eee}
 .date-sep-text{font-size:11px;font-weight:700;white-space:nowrap;padding:4px 12px;border-radius:20px}
@@ -101,7 +105,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .web-toolbar{display:flex;gap:10px;padding:12px 28px;background:white;border-bottom:1px solid #eee;align-items:center;flex-wrap:wrap}
 .web-toolbar input,.web-toolbar select{padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;background:white;outline:none}
 .web-toolbar input{background:#FAFAF8;width:200px}
-.web-toolbar input:focus{border-color:#C57E33;background:white}
 .sync-info{margin-left:auto;display:flex;align-items:center;gap:10px}
 .sync-badge{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;background:#FFF8EE;color:#C57E33;border:1px solid #F5D5A0}
 .last-sync{font-size:11px;color:#aaa}
@@ -116,14 +119,11 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .web-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
 .web-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px}
 .wt-news{background:#EFF6FF;color:#2563EB}
-.wt-award{background:#FFF8EE;color:#C57E33}
-.wt-event{background:#F0FDF4;color:#15803D}
-.wt-mention{background:#F3E8FF;color:#7C3AED}
 .wt-new{background:#C57E33;color:white}
 .web-snippet{font-size:12px;color:#555;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
 .sources-strip{border-top:1px solid #f5f5f5;padding:10px 18px;display:flex;align-items:center;flex-wrap:wrap}
 .sources-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-right:10px;white-space:nowrap}
-.source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;transition:all .15s;cursor:pointer}
+.source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;transition:all .15s}
 .source-pill:hover{background:#FFF8EE;border-color:#F5D5A0;color:#C57E33}
 .source-pill .sp-date{color:#aaa;font-size:10px}
 .sources-count{font-size:11px;font-weight:700;color:#C57E33;margin-right:8px;white-space:nowrap}
@@ -135,23 +135,24 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .info-key{color:#666}
 .info-val{font-weight:600}
 .info-val.gold{color:#C57E33}
-.rank-badge{background:#F5F3EE;border:1px solid #e8ddd0;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;color:#C57E33}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 .hidden{display:none!important}
 .empty-state{text-align:center;padding:60px 20px;color:#aaa}
 .empty-state .es-icon{font-size:48px;margin-bottom:14px}
-.empty-state .es-text{font-size:14px;margin-bottom:8px}
-.empty-state .es-sub{font-size:12px;color:#bbb}
-.error-bar{background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin:14px 28px;font-size:12px;color:#DC2626;display:none}</style>
+.empty-state .es-text{font-size:14px;margin-bottom:8px;color:#666}
+.empty-state .es-sub{font-size:12px}
+.error-bar{background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin:14px 28px;font-size:12px;color:#DC2626;display:none}
+</style>
 </head>
 <body>
 
-<!-- SETUP -->
+<!-- SETUP FORM -->
 <div class="setup-overlay" id="setupOverlay">
   <div class="setup-card">
-    <h2>Настройка дашборда</h2>
+    <h2>University Social Analytics</h2>
     <p class="sub">Заполните один раз — данные сохраняются в браузере</p>
+
     <div class="setup-field">
       <label>Название университета</label>
       <input type="text" id="uniName" placeholder="Almaty Management University">
@@ -160,7 +161,9 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <label>Аббревиатура</label>
       <input type="text" id="uniAbbr" placeholder="AlmaU" maxlength="6">
     </div>
+
     <hr class="sep">
+
     <div class="setup-field">
       <label>Instagram аккаунт</label>
       <input type="text" id="igHandle" placeholder="@university">
@@ -170,7 +173,15 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <input type="text" id="ttHandle" placeholder="@university_tiktok">
     </div>
 
-    <button class="btn-start" onclick="startDashboard()">Открыть дашборд →</button>
+    <hr class="sep">
+
+    <div class="setup-field">
+      <label>Apify API Token</label>
+      <input type="password" id="apifyToken" placeholder="apify_api_xxxxxxxxxxxxxxxx">
+      <div class="hint">Ваш личный токен с console.apify.com — используется только для загрузки данных</div>
+    </div>
+
+    <button class="btn-start" id="btnStart" onclick="startDashboard()">Загрузить данные и открыть дашборд →</button>
   </div>
 </div>
 
@@ -181,13 +192,13 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="header-abbr" id="headerAbbr">A</div>
       <div class="header-text">
         <h1 id="headerTitle">University — Analytics</h1>
-        <div class="sub">Instagram · TikTok · Интернет-мониторинг · 2026</div>
+        <div class="hsub">Instagram · TikTok · Интернет-мониторинг · 2026</div>
       </div>
     </div>
     <div class="header-right">
       <span class="last-update" id="lastUpdate">—</span>
       <button class="refresh-btn" onclick="realRefresh()"><span id="refreshIcon">↻</span> Обновить</button>
-      <button class="settings-btn" onclick="document.getElementById('setupOverlay').style.display='flex'">⚙ Настройки</button>
+      <button class="settings-btn" onclick="openSettings()">⚙ Настройки</button>
     </div>
   </div>
 
@@ -199,22 +210,27 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
   </div>
 
   <div class="loading-bar hidden" id="loadingBar">
-    <span class="spin">⟳</span> <span id="loadingText">Загружаем данные...</span>
+    <span class="spin">⟳</span>
+    <span id="loadingText">Загружаем...</span>
+    <div class="loading-steps">
+      <span class="step" id="step-ig">📸 Instagram</span>
+      <span class="step" id="step-tt">🎵 TikTok</span>
+      <span class="step" id="step-web">🌐 Интернет</span>
+    </div>
   </div>
   <div class="error-bar" id="errorBar"></div>
 
   <!-- INSTAGRAM -->
   <div class="tab-panel active" id="panel-instagram">
-    <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="ig-stat-posts">—</div><div class="l">Постов 2026</div></div>
       <div class="stat"><div class="v" id="ig-stat-likes">—</div><div class="l">Лайков</div></div>
       <div class="stat"><div class="v" id="ig-stat-comments">—</div><div class="l">Комментариев</div></div>
       <div class="stat"><div class="v" id="ig-stat-avg">—</div><div class="l">Ср. ❤</div></div>
       <div class="stat"><div class="v" id="ig-stat-new">—</div><div class="l">Новых</div><div class="s" id="igStatHandle">@—</div></div>
-      <div class="stat"><div class="v">2026</div><div class="l">Период</div><div class="s">только 2026 год</div></div>
     </div>
     <div class="controls">
-      <input type="text" placeholder="🔍 Поиск по тексту или автору...">
+      <input type="text" placeholder="🔍 Поиск по тексту...">
       <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
       <select><option>Любой тон</option><option>😊 Позитив</option><option>😠 Негатив</option><option>😐 Нейтрально</option></select>
       <select><option>По лайкам ↓</option><option>По дате ↓</option></select>
@@ -230,23 +246,18 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="cat-tab">🔥 Вирусный</div>
     </div>
     <div class="content" id="ig-content">
-      <div class="empty-state">
-        <div class="es-icon">📸</div>
-        <div class="es-text">Загрузка данных Instagram...</div>
-        <div class="es-sub">Будут загружены посты за 2026 год через Apify</div>
-      </div>
+      <div class="empty-state"><div class="es-icon">📸</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div>
     </div>
   </div>
 
   <!-- TIKTOK -->
   <div class="tab-panel" id="panel-tiktok">
-    <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="tt-stat-videos">—</div><div class="l">Видео 2026</div></div>
       <div class="stat"><div class="v" id="tt-stat-views">—</div><div class="l">Просмотров</div></div>
       <div class="stat"><div class="v" id="tt-stat-likes">—</div><div class="l">Лайков</div></div>
       <div class="stat"><div class="v" id="tt-stat-avg">—</div><div class="l">Ср. просм.</div></div>
       <div class="stat"><div class="v" id="tt-stat-er">—</div><div class="l">ER</div><div class="s" id="ttStatHandle">@—</div></div>
-      <div class="stat"><div class="v">2026</div><div class="l">Период</div><div class="s">только 2026 год</div></div>
     </div>
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск по видео...">
@@ -254,11 +265,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="cnt" id="tt-count">— видео</div>
     </div>
     <div class="content" id="tt-content">
-      <div class="empty-state">
-        <div class="es-icon">🎵</div>
-        <div class="es-text">Загрузка данных TikTok...</div>
-        <div class="es-sub">Будут загружены видео за 2026 год через Apify</div>
-      </div>
+      <div class="empty-state"><div class="es-icon">🎵</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div>
     </div>
   </div>
 
@@ -267,13 +274,13 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="web-stat-topics">—</div><div class="l">Упоминаний</div></div>
       <div class="stat"><div class="v" style="color:#C57E33" id="web-stat-new">—</div><div class="l">Новых</div></div>
-      <div class="stat"><div class="v" id="web-stat-mentions">—</div><div class="l">Всего</div><div class="s">в разных источниках</div></div>
-      <div class="stat"><div class="v" id="web-stat-sources">—</div><div class="l">Источников</div><div class="s">СМИ, блоги, edu</div></div>
-      <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div><div class="s">тональность</div></div>
+      <div class="stat"><div class="v" id="web-stat-mentions">—</div><div class="l">Всего</div></div>
+      <div class="stat"><div class="v" id="web-stat-sources">—</div><div class="l">Источников</div></div>
+      <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div></div>
     </div>
     <div class="web-toolbar">
       <input type="text" placeholder="🔍 Поиск по теме...">
-      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги</option><option>🔗 LinkedIn</option></select>
+      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги</option></select>
       <select><option>Все темы</option><option>Только новые 🆕</option></select>
       <div class="sync-info">
         <div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
@@ -281,20 +288,15 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       </div>
     </div>
     <div class="content" id="web-content">
-      <div class="empty-state">
-        <div class="es-icon">🌐</div>
-        <div class="es-text">Поиск упоминаний...</div>
-        <div class="es-sub">Google Search Scraper найдёт упоминания университета за 2026 год</div>
-      </div>
+      <div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div>
     </div>
   </div>
 
   <!-- GENERAL -->
   <div class="tab-panel" id="panel-general">
     <div class="content" style="max-width:1050px">
-      <div class="sec-label" style="margin-bottom:20px">Публичная информация — из открытых источников</div>
       <div class="info-grid">
-        <div class="info-card"><h3>🏛 Основные данные</h3>
+        <div class="info-card"><h3>🏙 Основные данные</h3>
           <div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div>
           <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div>
           <div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">—</span></div>
@@ -310,45 +312,57 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 </div>
 
 <script>
-
 var CFG = {};
 var isLoading = false;
 var EMOJIS = ['🎓','🏆','🌍','📚','🎉','🔥','💡','🎯','🌟','💫'];
 
 // ===== INIT =====
 window.onload = function() {
-  var saved = localStorage.getItem('uni_cfg_v2');
+  var saved = localStorage.getItem('uni_cfg_v4');
   if (saved) {
     try {
-      CFG = JSON.parse(saved);
-      if (CFG.name) document.getElementById('uniName').value = CFG.name;
-      if (CFG.abbr) document.getElementById('uniAbbr').value = CFG.abbr;
-      if (CFG.ig) document.getElementById('igHandle').value = '@' + CFG.ig;
-      if (CFG.tt) document.getElementById('ttHandle').value = '@' + CFG.tt;
+      var c = JSON.parse(saved);
+      if (c.name) document.getElementById('uniName').value = c.name;
+      if (c.abbr) document.getElementById('uniAbbr').value = c.abbr;
+      if (c.ig) document.getElementById('igHandle').value = '@' + c.ig;
+      if (c.tt) document.getElementById('ttHandle').value = '@' + c.tt;
+      // NOTE: token NOT restored — user must re-enter for security
     } catch(e) {}
   }
 };
 
-// ===== SETUP =====
-function startDashboard() {
-  var name = document.getElementById('uniName').value.trim() || 'University';
-  var abbr = document.getElementById('uniAbbr').value.trim() || name.charAt(0);
-  var ig = document.getElementById('igHandle').value.trim().replace('@','');
-  var tt = document.getElementById('ttHandle').value.trim().replace('@','');
+function openSettings() {
+  document.getElementById('setupOverlay').style.display = 'flex';
+}
 
+// ===== START =====
+function startDashboard() {
+  var name  = document.getElementById('uniName').value.trim();
+  var abbr  = document.getElementById('uniAbbr').value.trim();
+  var ig    = document.getElementById('igHandle').value.trim().replace('@','');
+  var tt    = document.getElementById('ttHandle').value.trim().replace('@','');
+  var token = document.getElementById('apifyToken').value.trim();
+
+  if (!name)  { alert('Введите название университета'); return; }
+  if (!token) { alert('Введите Apify API Token'); return; }
   if (!ig && !tt) { alert('Укажите хотя бы один аккаунт (Instagram или TikTok)'); return; }
 
-  CFG = { name: name, abbr: abbr, ig: ig, tt: tt };
-  localStorage.setItem('uni_cfg_v2', JSON.stringify(CFG));
+  CFG = { name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token };
+  // Save config without token
+  localStorage.setItem('uni_cfg_v4', JSON.stringify({ name: name, abbr: CFG.abbr, ig: ig, tt: tt }));
 
-  document.getElementById('headerTitle').textContent = name + ' \u2014 Analytics';
-  document.getElementById('headerAbbr').textContent = abbr.charAt(0).toUpperCase();
-  document.getElementById('genFullName').textContent = name;
-  document.getElementById('genIG').textContent = ig ? '@' + ig : '\u2014';
-  document.getElementById('genTT').textContent = tt ? '@' + tt : '\u2014';
+  document.getElementById('headerTitle').textContent = name + ' — Analytics';
+  document.getElementById('headerAbbr').textContent  = CFG.abbr.charAt(0).toUpperCase();
+  document.getElementById('genFullName').textContent  = name;
+  document.getElementById('genIG').textContent = ig ? '@' + ig : '—';
+  document.getElementById('genTT').textContent = tt ? '@' + tt : '—';
+  document.getElementById('igStatHandle').textContent = ig ? '@' + ig : '—';
+  document.getElementById('ttStatHandle').textContent = tt ? '@' + tt : '—';
+
   document.getElementById('setupOverlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 
+  // IMMEDIATELY start loading
   realRefresh();
 }
 
@@ -358,19 +372,17 @@ function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 function fmtNum(n) {
   n = Number(n) || 0;
   if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
   return String(n);
 }
 
 function fmtDate(iso) {
-  if (!iso) return '\u2014';
-  try {
-    var d = new Date(iso);
-    return d.toLocaleDateString('ru', {day:'numeric', month:'long', year:'numeric'});
-  } catch(e) { return iso; }
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleDateString('ru', {day:'numeric',month:'long',year:'numeric'}); }
+  catch(e) { return iso; }
 }
 
-function isNewItem(isoDate, lastVisit) {
+function isNew(isoDate, lastVisit) {
   if (!isoDate) return false;
   try { return new Date(isoDate) > new Date(lastVisit); } catch(e) { return false; }
 }
@@ -378,15 +390,14 @@ function isNewItem(isoDate, lastVisit) {
 function sentiment(text) {
   if (!text) return 'neu';
   var t = text.toLowerCase();
-  var pos = ['победит','лучш','достиж','отлич','поздрав','спасиб','рост','успех','горд','лидер','наград','первый','топ','рекорд','круто','молодц','призов','победа','чемпион','золот'];
-  var neg = ['скандал','критик','провал','плохо','ужас','проблем','жалоб','негатив','плохой','ошибк','аварий','утечк','штраф'];
+  var pos = ['победит','лучш','достиж','отлич','поздрав','спасиб','успех','наград','первый','топ','рекорд','победа','золот','лидер'];
+  var neg = ['скандал','провал','плох','ужас','проблем','жалоб','негатив','ошибк','штраф','критик'];
   if (pos.some(function(w){ return t.indexOf(w) >= 0; })) return 'pos';
   if (neg.some(function(w){ return t.indexOf(w) >= 0; })) return 'neg';
   return 'neu';
 }
-
-function sentLabel(s) { return {pos:'позитив', neg:'негатив', neu:'нейтрально'}[s] || 'нейтрально'; }
-function sentClass(s) { return {pos:'b-pos', neg:'b-neg', neu:'b-neu'}[s] || 'b-neu'; }
+function sLbl(s) { return {pos:'позитив',neg:'негатив',neu:'нейтрально'}[s]||'нейтрально'; }
+function sCls(s) { return {pos:'b-pos',neg:'b-neg',neu:'b-neu'}[s]||'b-neu'; }
 
 function sepNew(label) {
   return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">' + label + '</div><div class="date-sep-line"></div></div>';
@@ -398,59 +409,65 @@ function emptyState(msg, icon, sub) {
   return '<div class="empty-state"><div class="es-icon">' + icon + '</div><div class="es-text">' + msg + '</div>' + (sub ? '<div class="es-sub">' + sub + '</div>' : '') + '</div>';
 }
 
-// ===== LOADING =====
-function setLoadingText(msg) {
-  document.getElementById('loadingText').textContent = msg;
+// ===== LOADING UI =====
+function setStep(id, state) {
+  var el = document.getElementById('step-' + id);
+  if (!el) return;
+  el.className = 'step ' + state;
 }
-function showLoadingBar(msg) {
+function showLoading(msg) {
   document.getElementById('loadingBar').classList.remove('hidden');
   document.getElementById('refreshIcon').style.animation = 'spin 1s linear infinite';
   document.querySelector('.refresh-btn').disabled = true;
-  setLoadingText(msg);
+  document.getElementById('loadingText').textContent = msg;
   document.getElementById('errorBar').style.display = 'none';
 }
-function hideLoadingBar() {
+function hideLoading() {
   document.getElementById('loadingBar').classList.add('hidden');
   document.getElementById('refreshIcon').style.animation = '';
   document.querySelector('.refresh-btn').disabled = false;
 }
 function showError(msg) {
   var el = document.getElementById('errorBar');
-  el.textContent = '\u274C ' + msg;
+  el.textContent = '❌ ' + msg;
   el.style.display = 'block';
 }
 
-// ===== APIFY =====
-async function apifyRun(actorId, input, label) {
-  setLoadingText(label + ' — запускаем...');
-  console.log('[Fn] actor:', actorId);
+// ===== APIFY via Netlify Function (CORS proxy) =====
+async function apifyRun(actorId, input, stepId, label) {
+  setStep(stepId, 'active');
+  document.getElementById('loadingText').textContent = label + ' — запускаем...';
 
   var startRes = await fetch('/.netlify/functions/apify-start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ actorId: actorId, input: input })
+    body: JSON.stringify({ actorId: actorId, input: input, token: CFG.token })
   });
   if (!startRes.ok) {
     var et = await startRes.text();
-    throw new Error(label + ': HTTP ' + startRes.status + ' ' + et.substring(0, 120));
+    throw new Error(label + ': ' + et.substring(0, 150));
   }
   var sd = await startRes.json();
   if (sd.error) throw new Error(label + ': ' + sd.error);
+
   var runId = sd.runId;
-  console.log('[Fn] runId:', runId);
 
   for (var i = 0; i < 72; i++) {
     await sleep(5000);
-    setLoadingText(label + ' — ' + ((i + 1) * 5) + 'с... (ожидаем завершения)');
-    var pollRes = await fetch('/.netlify/functions/apify-poll', {
+    document.getElementById('loadingText').textContent = label + ' — ' + ((i+1)*5) + 'с...';
+
+    var pr = await fetch('/.netlify/functions/apify-poll', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ runId: runId, getItems: true })
+      body: JSON.stringify({ runId: runId, token: CFG.token, getItems: true })
     });
-    var pd = await pollRes.json();
-    console.log('[Fn] status:', pd.status);
-    if (pd.status === 'SUCCEEDED') return pd.items || [];
-    if (['FAILED', 'ABORTED', 'TIMED-OUT'].indexOf(pd.status) >= 0) {
+    var pd = await pr.json();
+
+    if (pd.status === 'SUCCEEDED') {
+      setStep(stepId, 'done');
+      return pd.items || [];
+    }
+    if (['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status) >= 0) {
       throw new Error(label + ': актор ' + pd.status);
     }
   }
@@ -460,272 +477,187 @@ async function apifyRun(actorId, input, label) {
 // ===== MAIN REFRESH =====
 async function realRefresh() {
   if (isLoading) return;
+  if (!CFG.token) { openSettings(); return; }
 
   isLoading = true;
-  var lastKey = 'last_visit_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_');
+  var lastKey   = 'lv_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
   var lastVisit = localStorage.getItem(lastKey) || '2025-12-31T23:59:59Z';
-  var lastVisitDisp = fmtDate(lastVisit);
+  var lastDisp  = fmtDate(lastVisit);
 
-  showLoadingBar('Подготовка...');
+  setStep('ig',''); setStep('tt',''); setStep('web','');
+  showLoading('Подготовка...');
 
   try {
-    // ── 1. INSTAGRAM ─────────────────────────────
+    // 1. Instagram
     if (CFG.ig) {
       var igItems = await apifyRun(
         'apify/instagram-scraper',
-        {
-          directUrls: ['https://www.instagram.com/' + CFG.ig + '/'],
-          resultsType: 'posts',
-          resultsLimit: 100,
-          addParentData: false
-        },
-        CFG.token, '\u{1F4F8} Instagram'
+        { directUrls: ['https://www.instagram.com/' + CFG.ig + '/'], resultsType: 'posts', resultsLimit: 100, addParentData: false },
+        'ig', '📸 Instagram'
       );
-      // Filter 2026
-      var posts2026 = igItems.filter(function(p) {
-        return p.timestamp && p.timestamp >= '2026-01-01';
-      });
-      renderInstagram(posts2026, lastVisit, lastVisitDisp);
+      var posts = igItems.filter(function(p){ return p.timestamp && p.timestamp >= '2026-01-01'; });
+      renderIG(posts, lastVisit, lastDisp);
+      document.getElementById('gen-ig-posts').textContent = posts.length;
     } else {
-      document.getElementById('ig-content').innerHTML = emptyState('Instagram аккаунт не указан', '\u{1F4F8}', 'Откройте настройки и добавьте @handle');
+      document.getElementById('ig-content').innerHTML = emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
     }
 
-    // ── 2. TIKTOK ────────────────────────────────
+    // 2. TikTok
     if (CFG.tt) {
       var ttItems = await apifyRun(
         'clockworks/free-tiktok-scraper',
-        {
-          profiles: [CFG.tt],
-          resultsPerPage: 100,
-          shouldDownloadVideos: false,
-          shouldDownloadCovers: false,
-          shouldDownloadSubtitles: false,
-          shouldDownloadSlideshowImages: false
-        },
-        CFG.token, '\u{1F3B5} TikTok'
+        { profiles: [CFG.tt], resultsPerPage: 100, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false, shouldDownloadSlideshowImages: false },
+        'tt', '🎵 TikTok'
       );
-      var videos2026 = ttItems.filter(function(v) {
-        if (!v.createTime) return false;
-        return new Date(v.createTime * 1000).getFullYear() === 2026;
-      });
-      renderTikTok(videos2026, lastVisit, lastVisitDisp);
+      var videos = ttItems.filter(function(v){ return v.createTime && new Date(v.createTime*1000).getFullYear()===2026; });
+      renderTT(videos, lastVisit, lastDisp);
+      document.getElementById('gen-tt-videos').textContent = videos.length;
     } else {
-      document.getElementById('tt-content').innerHTML = emptyState('TikTok аккаунт не указан', '\u{1F3B5}', 'Откройте настройки и добавьте @handle');
+      document.getElementById('tt-content').innerHTML = emptyState('TikTok аккаунт не указан','🎵','Откройте настройки');
     }
 
-    // ── 3. WEB MONITORING ────────────────────────
+    // 3. Web
     var webItems = await apifyRun(
       'apify/google-search-scraper',
-      {
-        queries: '"' + CFG.name + '" 2026',
-        maxPagesPerQuery: 3,
-        resultsPerPage: 10,
-        languageCode: 'ru',
-        countryCode: 'kz'
-      },
-      CFG.token, '\u{1F310} Интернет'
+      { queries: '"' + CFG.name + '" 2026', maxPagesPerQuery: 3, resultsPerPage: 10, languageCode: 'ru', countryCode: 'kz' },
+      'web', '🌐 Интернет'
     );
-    renderWeb(webItems, lastVisit, lastVisitDisp);
+    renderWeb(webItems, lastVisit, lastDisp);
 
-    // Save last visit only after successful load
     localStorage.setItem(lastKey, new Date().toISOString());
 
   } catch(e) {
-    console.error('[realRefresh error]', e);
+    console.error(e);
     showError(e.message);
   } finally {
     isLoading = false;
-    hideLoadingBar();
+    hideLoading();
     document.getElementById('lastUpdate').textContent = 'Обновлено: ' +
-      new Date().toLocaleString('ru', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   }
 }
 
 // ===== RENDER INSTAGRAM =====
-function renderInstagram(posts, lastVisit, lastVisitDisp) {
-  var newPosts = posts.filter(function(p){ return isNewItem(p.timestamp, lastVisit); });
-  var oldPosts = posts.filter(function(p){ return !isNewItem(p.timestamp, lastVisit); });
+function renderIG(posts, lastVisit, lastDisp) {
+  var newP = posts.filter(function(p){ return isNew(p.timestamp, lastVisit); });
+  var oldP = posts.filter(function(p){ return !isNew(p.timestamp, lastVisit); });
+  var tLikes = posts.reduce(function(s,p){ return s+(p.likesCount||0); },0);
+  var tCom   = posts.reduce(function(s,p){ return s+(p.commentsCount||0); },0);
 
-  var totalLikes = posts.reduce(function(s,p){ return s + (p.likesCount||0); }, 0);
-  var totalComments = posts.reduce(function(s,p){ return s + (p.commentsCount||0); }, 0);
-  var avgLikes = posts.length ? Math.round(totalLikes / posts.length) : 0;
-  var followers = posts.length > 0 && posts[0].ownerFullName ? posts[0].followersCount || '—' : '—';
+  document.getElementById('ig-stat-posts').textContent    = posts.length;
+  document.getElementById('ig-stat-likes').textContent    = fmtNum(tLikes);
+  document.getElementById('ig-stat-comments').textContent = fmtNum(tCom);
+  document.getElementById('ig-stat-avg').textContent      = posts.length ? Math.round(tLikes/posts.length) : 0;
+  document.getElementById('ig-stat-new').textContent      = newP.length;
 
-  document.getElementById('ig-stat-posts').textContent = posts.length;
-  document.getElementById('ig-stat-likes').textContent = fmtNum(totalLikes);
-  document.getElementById('ig-stat-comments').textContent = fmtNum(totalComments);
-  document.getElementById('ig-stat-avg').textContent = avgLikes;
-  document.getElementById('igStatHandle').textContent = CFG.ig ? '@' + CFG.ig : '—';
-  document.getElementById('ig-stat-new').textContent = newPosts.length;
-  document.getElementById('ig-count').textContent = posts.length + ' постов · ' + newPosts.length + ' новых';
-
-  var html = '';
-  if (newPosts.length) {
-    html += sepNew('\u{1F4F8} Новое в Instagram — с ' + lastVisitDisp);
-    html += '<div class="grid">' + newPosts.map(function(p){ return igCard(p, true); }).join('') + '</div>';
-  }
-  if (oldPosts.length) {
-    html += sepOld('Было при прошлом обновлении');
-    html += '<div class="grid">' + oldPosts.map(function(p){ return igCard(p, false); }).join('') + '</div>';
-  }
-  if (!posts.length) html = emptyState('Нет постов за 2026 год', '\u{1F4F8}', 'Данные загружены, но нет публикаций за 2026');
-
-  document.getElementById('ig-content').innerHTML = html;
+  var h = '';
+  if (newP.length) h += sepNew('📸 Новое в Instagram — с ' + lastDisp) + '<div class="grid">' + newP.map(function(p){ return igCard(p,true); }).join('') + '</div>';
+  if (oldP.length) h += sepOld('Было при прошлом обновлении') + '<div class="grid">' + oldP.map(function(p){ return igCard(p,false); }).join('') + '</div>';
+  if (!posts.length) h = emptyState('Нет постов за 2026 год','📸','Данные загружены, но публикаций за 2026 не найдено');
+  document.getElementById('ig-content').innerHTML = h;
+  document.getElementById('ig-count').textContent = posts.length + ' постов · ' + newP.length + ' новых';
 }
 
 function igCard(p, isN) {
-  var s = sentiment(p.caption);
-  var viral = (p.likesCount||0) > 500;
-  var isProfile = (p.ownerUsername||'').toLowerCase() === CFG.ig.toLowerCase();
-  var caption = (p.caption || '').substring(0, 300);
-  return '<div class="card' + (isN ? ' is-new' : '') + '">'
-    + '<div class="card-head"><div><div class="author">' + (p.ownerUsername || CFG.ig) + '</div>'
-    + '<div class="date-sm">' + fmtDate(p.timestamp) + '</div></div>'
-    + '<div class="badges">'
-    + (isN ? '<span class="b b-new">\u{1F195} Новое</span>' : '')
-    + (viral ? '<span class="b b-viral">вирусный</span>' : '')
-    + '<span class="b ' + (isProfile ? 'b-profile' : 'b-mention') + '">' + (isProfile ? 'профиль' : 'упоминание') + '</span>'
-    + '<span class="b ' + sentClass(s) + '">' + sentLabel(s) + '</span>'
-    + '</div></div>'
-    + '<div class="caption">' + caption + '</div>'
-    + '<div class="card-foot"><div class="meta">'
-    + '<span class="likes">\u2764 ' + fmtNum(p.likesCount) + '</span>'
-    + '<span>\u{1F4AC} ' + fmtNum(p.commentsCount) + '</span>'
-    + '</div><a class="open-link" href="' + (p.url||'#') + '" target="_blank">Открыть \u2192</a></div>'
-    + '</div>';
+  var s  = sentiment(p.caption);
+  var vr = (p.likesCount||0) > 500;
+  var ip = (p.ownerUsername||'').toLowerCase() === CFG.ig.toLowerCase();
+  return '<div class="card' + (isN?' is-new':'') + '">'
+    + '<div class="card-head"><div><div class="author">' + (p.ownerUsername||CFG.ig) + '</div><div class="date-sm">' + fmtDate(p.timestamp) + '</div></div>'
+    + '<div class="badges">' + (isN?'<span class="b b-new">🆕 Новое</span>':'') + (vr?'<span class="b b-viral">вирусный</span>':'')
+    + '<span class="b ' + (ip?'b-profile':'b-mention') + '">' + (ip?'профиль':'упоминание') + '</span>'
+    + '<span class="b ' + sCls(s) + '">' + sLbl(s) + '</span></div></div>'
+    + '<div class="caption">' + (p.caption||'').substring(0,300) + '</div>'
+    + '<div class="card-foot"><div class="meta"><span class="likes">❤ ' + fmtNum(p.likesCount) + '</span><span>💬 ' + fmtNum(p.commentsCount) + '</span></div>'
+    + '<a class="open-link" href="' + (p.url||'#') + '" target="_blank">Открыть →</a></div></div>';
 }
 
 // ===== RENDER TIKTOK =====
-function renderTikTok(videos, lastVisit, lastVisitDisp) {
-  var newVideos = videos.filter(function(v){
-    return isNewItem(new Date(v.createTime*1000).toISOString(), lastVisit);
-  });
-  var oldVideos = videos.filter(function(v){
-    return !isNewItem(new Date(v.createTime*1000).toISOString(), lastVisit);
-  });
-
-  var totalViews = videos.reduce(function(s,v){ return s + (v.stats&&v.stats.playCount||0); }, 0);
-  var totalLikes = videos.reduce(function(s,v){ return s + (v.stats&&v.stats.diggCount||0); }, 0);
-  var avgViews = videos.length ? Math.round(totalViews/videos.length) : 0;
-  var followers = videos.length > 0 ? (videos[0].authorMeta&&videos[0].authorMeta.fans || '—') : '—';
-  var er = videos.length && totalViews > 0 ? ((totalLikes/totalViews)*100).toFixed(1) + '%' : '—';
+function renderTT(videos, lastVisit, lastDisp) {
+  var newV = videos.filter(function(v){ return isNew(new Date(v.createTime*1000).toISOString(), lastVisit); });
+  var oldV = videos.filter(function(v){ return !isNew(new Date(v.createTime*1000).toISOString(), lastVisit); });
+  var tViews = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.playCount)||0); },0);
+  var tLikes = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.diggCount)||0); },0);
 
   document.getElementById('tt-stat-videos').textContent = videos.length;
-  document.getElementById('tt-stat-views').textContent = fmtNum(totalViews);
-  document.getElementById('tt-stat-likes').textContent = fmtNum(totalLikes);
-  document.getElementById('tt-stat-avg').textContent = fmtNum(avgViews);
-  document.getElementById('ttStatHandle').textContent = CFG.tt ? '@' + CFG.tt : '—';
-  document.getElementById('tt-stat-er').textContent = er;
-  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + newVideos.length + ' новых';
+  document.getElementById('tt-stat-views').textContent  = fmtNum(tViews);
+  document.getElementById('tt-stat-likes').textContent  = fmtNum(tLikes);
+  document.getElementById('tt-stat-avg').textContent    = videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;
+  document.getElementById('tt-stat-er').textContent     = videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1)+'%' : '—';
+  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + newV.length + ' новых';
 
-  var html = '';
-  if (newVideos.length) {
-    html += sepNew('\u{1F3B5} Новое в TikTok — с ' + lastVisitDisp);
-    html += '<div class="tiktok-grid">' + newVideos.map(function(v){ return ttCard(v, true); }).join('') + '</div>';
-  }
-  if (oldVideos.length) {
-    html += sepOld('Было при прошлом обновлении');
-    html += '<div class="tiktok-grid">' + oldVideos.map(function(v){ return ttCard(v, false); }).join('') + '</div>';
-  }
-  if (!videos.length) html = emptyState('Нет видео за 2026 год', '\u{1F3B5}', 'Данные загружены, но нет публикаций за 2026');
-
-  document.getElementById('tt-content').innerHTML = html;
+  var h = '';
+  if (newV.length) h += sepNew('🎵 Новое в TikTok — с ' + lastDisp) + '<div class="tiktok-grid">' + newV.map(function(v){ return ttCard(v,true); }).join('') + '</div>';
+  if (oldV.length) h += sepOld('Было при прошлом обновлении') + '<div class="tiktok-grid">' + oldV.map(function(v){ return ttCard(v,false); }).join('') + '</div>';
+  if (!videos.length) h = emptyState('Нет видео за 2026 год','🎵','Данные загружены, но видео за 2026 не найдено');
+  document.getElementById('tt-content').innerHTML = h;
 }
 
 function ttCard(v, isN) {
-  var d = new Date(v.createTime * 1000);
-  var emoji = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  var desc = (v.desc || '').substring(0, 100);
-  return '<div class="tt-card' + (isN ? ' is-new' : '') + '">'
-    + '<div class="tt-thumb">' + emoji + '<div class="tt-play"><span>\u25B6</span></div></div>'
+  var d = new Date(v.createTime*1000);
+  var e = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  return '<div class="tt-card' + (isN?' is-new':'') + '">'
+    + '<div class="tt-thumb">' + e + '<div class="tt-play"><span>▶</span></div></div>'
     + '<div class="tt-info">'
-    + (isN ? '<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">\u{1F195} Новое</span></div>' : '')
+    + (isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div>':'')
     + '<div class="tt-views">' + fmtNum(v.stats&&v.stats.playCount) + '</div>'
     + '<div class="tt-lbl">просмотров · ' + d.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'}) + '</div>'
-    + '<div class="tt-desc">' + desc + '</div>'
-    + '<div class="tt-meta">'
-    + '<span>\u2764 ' + fmtNum(v.stats&&v.stats.diggCount) + '</span>'
-    + '<span>\u{1F4AC} ' + fmtNum(v.stats&&v.stats.commentCount) + '</span>'
-    + '<span>\u2197 ' + fmtNum(v.stats&&v.stats.shareCount) + '</span>'
-    + '</div></div></div>';
+    + '<div class="tt-desc">' + (v.desc||'').substring(0,100) + '</div>'
+    + '<div class="tt-meta"><span>❤ ' + fmtNum(v.stats&&v.stats.diggCount) + '</span><span>💬 ' + fmtNum(v.stats&&v.stats.commentCount) + '</span><span>↗ ' + fmtNum(v.stats&&v.stats.shareCount) + '</span></div>'
+    + '</div></div>';
 }
 
 // ===== RENDER WEB =====
-function renderWeb(items, lastVisit, lastVisitDisp) {
-  // Filter: mention uni name + 2026
-  var filtered = items.filter(function(item) {
-    var text = (item.title||'') + ' ' + (item.description||'');
-    return text.toLowerCase().indexOf(CFG.name.toLowerCase().split(' ')[0].toLowerCase()) >= 0;
-  });
+function renderWeb(items, lastVisit, lastDisp) {
+  var kw = CFG.name.toLowerCase().split(' ')[0];
+  var filtered = items.filter(function(i){ return ((i.title||'')+(i.description||'')).toLowerCase().indexOf(kw) >= 0; });
+  var newI = filtered.filter(function(i){ return i.date && isNew(i.date, lastVisit); });
+  var oldI = filtered.filter(function(i){ return !i.date || !isNew(i.date, lastVisit); });
+  var hs = {};
+  filtered.forEach(function(i){ try{ hs[new URL(i.url||'http://x').hostname]=1; }catch(e){} });
+  var posC = filtered.filter(function(i){ return sentiment((i.title||'')+(i.description||''))==='pos'; }).length;
 
-  var newItems = filtered.filter(function(item){
-    return item.date && isNewItem(item.date, lastVisit);
-  });
-  var oldItems = filtered.filter(function(item){
-    return !item.date || !isNewItem(item.date, lastVisit);
-  });
-
-  var hostSet = {};
-  filtered.forEach(function(i){ try { hostSet[new URL(i.url||'http://x').hostname] = 1; } catch(e){} });
-  var sourcesCount = Object.keys(hostSet).length;
-
-  var posCount = filtered.filter(function(i){ return sentiment((i.title||'')+(i.description||'')) === 'pos'; }).length;
-  var sentPct = filtered.length ? Math.round(posCount/filtered.length*100) : 0;
-
-  document.getElementById('web-stat-topics').textContent = filtered.length;
-  document.getElementById('web-stat-new').textContent = newItems.length;
+  document.getElementById('web-stat-topics').textContent   = filtered.length;
+  document.getElementById('web-stat-new').textContent      = newI.length;
   document.getElementById('web-stat-mentions').textContent = filtered.length;
-  document.getElementById('web-stat-sources').textContent = sourcesCount;
-  document.getElementById('web-stat-sentiment').textContent = sentPct + '%';
-  document.getElementById('web-sync-badge').textContent = '\u{1F195} ' + newItems.length + ' новых';
-  document.getElementById('web-last-sync').textContent = 'Проверено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('web-stat-sources').textContent  = Object.keys(hs).length;
+  document.getElementById('web-stat-sentiment').textContent= filtered.length ? Math.round(posC/filtered.length*100)+'%' : '—';
+  document.getElementById('web-sync-badge').textContent = '🆕 ' + newI.length + ' новых';
+  document.getElementById('web-last-sync').textContent  = 'Проверено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('gen-web-mentions').textContent = filtered.length;
 
-  var html = '';
-  if (newItems.length) {
-    html += sepNew('\u{1F310} Интернет — новое с ' + lastVisitDisp);
-    html += '<div class="web-grid">' + newItems.map(function(i){ return webCard(i, true); }).join('') + '</div>';
-  }
-  if (oldItems.length) {
-    html += sepOld('Ранее найденное');
-    html += '<div class="web-grid">' + oldItems.map(function(i){ return webCard(i, false); }).join('') + '</div>';
-  }
-  if (!filtered.length) html = emptyState('Нет упоминаний в интернете за 2026 год', '\u{1F310}', 'Попробуйте обновить позже');
-
-  document.getElementById('web-content').innerHTML = html;
+  var h = '';
+  if (newI.length) h += sepNew('🌐 Интернет — новое с ' + lastDisp) + '<div class="web-grid">' + newI.map(function(i){ return webCard(i,true); }).join('') + '</div>';
+  if (oldI.length) h += sepOld('Ранее найденное') + '<div class="web-grid">' + oldI.map(function(i){ return webCard(i,false); }).join('') + '</div>';
+  if (!filtered.length) h = emptyState('Нет упоминаний за 2026 год','🌐','Попробуйте обновить позже');
+  document.getElementById('web-content').innerHTML = h;
 }
 
 function webCard(item, isN) {
-  var host = '—';
-  try { host = new URL(item.url||'http://x').hostname; } catch(e){}
-  var s = sentiment((item.title||'') + (item.description||''));
-  return '<div class="web-card' + (isN ? ' is-new' : '') + '">'
-    + '<div class="wc-body"><div class="web-source-icon">\u{1F4F0}</div>'
-    + '<div class="web-main">'
-    + '<div class="web-title">' + (item.title||'\u2014') + '</div>'
-    + '<div class="web-tags">'
-    + (isN ? '<span class="web-tag wt-new">\u{1F195} Новое</span>' : '')
+  var host = '—'; try{ host = new URL(item.url||'http://x').hostname; }catch(e){}
+  var s = sentiment((item.title||'')+(item.description||''));
+  return '<div class="web-card' + (isN?' is-new':'') + '">'
+    + '<div class="wc-body"><div class="web-source-icon">📰</div>'
+    + '<div class="web-main"><div class="web-title">' + (item.title||'—') + '</div>'
+    + '<div class="web-tags">' + (isN?'<span class="web-tag wt-new">🆕 Новое</span>':'')
     + '<span class="web-tag wt-news">Новость</span>'
-    + '<span class="b ' + sentClass(s) + '" style="font-size:10px;padding:2px 7px">' + sentLabel(s) + '</span>'
-    + '</div>'
+    + '<span class="b ' + sCls(s) + '" style="font-size:10px;padding:2px 7px">' + sLbl(s) + '</span></div>'
     + '<div class="web-snippet">' + (item.description||'').substring(0,250) + '</div>'
     + '</div></div>'
-    + '<div class="sources-strip">'
-    + '<span class="sources-label">Источник</span>'
+    + '<div class="sources-strip"><span class="sources-label">Источник</span>'
     + '<span class="sources-count">1 издание:</span>'
-    + '<a class="source-pill" href="' + (item.url||'#') + '" target="_blank">'
-    + '\u{1F4F0} ' + host
-    + (item.date ? ' <span class="sp-date">' + item.date + '</span>' : '')
+    + '<a class="source-pill" href="' + (item.url||'#') + '" target="_blank">📰 ' + host
+    + (item.date?' <span class="sp-date">' + item.date + '</span>':'')
     + '</a></div></div>';
 }
 
-// ===== SWITCH TAB =====
+// ===== TAB SWITCH =====
 function switchTab(tab, el) {
   document.querySelectorAll('.plat-tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
   document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('panel-' + tab).classList.add('active');
 }
-
 </script>
 </body>
 </html>
