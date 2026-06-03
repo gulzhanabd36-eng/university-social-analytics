@@ -4,3 +4,385 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>University Social Analytics</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13px;min-height:100vh}
+.setup-overlay{position:fixed;inset:0;background:#FAFAF8;display:flex;align-items:center;justify-content:center;z-index:200}
+.setup-card{background:white;border:1px solid #eee;border-radius:14px;padding:40px 44px;width:440px;box-shadow:0 8px 40px rgba(0,0,0,.07)}
+.setup-card h2{font-size:19px;font-weight:700;margin-bottom:4px}
+.setup-card .sub{font-size:12px;color:#888;margin-bottom:28px}
+.setup-field{margin-bottom:15px}
+.setup-field label{display:block;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.setup-field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;background:#FAFAF8;transition:all .15s}
+.setup-field input:focus{border-color:#C57E33;background:white}
+.hint{font-size:11px;color:#bbb;margin-top:4px}
+.sep{border:none;border-top:1px solid #f0f0f0;margin:20px 0}
+.btn-start{width:100%;padding:12px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .15s}
+.btn-start:hover{background:#333}
+
+#app{display:none}
+.header{background:#1a1a1a;color:#FAFAF8;padding:0 28px;display:flex;justify-content:space-between;align-items:center;height:58px}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-abbr{width:34px;height:34px;border-radius:8px;background:#C57E33;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0}
+.header-text h1{font-size:16px;font-weight:700}
+.header-text .sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:12px}
+.refresh-btn{background:#C57E33;color:white;border:none;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s}
+.refresh-btn:hover{opacity:.85}
+.settings-btn{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);padding:6px 12px;border-radius:7px;font-size:11px;cursor:pointer}
+.settings-btn:hover{border-color:rgba(255,255,255,.4);color:white}
+.last-update{font-size:10px;color:rgba(255,255,255,.35)}
+.platform-nav{background:white;border-bottom:2px solid #eee;padding:0 28px;display:flex}
+.plat-tab{padding:13px 20px;font-size:13px;font-weight:500;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:7px;white-space:nowrap;user-select:none}
+.plat-tab:hover:not(.active){color:#555;background:#FAFAF8}
+.plat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
+.plat-tab .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-ig{background:#E1306C}.dot-tt{background:#010101}.dot-web{background:#3B82F6}.dot-gen{background:#C57E33}
+.loading-bar{background:#FFF8EE;border-bottom:1px solid #F5D5A0;padding:10px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:#C57E33;font-weight:500}
+.loading-bar.hidden{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 1s linear infinite}
+.stats-row{display:grid;background:white;border-bottom:2px solid #eee}
+.stat{padding:13px 16px;border-right:1px solid #eee;text-align:center}
+.stat:last-child{border-right:none}
+.stat .v{font-size:20px;font-weight:700}
+.stat .l{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.stat .s{font-size:11px;color:#C57E33;font-weight:600;margin-top:2px}
+.controls{display:flex;gap:10px;padding:12px 28px;background:white;border-bottom:1px solid #eee;flex-wrap:wrap;align-items:center}
+.controls input,.controls select{padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;background:white;outline:none}
+.controls input{background:#FAFAF8;width:220px}
+.controls input:focus{border-color:#C57E33;background:white}
+.cnt{font-size:12px;color:#888;margin-left:auto;font-weight:500}
+.cat-nav{display:flex;padding:0 28px;background:white;border-bottom:2px solid #eee;overflow-x:auto}
+.cat-tab{padding:9px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;user-select:none;flex-shrink:0}
+.cat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
+.cat-tab:hover:not(.active){color:#555;background:#FAFAF8}
+.content{padding:20px 28px}
+.sec-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888;margin-bottom:14px}
+.date-sep{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.date-sep-line{flex:1;border-top:1px solid #eee}
+.date-sep-text{font-size:11px;font-weight:700;white-space:nowrap;padding:4px 12px;border-radius:20px}
+.date-sep-text.new-block{background:#FFF8EE;color:#C57E33;border:1px solid #F5D5A0}
+.date-sep-text.old-block{background:#F5F3EE;color:#888;border:1px solid #e8e8e8}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px}
+.card{background:white;border-radius:10px;border:1px solid #eee;padding:14px;display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s}
+.card.is-new{border-left:3px solid #C57E33}
+.card:hover{box-shadow:0 3px 16px rgba(0,0,0,.09);border-color:#e0e0e0}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.author{font-size:12px;font-weight:700}
+.date-sm{font-size:10px;color:#aaa;margin-top:2px}
+.badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.b{padding:2px 7px;border-radius:7px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-pos{background:#DCFCE7;color:#15803D}
+.b-neg{background:#FEE2E2;color:#DC2626}
+.b-neu{background:#F5F3EE;color:#6B7280}
+.b-profile{background:#DBEAFE;color:#1D4ED8}
+.b-mention{background:#FFF3E0;color:#C57E33}
+.b-viral{background:#FEF9C3;color:#854D0E}
+.b-new{background:#C57E33;color:white}
+.caption{font-size:12px;color:#444;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f0f0f0;margin-top:auto}
+.meta{display:flex;gap:10px;font-size:11px;color:#888}
+.likes{color:#C57E33;font-weight:700}
+.open-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0;transition:all .15s}
+.open-link:hover{background:#C57E33;color:white}
+.tiktok-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:20px}
+.tt-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden;transition:box-shadow .15s}
+.tt-card.is-new{border-left:3px solid #C57E33}
+.tt-card:hover{box-shadow:0 3px 16px rgba(0,0,0,.09)}
+.tt-thumb{height:130px;background:linear-gradient(135deg,#F5F3EE,#e8e0d8);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.tt-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.tt-play span{width:36px;height:36px;background:rgba(0,0,0,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;padding-left:3px}
+.tt-info{padding:10px 12px}
+.tt-views{font-size:14px;font-weight:700}
+.tt-lbl{font-size:10px;color:#888}
+.tt-desc{font-size:11px;color:#555;margin-top:6px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tt-meta{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;font-size:11px;color:#888}
+.web-toolbar{display:flex;gap:10px;padding:12px 28px;background:white;border-bottom:1px solid #eee;align-items:center;flex-wrap:wrap}
+.web-toolbar input,.web-toolbar select{padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;background:white;outline:none}
+.web-toolbar input{background:#FAFAF8;width:200px}
+.web-toolbar input:focus{border-color:#C57E33;background:white}
+.sync-info{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sync-badge{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;background:#FFF8EE;color:#C57E33;border:1px solid #F5D5A0}
+.last-sync{font-size:11px;color:#aaa}
+.web-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:20px}
+.web-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden;transition:box-shadow .15s}
+.web-card.is-new{border-left:3px solid #C57E33}
+.web-card:hover{box-shadow:0 3px 16px rgba(0,0,0,.08)}
+.wc-body{display:flex;gap:14px;padding:15px 18px;align-items:flex-start}
+.web-source-icon{width:36px;height:36px;border-radius:8px;background:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid #eee}
+.web-main{flex:1;min-width:0}
+.web-title{font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.35;margin-bottom:6px}
+.web-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.web-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px}
+.wt-news{background:#EFF6FF;color:#2563EB}
+.wt-award{background:#FFF8EE;color:#C57E33}
+.wt-event{background:#F0FDF4;color:#15803D}
+.wt-mention{background:#F3E8FF;color:#7C3AED}
+.wt-new{background:#C57E33;color:white}
+.web-snippet{font-size:12px;color:#555;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
+.sources-strip{border-top:1px solid #f5f5f5;padding:10px 18px;display:flex;align-items:center;flex-wrap:wrap}
+.sources-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-right:10px;white-space:nowrap}
+.source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;transition:all .15s;cursor:pointer}
+.source-pill:hover{background:#FFF8EE;border-color:#F5D5A0;color:#C57E33}
+.source-pill .sp-date{color:#aaa;font-size:10px}
+.sources-count{font-size:11px;font-weight:700;color:#C57E33;margin-right:8px;white-space:nowrap}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.info-card{background:white;border-radius:10px;border:1px solid #eee;padding:18px}
+.info-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:14px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:#666}
+.info-val{font-weight:600}
+.info-val.gold{color:#C57E33}
+.rank-badge{background:#F5F3EE;border:1px solid #e8ddd0;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;color:#C57E33}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- SETUP — только форма, без превью -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-card">
+    <h2>Настройка дашборда</h2>
+    <p class="sub">Заполните один раз — данные сохраняются в браузере</p>
+
+    <div class="setup-field">
+      <label>Название университета</label>
+      <input type="text" id="uniName" placeholder="Almaty Management University">
+    </div>
+    <div class="setup-field">
+      <label>Аббревиатура</label>
+      <input type="text" id="uniAbbr" placeholder="AlmaU" maxlength="6">
+    </div>
+
+    <hr class="sep">
+
+    <div class="setup-field">
+      <label>Instagram аккаунт</label>
+      <input type="text" id="igHandle" placeholder="@university">
+    </div>
+    <div class="setup-field">
+      <label>TikTok аккаунт</label>
+      <input type="text" id="ttHandle" placeholder="@university_tiktok">
+    </div>
+
+    <hr class="sep">
+
+    <div class="setup-field">
+      <label>Apify API Token</label>
+      <input type="password" id="apifyToken" placeholder="apify_api_xxxxxxxxxxxxxxxx">
+      <div class="hint">Для сбора данных Instagram, TikTok и мониторинга интернета</div>
+    </div>
+
+    <button class="btn-start" onclick="startDashboard()">Открыть дашборд →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-abbr" id="headerAbbr">A</div>
+      <div class="header-text">
+        <h1 id="headerTitle">University — Analytics</h1>
+        <div class="sub">Instagram · TikTok · Интернет-мониторинг · Общий профиль</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="last-update" id="lastUpdate">—</span>
+      <button class="refresh-btn" onclick="simulateRefresh()"><span id="refreshIcon">↻</span> Обновить</button>
+      <button class="settings-btn" onclick="document.getElementById('setupOverlay').style.display='flex'">⚙ Настройки</button>
+    </div>
+  </div>
+
+  <div class="platform-nav">
+    <div class="plat-tab active" onclick="switchTab('instagram',this)"><div class="dot dot-ig"></div> Instagram</div>
+    <div class="plat-tab" onclick="switchTab('tiktok',this)"><div class="dot dot-tt"></div> TikTok</div>
+    <div class="plat-tab" onclick="switchTab('web',this)"><div class="dot dot-web"></div> Интернет-мониторинг</div>
+    <div class="plat-tab" onclick="switchTab('general',this)"><div class="dot dot-gen"></div> Общий профиль</div>
+  </div>
+
+  <div class="loading-bar hidden" id="loadingBar">
+    <span class="spin">⟳</span> <span id="loadingText">Обновляем данные...</span>
+  </div>
+
+  <!-- ══ INSTAGRAM ══ -->
+  <div class="tab-panel active" id="panel-instagram">
+    <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
+      <div class="stat"><div class="v">282</div><div class="l">Постов</div></div>
+      <div class="stat"><div class="v">39 331</div><div class="l">Лайков</div></div>
+      <div class="stat"><div class="v">2 630</div><div class="l">Комментариев</div></div>
+      <div class="stat"><div class="v">139.5</div><div class="l">Ср. ❤</div></div>
+      <div class="stat"><div class="v">152</div><div class="l">Профиль</div><div class="s" id="igStatHandle">@almau_edu</div></div>
+      <div class="stat"><div class="v">129</div><div class="l">Упоминания</div><div class="s">внешние</div></div>
+    </div>
+    <div class="controls">
+      <input type="text" placeholder="🔍 Поиск по тексту или автору...">
+      <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
+      <select><option>Любой тон</option><option>😊 Позитив</option><option>😠 Негатив</option><option>😐 Нейтрально</option></select>
+      <select><option>По лайкам ↓</option><option>По дате ↓</option><option>По комментариям ↓</option></select>
+      <div class="cnt">282 постов · 5 новых</div>
+    </div>
+    <div class="cat-nav">
+      <div class="cat-tab active">Все</div>
+      <div class="cat-tab">🎓 Поступление</div>
+      <div class="cat-tab">🏆 Достижения</div>
+      <div class="cat-tab">🎉 Мероприятия</div>
+      <div class="cat-tab">📚 Образование</div>
+      <div class="cat-tab">🌍 Международка</div>
+      <div class="cat-tab">🔥 Вирусный</div>
+    </div>
+    <div class="content">
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новое — появилось с 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="grid">
+        <div class="card is-new"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">3 июня 2026</div></div><div class="badges"><span class="b b-new">🆕 Новое</span><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">Data Fest 2026 в AlmaU — крупнейшее событие для Data Science и AI специалистов. Более 300 участников, 6 компаний-докладчиков: Verigram, Freedom Lifestyle, EY и другие 🚀</div><div class="card-foot"><div class="meta"><span class="likes">❤ 204</span><span>💬 12</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+        <div class="card is-new"><div class="card-head"><div><div class="author">sdte_almau</div><div class="date-sm">2 июня 2026</div></div><div class="badges"><span class="b b-new">🆕 Новое</span><span class="b b-mention">упоминание</span><span class="b b-pos">позитив</span></div></div><div class="caption">Студенты SDTE AlmaU успешно сдали международный сертификационный экзамен CaPEN по безопасности веб-приложений. Сертификаты получили 12 студентов 🔐</div><div class="card-foot"><div class="meta"><span class="likes">❤ 88</span><span>💬 5</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+      </div>
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="grid">
+        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">25 мая 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">🥉 Студенты ОП «Учет и аудит» AlmaU заняли III место на XVIII Республиканской студенческой предметной олимпиаде. Команда «AlmaU team» достойно представила университет!</div><div class="card-foot"><div class="meta"><span class="likes">❤ 238</span><span>💬 8</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">1 апреля 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-viral">вирусный</span></div></div><div class="caption">Қуанып үлгердіңіз бе? 1 сәуір құтты болсын! 🤭 Бірақ шынын айтсақ, емтихандар мен рубежкалар бізді шыңдайды 💙</div><div class="card-foot"><div class="meta"><span class="likes">❤ 1 424</span><span>💬 56</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">13 марта 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">Новый ректор AlmaU — Тимур Булдыбаев. По итогам заседания Попечительского совета в Южной Корее назначен на должность ректора университета.</div><div class="card-foot"><div class="meta"><span class="likes">❤ 517</span><span>💬 73</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+        <div class="card"><div class="card-head"><div><div class="author">almau_edu</div><div class="date-sm">22 апреля 2026</div></div><div class="badges"><span class="b b-profile">профиль</span><span class="b b-pos">позитив</span></div></div><div class="caption">AlmaU — первый университет Центральной Азии, получивший THE Awards Asia 2026. Программа Tolyq Adam победила в номинации Teaching and Learning Strategy of the Year 🏆</div><div class="card-foot"><div class="meta"><span class="likes">❤ 411</span><span>💬 27</span></div><a class="open-link" href="#">Открыть →</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TIKTOK ══ -->
+  <div class="tab-panel" id="panel-tiktok">
+    <div class="stats-row" style="grid-template-columns:repeat(6,1fr)">
+      <div class="stat"><div class="v">47</div><div class="l">Видео</div></div>
+      <div class="stat"><div class="v">1.2M</div><div class="l">Просмотров</div></div>
+      <div class="stat"><div class="v">84K</div><div class="l">Лайков</div></div>
+      <div class="stat"><div class="v">25.5K</div><div class="l">Ср. просм.</div></div>
+      <div class="stat"><div class="v">12.4K</div><div class="l">Подписчики</div><div class="s" id="ttStatHandle">@almau.official</div></div>
+      <div class="stat"><div class="v">3.2%</div><div class="l">ER</div><div class="s">выше среднего</div></div>
+    </div>
+    <div class="controls">
+      <input type="text" placeholder="🔍 Поиск по видео...">
+      <select><option>По просмотрам ↓</option><option>По дате ↓</option><option>По лайкам ↓</option></select>
+      <div class="cnt">47 видео · 2 новых</div>
+    </div>
+    <div class="content">
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новое — появилось с 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="tiktok-grid">
+        <div class="tt-card is-new"><div class="tt-thumb">🎓<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div><div class="tt-views">41 200</div><div class="tt-lbl">просмотров · 2 июня 2026</div><div class="tt-desc">Data Fest 2026 в AlmaU — лучшие Data Science специалисты Казахстана 📊</div><div class="tt-meta"><span>❤ 3.1K</span><span>💬 178</span><span>↗ 820</span></div></div></div>
+        <div class="tt-card is-new"><div class="tt-thumb">🏆<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div><div class="tt-views">28 700</div><div class="tt-lbl">просмотров · 1 июня 2026</div><div class="tt-desc">Наши студенты — победители олимпиады! Финансы и учёт в Тұран 🥈🥉</div><div class="tt-meta"><span>❤ 2.4K</span><span>💬 91</span><span>↗ 560</span></div></div></div>
+      </div>
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="tiktok-grid">
+        <div class="tt-card"><div class="tt-thumb">💃<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">312 000</div><div class="tt-lbl">просмотров · 5 мая 2026</div><div class="tt-desc">AlmaU Dance 2026 — Coachella в университете! ✨</div><div class="tt-meta"><span>❤ 22.1K</span><span>💬 891</span><span>↗ 5.4K</span></div></div></div>
+        <div class="tt-card"><div class="tt-thumb">🎓<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">195 000</div><div class="tt-lbl">просмотров · 28 апр 2026</div><div class="tt-desc">Один день из жизни студента AlmaU 🏫</div><div class="tt-meta"><span>❤ 14.2K</span><span>💬 621</span><span>↗ 3.9K</span></div></div></div>
+        <div class="tt-card"><div class="tt-thumb">🌍<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">88 900</div><div class="tt-lbl">просмотров · 22 апр 2026</div><div class="tt-desc">THE Awards Asia 2026 — первый в Центральной Азии! 🏅</div><div class="tt-meta"><span>❤ 7.8K</span><span>💬 445</span><span>↗ 2.3K</span></div></div></div>
+        <div class="tt-card"><div class="tt-thumb">📚<div class="tt-play"><span>▶</span></div></div><div class="tt-info"><div class="tt-views">41 800</div><div class="tt-lbl">просмотров · 15 апр 2026</div><div class="tt-desc">Студент с 100% грантом из Якутии — его история</div><div class="tt-meta"><span>❤ 3.1K</span><span>💬 212</span><span>↗ 670</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ WEB ══ -->
+  <div class="tab-panel" id="panel-web">
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="stat"><div class="v">24</div><div class="l">Уникальных тем</div></div>
+      <div class="stat"><div class="v" style="color:#C57E33">5</div><div class="l">Новых тем</div><div class="s">с 03.06.2026</div></div>
+      <div class="stat"><div class="v">67</div><div class="l">Упоминаний</div><div class="s">в разных источниках</div></div>
+      <div class="stat"><div class="v">19</div><div class="l">Источников</div><div class="s">СМИ, блоги, edu</div></div>
+      <div class="stat"><div class="v">91%</div><div class="l">Тональность</div><div class="s">позитив</div></div>
+    </div>
+    <div class="web-toolbar">
+      <input type="text" placeholder="🔍 Поиск по теме...">
+      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги / Форумы</option><option>🔗 LinkedIn</option><option>🎓 Edu-сайты</option></select>
+      <select><option>Все даты</option><option>Сегодня</option><option>Эта неделя</option><option>Этот месяц</option></select>
+      <select><option>Все темы</option><option>Только новые 🆕</option><option>По кол-ву источников ↓</option></select>
+      <div class="sync-info">
+        <div class="sync-badge">🆕 5 новых тем</div>
+        <span class="last-sync">Проверено: 03.06.2026, 11:14</span>
+      </div>
+    </div>
+    <div class="content">
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">🆕 Новые темы — появились с 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="web-grid">
+        <div class="web-card is-new">
+          <div class="wc-body"><div class="web-source-icon">🏆</div><div class="web-main"><div class="web-title">Студенты AlmaU заняли призовые места на XVIII Республиканской предметной олимпиаде</div><div class="web-tags"><span class="web-tag wt-new">🆕 Новое</span><span class="web-tag wt-award">Достижение</span></div><div class="web-snippet">Команды по направлениям «Финансы» и «Учёт и аудит» завоевали II и III места. Олимпиада прошла в университете Тұран, участвовали команды из 6 регионов Казахстана.</div></div></div>
+          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">3 издания:</span><a class="source-pill" href="#">📰 edu.gov.kz <span class="sp-date">25 мая</span></a><a class="source-pill" href="#">📰 Zakon.kz <span class="sp-date">25 мая</span></a><a class="source-pill" href="#">📝 univer_turan (IG) <span class="sp-date">26 мая</span></a></div>
+        </div>
+        <div class="web-card is-new">
+          <div class="wc-body"><div class="web-source-icon">🔐</div><div class="web-main"><div class="web-title">Студенты AlmaU и курсанты МВД сдали международный экзамен CaPEN по кибербезопасности</div><div class="web-tags"><span class="web-tag wt-new">🆕 Новое</span><span class="web-tag wt-award">Сертификация</span></div><div class="web-snippet">12 студентов AlmaU и курсанты Академии МВД подтвердили практические навыки в области безопасности веб-приложений, получив международный сертификат CaPEN.</div></div></div>
+          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">2 издания:</span><a class="source-pill" href="#">🏛 qr_iim_almaty (IG) <span class="sp-date">15 мая</span></a><a class="source-pill" href="#">📝 sdte_almau (IG) <span class="sp-date">16 мая</span></a></div>
+        </div>
+      </div>
+      <div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">Было при прошлом обновлении — до 03.06.2026</div><div class="date-sep-line"></div></div>
+      <div class="web-grid">
+        <div class="web-card">
+          <div class="wc-body"><div class="web-source-icon">🏅</div><div class="web-main"><div class="web-title">AlmaU — победитель THE Awards Asia 2026 в номинации Teaching and Learning Strategy of the Year</div><div class="web-tags"><span class="web-tag wt-award">Награда</span><span class="web-tag wt-news">Топ-тема</span></div><div class="web-snippet">Almaty Management University стал первым университетом Центральной Азии. Программа Tolyq Adam основана на философии Абая и охватывает 1000+ студентов ежегодно.</div></div></div>
+          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">6 изданий:</span><a class="source-pill" href="#">📰 Forbes Kazakhstan <span class="sp-date">22 мая</span></a><a class="source-pill" href="#">📰 Tengrinews <span class="sp-date">22 мая</span></a><a class="source-pill" href="#">📰 Kapital.kz <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">📰 Informburo <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">🔗 LinkedIn <span class="sp-date">23 мая</span></a><a class="source-pill" href="#">🌐 timeshighereducation.com <span class="sp-date">22 мая</span></a></div>
+        </div>
+        <div class="web-card">
+          <div class="wc-body"><div class="web-source-icon">🌍</div><div class="web-main"><div class="web-title">AlmaU проведёт Babson Collaborative Global Summit 2027 — впервые в Центральной Азии</div><div class="web-tags"><span class="web-tag wt-news">Новость</span><span class="web-tag wt-event">Событие</span></div><div class="web-snippet">В 2027 году Алматы станет площадкой для Babson Global Summit. AlmaU является членом сети с 2017 года и выбран принимающим университетом юбилейного 10-го саммита.</div></div></div>
+          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">4 издания:</span><a class="source-pill" href="#">📰 Profit.kz <span class="sp-date">6 мая</span></a><a class="source-pill" href="#">📰 nur.kz <span class="sp-date">7 мая</span></a><a class="source-pill" href="#">📰 Zakon.kz <span class="sp-date">7 мая</span></a><a class="source-pill" href="#">🔗 Babson.edu <span class="sp-date">6 мая</span></a></div>
+        </div>
+        <div class="web-card">
+          <div class="wc-body"><div class="web-source-icon">🎓</div><div class="web-main"><div class="web-title">Тимур Булдыбаев назначен новым ректором Almaty Management University</div><div class="web-tags"><span class="web-tag wt-news">Новость</span></div><div class="web-snippet">По итогам заседания Попечительского совета в Южной Корее, Тимур Булдыбаев назначен ректором AlmaU. Рассказал о стратегии развития до 2030 года.</div></div></div>
+          <div class="sources-strip"><span class="sources-label">Источники</span><span class="sources-count">5 изданий:</span><a class="source-pill" href="#">📰 Informburo <span class="sp-date">13 марта</span></a><a class="source-pill" href="#">📰 Хабар 24 <span class="sp-date">13 марта</span></a><a class="source-pill" href="#">📰 KZ News <span class="sp-date">14 марта</span></a><a class="source-pill" href="#">📰 Kapital.kz <span class="sp-date">14 марта</span></a><a class="source-pill" href="#">🌐 almau.edu.kz <span class="sp-date">13 марта</span></a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GENERAL ══ -->
+  <div class="tab-panel" id="panel-general">
+    <div class="content" style="max-width:1050px">
+      <div class="sec-label" style="margin-bottom:20px">Публичная информация — из открытых источников</div>
+      <div class="info-grid">
+        <div class="info-card"><h3>🏛 Основные данные</h3><div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div><div class="info-row"><span class="info-key">Год основания</span><span class="info-val">1988</span></div><div class="info-row"><span class="info-key">Тип</span><span class="info-val">Частный университет</span></div><div class="info-row"><span class="info-key">Город</span><span class="info-val">Алматы, Казахстан</span></div><div class="info-row"><span class="info-key">Студентов</span><span class="info-val">~6 000</span></div><div class="info-row"><span class="info-key">Сайт</span><span class="info-val gold">almau.edu.kz</span></div></div>
+        <div class="info-card"><h3>🏆 Рейтинги и аккредитации</h3><div class="info-row"><span class="info-key">QS Stars</span><span class="info-val"><span class="rank-badge">4 ★★★★</span></span></div><div class="info-row"><span class="info-key">THE Awards Asia 2026</span><span class="info-val gold">Победитель</span></div><div class="info-row"><span class="info-key">FIBAA</span><span class="info-val">✓ Активна</span></div><div class="info-row"><span class="info-key">AMBA / BGA</span><span class="info-val">✓ Активна</span></div><div class="info-row"><span class="info-key">Babson Collaborative</span><span class="info-val">С 2017 года</span></div><div class="info-row"><span class="info-key">Партнёры</span><span class="info-val">70+ ун-тов, 40+ стран</span></div></div>
+        <div class="info-card"><h3>📡 Соцсети</h3><div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div><div class="info-row"><span class="info-key">Подписчики IG</span><span class="info-val">38 400</span></div><div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">—</span></div><div class="info-row"><span class="info-key">Подписчики TT</span><span class="info-val">12 400</span></div><div class="info-row"><span class="info-key">YouTube</span><span class="info-val gold">AlmaU TV</span></div><div class="info-row"><span class="info-key">Telegram</span><span class="info-val">t.me/almau_edu</span></div></div>
+        <div class="info-card"><h3>📰 Медиа-активность (30 дней)</h3><div class="info-row"><span class="info-key">Уникальных тем</span><span class="info-val gold">24</span></div><div class="info-row"><span class="info-key">Всего упоминаний</span><span class="info-val">67 <span style="color:#aaa;font-weight:400;font-size:11px">(в разных изданиях)</span></span></div><div class="info-row"><span class="info-key">Макс. охват темы</span><span class="info-val">THE Awards — 6 изданий</span></div><div class="info-row"><span class="info-key">Топ источник</span><span class="info-val">Forbes Kazakhstan</span></div><div class="info-row"><span class="info-key">Главная тема</span><span class="info-val">THE Awards Asia 2026</span></div><div class="info-row"><span class="info-key">Тональность</span><span class="info-val gold">91% позитив</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function startDashboard(){
+  const name=document.getElementById('uniName').value||'University';
+  const abbr=document.getElementById('uniAbbr').value||'U';
+  const ig=document.getElementById('igHandle').value||'';
+  const tt=document.getElementById('ttHandle').value||'';
+  document.getElementById('headerTitle').textContent=name+' — Analytics';
+  document.getElementById('headerAbbr').textContent=abbr.charAt(0).toUpperCase();
+  document.getElementById('igStatHandle').textContent=ig;
+  document.getElementById('ttStatHandle').textContent=tt;
+  document.getElementById('genFullName').textContent=name;
+  document.getElementById('genIG').textContent=ig;
+  document.getElementById('genTT').textContent=tt;
+  document.getElementById('setupOverlay').style.display='none';
+  document.getElementById('app').style.display='block';
+  simulateRefresh();
+}
+function switchTab(tab,el){
+  document.querySelectorAll('.plat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+function simulateRefresh(){
+  const bar=document.getElementById('loadingBar');
+  const icon=document.getElementById('refreshIcon');
+  bar.classList.remove('hidden');
+  icon.style.animation='spin 1s linear infinite';
+  const msgs=['Проверяем Instagram через Apify...','Загружаем TikTok данные...','Сканируем интернет: новости, блоги, LinkedIn...','Группируем одинаковые новости из разных источников...','Определяем новое с даты последнего визита...','Готово ✓'];
+  let i=0;
+  const iv=setInterval(()=>{document.getElementById('loadingText').textContent=msgs[Math.min(i,msgs.length-1)];i++;},600);
+  setTimeout(()=>{
+    clearInterval(iv);
+    bar.classList.add('hidden');
+    icon.style.animation='';
+    document.getElementById('lastUpdate').textContent='Обновлено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  },4000);
+}
+</script>
+</body>
+</html>
