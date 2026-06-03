@@ -386,7 +386,7 @@ async function realRefresh(){
     // timestamp field can be ISO string or Unix seconds.
     if(CFG.ig){
       var igItems=await apifyRun('apify/instagram-scraper',
-        {usernames:[CFG.ig],resultsType:'posts',resultsLimit:100},
+        {usernames:[CFG.ig],resultsType:'posts',resultsLimit:30},
         'ig','📸 Instagram'
       );
       console.log('[IG] total items:',igItems.length,'sample:',igItems[0]?JSON.stringify(igItems[0]).substring(0,300):'none');
