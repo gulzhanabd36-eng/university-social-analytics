@@ -125,7 +125,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .sources-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-right:10px;white-space:nowrap}
 .source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;transition:all .15s}
 .source-pill:hover{background:#FFF8EE;border-color:#F5D5A0;color:#C57E33}
-.source-pill .sp-date{color:#aaa;font-size:10px}
 .sources-count{font-size:11px;font-weight:700;color:#C57E33;margin-right:8px;white-space:nowrap}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .info-card{background:white;border-radius:10px;border:1px solid #eee;padding:18px}
@@ -147,12 +146,10 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 </head>
 <body>
 
-<!-- SETUP FORM -->
 <div class="setup-overlay" id="setupOverlay">
   <div class="setup-card">
     <h2>University Social Analytics</h2>
     <p class="sub">Заполните один раз — данные сохраняются в браузере</p>
-
     <div class="setup-field">
       <label>Название университета</label>
       <input type="text" id="uniName" placeholder="Almaty Management University">
@@ -161,31 +158,27 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <label>Аббревиатура</label>
       <input type="text" id="uniAbbr" placeholder="AlmaU" maxlength="6">
     </div>
-
     <hr class="sep">
-
     <div class="setup-field">
       <label>Instagram аккаунт</label>
-      <input type="text" id="igHandle" placeholder="@university">
+      <input type="text" id="igHandle" placeholder="almau_edu (без @)">
+      <div class="hint">Только логин, без @ и без ссылки</div>
     </div>
     <div class="setup-field">
       <label>TikTok аккаунт</label>
-      <input type="text" id="ttHandle" placeholder="@university_tiktok">
+      <input type="text" id="ttHandle" placeholder="almau.official (без @)">
+      <div class="hint">Только логин, без @</div>
     </div>
-
     <hr class="sep">
-
     <div class="setup-field">
       <label>Apify API Token</label>
       <input type="password" id="apifyToken" placeholder="apify_api_xxxxxxxxxxxxxxxx">
-      <div class="hint">Ваш личный токен с console.apify.com — используется только для загрузки данных</div>
+      <div class="hint">С console.apify.com → Settings → Integrations</div>
     </div>
-
-    <button class="btn-start" id="btnStart" onclick="startDashboard()">Загрузить данные и открыть дашборд →</button>
+    <button class="btn-start" onclick="startDashboard()">Загрузить данные и открыть дашборд →</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="app">
   <div class="header">
     <div class="header-left">
@@ -201,14 +194,12 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <button class="settings-btn" onclick="openSettings()">⚙ Настройки</button>
     </div>
   </div>
-
   <div class="platform-nav">
     <div class="plat-tab active" onclick="switchTab('instagram',this)"><div class="dot dot-ig"></div> Instagram</div>
     <div class="plat-tab" onclick="switchTab('tiktok',this)"><div class="dot dot-tt"></div> TikTok</div>
     <div class="plat-tab" onclick="switchTab('web',this)"><div class="dot dot-web"></div> Интернет-мониторинг</div>
     <div class="plat-tab" onclick="switchTab('general',this)"><div class="dot dot-gen"></div> Общий профиль</div>
   </div>
-
   <div class="loading-bar hidden" id="loadingBar">
     <span class="spin">⟳</span>
     <span id="loadingText">Загружаем...</span>
@@ -220,7 +211,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
   </div>
   <div class="error-bar" id="errorBar"></div>
 
-  <!-- INSTAGRAM -->
   <div class="tab-panel active" id="panel-instagram">
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="ig-stat-posts">—</div><div class="l">Постов 2026</div></div>
@@ -230,7 +220,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="ig-stat-new">—</div><div class="l">Новых</div><div class="s" id="igStatHandle">@—</div></div>
     </div>
     <div class="controls">
-      <input type="text" placeholder="🔍 Поиск по тексту...">
+      <input type="text" placeholder="🔍 Поиск...">
       <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
       <select><option>Любой тон</option><option>😊 Позитив</option><option>😠 Негатив</option><option>😐 Нейтрально</option></select>
       <select><option>По лайкам ↓</option><option>По дате ↓</option></select>
@@ -250,7 +240,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
   </div>
 
-  <!-- TIKTOK -->
   <div class="tab-panel" id="panel-tiktok">
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="tt-stat-videos">—</div><div class="l">Видео 2026</div></div>
@@ -269,7 +258,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
   </div>
 
-  <!-- WEB -->
   <div class="tab-panel" id="panel-web">
     <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
       <div class="stat"><div class="v" id="web-stat-topics">—</div><div class="l">Упоминаний</div></div>
@@ -280,7 +268,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
     <div class="web-toolbar">
       <input type="text" placeholder="🔍 Поиск по теме...">
-      <select><option>Все источники</option><option>📰 Новости СМИ</option><option>📝 Блоги</option></select>
+      <select><option>Все источники</option><option>📰 Новости</option><option>📝 Блоги</option></select>
       <select><option>Все темы</option><option>Только новые 🆕</option></select>
       <div class="sync-info">
         <div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
@@ -292,7 +280,6 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
   </div>
 
-  <!-- GENERAL -->
   <div class="tab-panel" id="panel-general">
     <div class="content" style="max-width:1050px">
       <div class="info-grid">
@@ -316,7 +303,6 @@ var CFG = {};
 var isLoading = false;
 var EMOJIS = ['🎓','🏆','🌍','📚','🎉','🔥','💡','🎯','🌟','💫'];
 
-// ===== INIT =====
 window.onload = function() {
   var saved = localStorage.getItem('uni_cfg_v4');
   if (saved) {
@@ -324,23 +310,20 @@ window.onload = function() {
       var c = JSON.parse(saved);
       if (c.name) document.getElementById('uniName').value = c.name;
       if (c.abbr) document.getElementById('uniAbbr').value = c.abbr;
-      if (c.ig) document.getElementById('igHandle').value = '@' + c.ig;
-      if (c.tt) document.getElementById('ttHandle').value = '@' + c.tt;
-      // NOTE: token NOT restored — user must re-enter for security
+      if (c.ig)   document.getElementById('igHandle').value = c.ig;
+      if (c.tt)   document.getElementById('ttHandle').value = c.tt;
     } catch(e) {}
   }
 };
 
-function openSettings() {
-  document.getElementById('setupOverlay').style.display = 'flex';
-}
+function openSettings() { document.getElementById('setupOverlay').style.display = 'flex'; }
 
-// ===== START =====
 function startDashboard() {
   var name  = document.getElementById('uniName').value.trim();
   var abbr  = document.getElementById('uniAbbr').value.trim();
-  var ig    = document.getElementById('igHandle').value.trim().replace('@','');
-  var tt    = document.getElementById('ttHandle').value.trim().replace('@','');
+  // Strip @ and whitespace
+  var ig    = document.getElementById('igHandle').value.trim().replace(/^@+/, '').trim();
+  var tt    = document.getElementById('ttHandle').value.trim().replace(/^@+/, '').trim();
   var token = document.getElementById('apifyToken').value.trim();
 
   if (!name)  { alert('Введите название университета'); return; }
@@ -348,25 +331,21 @@ function startDashboard() {
   if (!ig && !tt) { alert('Укажите хотя бы один аккаунт (Instagram или TikTok)'); return; }
 
   CFG = { name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token };
-  // Save config without token
   localStorage.setItem('uni_cfg_v4', JSON.stringify({ name: name, abbr: CFG.abbr, ig: ig, tt: tt }));
 
-  document.getElementById('headerTitle').textContent = name + ' — Analytics';
-  document.getElementById('headerAbbr').textContent  = CFG.abbr.charAt(0).toUpperCase();
+  document.getElementById('headerTitle').textContent  = name + ' — Analytics';
+  document.getElementById('headerAbbr').textContent   = CFG.abbr.charAt(0).toUpperCase();
   document.getElementById('genFullName').textContent  = name;
-  document.getElementById('genIG').textContent = ig ? '@' + ig : '—';
-  document.getElementById('genTT').textContent = tt ? '@' + tt : '—';
+  document.getElementById('genIG').textContent        = ig ? '@' + ig : '—';
+  document.getElementById('genTT').textContent        = tt ? '@' + tt : '—';
   document.getElementById('igStatHandle').textContent = ig ? '@' + ig : '—';
   document.getElementById('ttStatHandle').textContent = tt ? '@' + tt : '—';
 
   document.getElementById('setupOverlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-
-  // IMMEDIATELY start loading
   realRefresh();
 }
 
-// ===== UTILS =====
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
 function fmtNum(n) {
@@ -375,22 +354,19 @@ function fmtNum(n) {
   if (n >= 1000)    return (n/1000).toFixed(1) + 'K';
   return String(n);
 }
-
 function fmtDate(iso) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleDateString('ru', {day:'numeric',month:'long',year:'numeric'}); }
   catch(e) { return iso; }
 }
-
-function isNew(isoDate, lastVisit) {
-  if (!isoDate) return false;
-  try { return new Date(isoDate) > new Date(lastVisit); } catch(e) { return false; }
+function isNew(d, lv) {
+  if (!d) return false;
+  try { return new Date(d) > new Date(lv); } catch(e) { return false; }
 }
-
 function sentiment(text) {
   if (!text) return 'neu';
   var t = text.toLowerCase();
-  var pos = ['победит','лучш','достиж','отлич','поздрав','спасиб','успех','наград','первый','топ','рекорд','победа','золот','лидер'];
+  var pos = ['победит','лучш','достиж','отлич','поздрав','успех','наград','первый','топ','рекорд','победа','золот','лидер'];
   var neg = ['скандал','провал','плох','ужас','проблем','жалоб','негатив','ошибк','штраф','критик'];
   if (pos.some(function(w){ return t.indexOf(w) >= 0; })) return 'pos';
   if (neg.some(function(w){ return t.indexOf(w) >= 0; })) return 'neg';
@@ -398,23 +374,11 @@ function sentiment(text) {
 }
 function sLbl(s) { return {pos:'позитив',neg:'негатив',neu:'нейтрально'}[s]||'нейтрально'; }
 function sCls(s) { return {pos:'b-pos',neg:'b-neg',neu:'b-neu'}[s]||'b-neu'; }
+function sepNew(l) { return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">' + l + '</div><div class="date-sep-line"></div></div>'; }
+function sepOld(l) { return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">' + l + '</div><div class="date-sep-line"></div></div>'; }
+function emptyState(msg, icon, sub) { return '<div class="empty-state"><div class="es-icon">' + icon + '</div><div class="es-text">' + msg + '</div>' + (sub?'<div class="es-sub">' + sub + '</div>':'') + '</div>'; }
 
-function sepNew(label) {
-  return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text new-block">' + label + '</div><div class="date-sep-line"></div></div>';
-}
-function sepOld(label) {
-  return '<div class="date-sep"><div class="date-sep-line"></div><div class="date-sep-text old-block">' + label + '</div><div class="date-sep-line"></div></div>';
-}
-function emptyState(msg, icon, sub) {
-  return '<div class="empty-state"><div class="es-icon">' + icon + '</div><div class="es-text">' + msg + '</div>' + (sub ? '<div class="es-sub">' + sub + '</div>' : '') + '</div>';
-}
-
-// ===== LOADING UI =====
-function setStep(id, state) {
-  var el = document.getElementById('step-' + id);
-  if (!el) return;
-  el.className = 'step ' + state;
-}
+function setStep(id, state) { var el = document.getElementById('step-' + id); if (el) el.className = 'step ' + state; }
 function showLoading(msg) {
   document.getElementById('loadingBar').classList.remove('hidden');
   document.getElementById('refreshIcon').style.animation = 'spin 1s linear infinite';
@@ -433,7 +397,6 @@ function showError(msg) {
   el.style.display = 'block';
 }
 
-// ===== APIFY via Netlify Function (CORS proxy) =====
 async function apifyRun(actorId, input, stepId, label) {
   setStep(stepId, 'active');
   document.getElementById('loadingText').textContent = label + ' — запускаем...';
@@ -443,56 +406,46 @@ async function apifyRun(actorId, input, stepId, label) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ actorId: actorId, input: input, token: CFG.token })
   });
-  if (!startRes.ok) {
-    var et = await startRes.text();
-    throw new Error(label + ': ' + et.substring(0, 150));
-  }
-  var sd = await startRes.json();
-  if (sd.error) throw new Error(label + ': ' + sd.error);
-
+  var sd;
+  try { sd = await startRes.json(); } catch(e) { throw new Error(label + ': неверный ответ от функции'); }
+  if (!startRes.ok || sd.error) throw new Error(label + ': ' + (sd.error || startRes.status));
   var runId = sd.runId;
 
   for (var i = 0; i < 72; i++) {
     await sleep(5000);
     document.getElementById('loadingText').textContent = label + ' — ' + ((i+1)*5) + 'с...';
-
     var pr = await fetch('/.netlify/functions/apify-poll', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ runId: runId, token: CFG.token, getItems: true })
     });
-    var pd = await pr.json();
-
-    if (pd.status === 'SUCCEEDED') {
-      setStep(stepId, 'done');
-      return pd.items || [];
-    }
-    if (['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status) >= 0) {
-      throw new Error(label + ': актор ' + pd.status);
-    }
+    var pd;
+    try { pd = await pr.json(); } catch(e) { continue; }
+    if (pd.status === 'SUCCEEDED') { setStep(stepId, 'done'); return pd.items || []; }
+    if (['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status) >= 0) throw new Error(label + ': актор ' + pd.status);
   }
   throw new Error(label + ': timeout 6 мин');
 }
 
-// ===== MAIN REFRESH =====
 async function realRefresh() {
   if (isLoading) return;
   if (!CFG.token) { openSettings(); return; }
-
   isLoading = true;
   var lastKey   = 'lv_' + (CFG.ig || CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
   var lastVisit = localStorage.getItem(lastKey) || '2025-12-31T23:59:59Z';
   var lastDisp  = fmtDate(lastVisit);
-
   setStep('ig',''); setStep('tt',''); setStep('web','');
   showLoading('Подготовка...');
-
   try {
-    // 1. Instagram
     if (CFG.ig) {
+      // FIX: use usernames[] array — correct format for apify/instagram-scraper
       var igItems = await apifyRun(
         'apify/instagram-scraper',
-        { directUrls: ['https://www.instagram.com/' + CFG.ig + '/'], resultsType: 'posts', resultsLimit: 100, addParentData: false },
+        {
+          usernames: [CFG.ig],
+          resultsType: 'posts',
+          resultsLimit: 100
+        },
         'ig', '📸 Instagram'
       );
       var posts = igItems.filter(function(p){ return p.timestamp && p.timestamp >= '2026-01-01'; });
@@ -501,8 +454,6 @@ async function realRefresh() {
     } else {
       document.getElementById('ig-content').innerHTML = emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
     }
-
-    // 2. TikTok
     if (CFG.tt) {
       var ttItems = await apifyRun(
         'clockworks/free-tiktok-scraper',
@@ -515,143 +466,122 @@ async function realRefresh() {
     } else {
       document.getElementById('tt-content').innerHTML = emptyState('TikTok аккаунт не указан','🎵','Откройте настройки');
     }
-
-    // 3. Web
     var webItems = await apifyRun(
       'apify/google-search-scraper',
       { queries: '"' + CFG.name + '" 2026', maxPagesPerQuery: 3, resultsPerPage: 10, languageCode: 'ru', countryCode: 'kz' },
       'web', '🌐 Интернет'
     );
     renderWeb(webItems, lastVisit, lastDisp);
-
     localStorage.setItem(lastKey, new Date().toISOString());
-
   } catch(e) {
     console.error(e);
     showError(e.message);
   } finally {
     isLoading = false;
     hideLoading();
-    document.getElementById('lastUpdate').textContent = 'Обновлено: ' +
-      new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('lastUpdate').textContent = 'Обновлено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   }
 }
 
-// ===== RENDER INSTAGRAM =====
-function renderIG(posts, lastVisit, lastDisp) {
-  var newP = posts.filter(function(p){ return isNew(p.timestamp, lastVisit); });
-  var oldP = posts.filter(function(p){ return !isNew(p.timestamp, lastVisit); });
-  var tLikes = posts.reduce(function(s,p){ return s+(p.likesCount||0); },0);
-  var tCom   = posts.reduce(function(s,p){ return s+(p.commentsCount||0); },0);
-
+function renderIG(posts, lv, ld) {
+  var nP = posts.filter(function(p){ return isNew(p.timestamp, lv); });
+  var oP = posts.filter(function(p){ return !isNew(p.timestamp, lv); });
+  var tL = posts.reduce(function(s,p){ return s+(p.likesCount||0); },0);
+  var tC = posts.reduce(function(s,p){ return s+(p.commentsCount||0); },0);
   document.getElementById('ig-stat-posts').textContent    = posts.length;
-  document.getElementById('ig-stat-likes').textContent    = fmtNum(tLikes);
-  document.getElementById('ig-stat-comments').textContent = fmtNum(tCom);
-  document.getElementById('ig-stat-avg').textContent      = posts.length ? Math.round(tLikes/posts.length) : 0;
-  document.getElementById('ig-stat-new').textContent      = newP.length;
-
+  document.getElementById('ig-stat-likes').textContent    = fmtNum(tL);
+  document.getElementById('ig-stat-comments').textContent = fmtNum(tC);
+  document.getElementById('ig-stat-avg').textContent      = posts.length ? Math.round(tL/posts.length) : 0;
+  document.getElementById('ig-stat-new').textContent      = nP.length;
+  document.getElementById('ig-count').textContent         = posts.length + ' постов · ' + nP.length + ' новых';
   var h = '';
-  if (newP.length) h += sepNew('📸 Новое в Instagram — с ' + lastDisp) + '<div class="grid">' + newP.map(function(p){ return igCard(p,true); }).join('') + '</div>';
-  if (oldP.length) h += sepOld('Было при прошлом обновлении') + '<div class="grid">' + oldP.map(function(p){ return igCard(p,false); }).join('') + '</div>';
+  if (nP.length) h += sepNew('📸 Новое в Instagram — с ' + ld) + '<div class="grid">' + nP.map(function(p){ return igCard(p,true); }).join('') + '</div>';
+  if (oP.length) h += sepOld('Было при прошлом обновлении') + '<div class="grid">' + oP.map(function(p){ return igCard(p,false); }).join('') + '</div>';
   if (!posts.length) h = emptyState('Нет постов за 2026 год','📸','Данные загружены, но публикаций за 2026 не найдено');
   document.getElementById('ig-content').innerHTML = h;
-  document.getElementById('ig-count').textContent = posts.length + ' постов · ' + newP.length + ' новых';
 }
-
 function igCard(p, isN) {
-  var s  = sentiment(p.caption);
-  var vr = (p.likesCount||0) > 500;
-  var ip = (p.ownerUsername||'').toLowerCase() === CFG.ig.toLowerCase();
-  return '<div class="card' + (isN?' is-new':'') + '">'
-    + '<div class="card-head"><div><div class="author">' + (p.ownerUsername||CFG.ig) + '</div><div class="date-sm">' + fmtDate(p.timestamp) + '</div></div>'
-    + '<div class="badges">' + (isN?'<span class="b b-new">🆕 Новое</span>':'') + (vr?'<span class="b b-viral">вирусный</span>':'')
-    + '<span class="b ' + (ip?'b-profile':'b-mention') + '">' + (ip?'профиль':'упоминание') + '</span>'
-    + '<span class="b ' + sCls(s) + '">' + sLbl(s) + '</span></div></div>'
-    + '<div class="caption">' + (p.caption||'').substring(0,300) + '</div>'
-    + '<div class="card-foot"><div class="meta"><span class="likes">❤ ' + fmtNum(p.likesCount) + '</span><span>💬 ' + fmtNum(p.commentsCount) + '</span></div>'
-    + '<a class="open-link" href="' + (p.url||'#') + '" target="_blank">Открыть →</a></div></div>';
+  var s = sentiment(p.caption); var vr = (p.likesCount||0)>500;
+  var ip = (p.ownerUsername||'').toLowerCase()===CFG.ig.toLowerCase();
+  return '<div class="card'+(isN?' is-new':'')+'">'
+    +'<div class="card-head"><div><div class="author">'+(p.ownerUsername||CFG.ig)+'</div><div class="date-sm">'+fmtDate(p.timestamp)+'</div></div>'
+    +'<div class="badges">'+(isN?'<span class="b b-new">🆕 Новое</span>':'')+(vr?'<span class="b b-viral">вирусный</span>':'')
+    +'<span class="b '+(ip?'b-profile':'b-mention')+'">'+(ip?'профиль':'упоминание')+'</span>'
+    +'<span class="b '+sCls(s)+'">'+sLbl(s)+'</span></div></div>'
+    +'<div class="caption">'+(p.caption||'').substring(0,300)+'</div>'
+    +'<div class="card-foot"><div class="meta"><span class="likes">❤ '+fmtNum(p.likesCount)+'</span><span>💬 '+fmtNum(p.commentsCount)+'</span></div>'
+    +'<a class="open-link" href="'+(p.url||'#')+'" target="_blank">Открыть →</a></div></div>';
 }
 
-// ===== RENDER TIKTOK =====
-function renderTT(videos, lastVisit, lastDisp) {
-  var newV = videos.filter(function(v){ return isNew(new Date(v.createTime*1000).toISOString(), lastVisit); });
-  var oldV = videos.filter(function(v){ return !isNew(new Date(v.createTime*1000).toISOString(), lastVisit); });
+function renderTT(videos, lv, ld) {
+  var nV = videos.filter(function(v){ return isNew(new Date(v.createTime*1000).toISOString(), lv); });
+  var oV = videos.filter(function(v){ return !isNew(new Date(v.createTime*1000).toISOString(), lv); });
   var tViews = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.playCount)||0); },0);
   var tLikes = videos.reduce(function(s,v){ return s+((v.stats&&v.stats.diggCount)||0); },0);
-
   document.getElementById('tt-stat-videos').textContent = videos.length;
   document.getElementById('tt-stat-views').textContent  = fmtNum(tViews);
   document.getElementById('tt-stat-likes').textContent  = fmtNum(tLikes);
   document.getElementById('tt-stat-avg').textContent    = videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;
-  document.getElementById('tt-stat-er').textContent     = videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1)+'%' : '—';
-  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + newV.length + ' новых';
-
+  document.getElementById('tt-stat-er').textContent     = videos.length&&tViews ? ((tLikes/tViews)*100).toFixed(1)+'%' : '—';
+  document.getElementById('tt-count').textContent = videos.length + ' видео · ' + nV.length + ' новых';
   var h = '';
-  if (newV.length) h += sepNew('🎵 Новое в TikTok — с ' + lastDisp) + '<div class="tiktok-grid">' + newV.map(function(v){ return ttCard(v,true); }).join('') + '</div>';
-  if (oldV.length) h += sepOld('Было при прошлом обновлении') + '<div class="tiktok-grid">' + oldV.map(function(v){ return ttCard(v,false); }).join('') + '</div>';
-  if (!videos.length) h = emptyState('Нет видео за 2026 год','🎵','Данные загружены, но видео за 2026 не найдено');
+  if (nV.length) h += sepNew('🎵 Новое в TikTok — с ' + ld) + '<div class="tiktok-grid">' + nV.map(function(v){ return ttCard(v,true); }).join('') + '</div>';
+  if (oV.length) h += sepOld('Было при прошлом обновлении') + '<div class="tiktok-grid">' + oV.map(function(v){ return ttCard(v,false); }).join('') + '</div>';
+  if (!videos.length) h = emptyState('Нет видео за 2026','🎵','Данные загружены');
   document.getElementById('tt-content').innerHTML = h;
 }
-
 function ttCard(v, isN) {
   var d = new Date(v.createTime*1000);
   var e = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  return '<div class="tt-card' + (isN?' is-new':'') + '">'
-    + '<div class="tt-thumb">' + e + '<div class="tt-play"><span>▶</span></div></div>'
-    + '<div class="tt-info">'
-    + (isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div>':'')
-    + '<div class="tt-views">' + fmtNum(v.stats&&v.stats.playCount) + '</div>'
-    + '<div class="tt-lbl">просмотров · ' + d.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'}) + '</div>'
-    + '<div class="tt-desc">' + (v.desc||'').substring(0,100) + '</div>'
-    + '<div class="tt-meta"><span>❤ ' + fmtNum(v.stats&&v.stats.diggCount) + '</span><span>💬 ' + fmtNum(v.stats&&v.stats.commentCount) + '</span><span>↗ ' + fmtNum(v.stats&&v.stats.shareCount) + '</span></div>'
-    + '</div></div>';
+  return '<div class="tt-card'+(isN?' is-new':'')+'">'
+    +'<div class="tt-thumb">'+e+'<div class="tt-play"><span>▶</span></div></div>'
+    +'<div class="tt-info">'+(isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕 Новое</span></div>':'')
+    +'<div class="tt-views">'+fmtNum(v.stats&&v.stats.playCount)+'</div>'
+    +'<div class="tt-lbl">просмотров · '+d.toLocaleDateString('ru',{day:'numeric',month:'short',year:'numeric'})+'</div>'
+    +'<div class="tt-desc">'+(v.desc||'').substring(0,100)+'</div>'
+    +'<div class="tt-meta"><span>❤ '+fmtNum(v.stats&&v.stats.diggCount)+'</span><span>💬 '+fmtNum(v.stats&&v.stats.commentCount)+'</span><span>↗ '+fmtNum(v.stats&&v.stats.shareCount)+'</span></div>'
+    +'</div></div>';
 }
 
-// ===== RENDER WEB =====
-function renderWeb(items, lastVisit, lastDisp) {
+function renderWeb(items, lv, ld) {
   var kw = CFG.name.toLowerCase().split(' ')[0];
-  var filtered = items.filter(function(i){ return ((i.title||'')+(i.description||'')).toLowerCase().indexOf(kw) >= 0; });
-  var newI = filtered.filter(function(i){ return i.date && isNew(i.date, lastVisit); });
-  var oldI = filtered.filter(function(i){ return !i.date || !isNew(i.date, lastVisit); });
-  var hs = {};
-  filtered.forEach(function(i){ try{ hs[new URL(i.url||'http://x').hostname]=1; }catch(e){} });
-  var posC = filtered.filter(function(i){ return sentiment((i.title||'')+(i.description||''))==='pos'; }).length;
-
-  document.getElementById('web-stat-topics').textContent   = filtered.length;
-  document.getElementById('web-stat-new').textContent      = newI.length;
-  document.getElementById('web-stat-mentions').textContent = filtered.length;
+  var f = items.filter(function(i){ return ((i.title||'')+(i.description||'')).toLowerCase().indexOf(kw)>=0; });
+  var nI = f.filter(function(i){ return i.date && isNew(i.date, lv); });
+  var oI = f.filter(function(i){ return !i.date || !isNew(i.date, lv); });
+  var hs = {}; f.forEach(function(i){ try{ hs[new URL(i.url||'http://x').hostname]=1; }catch(e){} });
+  var posC = f.filter(function(i){ return sentiment((i.title||'')+(i.description||')'))==='позитив'; }).length;
+  document.getElementById('web-stat-topics').textContent   = f.length;
+  document.getElementById('web-stat-new').textContent      = nI.length;
+  document.getElementById('web-stat-mentions').textContent = f.length;
   document.getElementById('web-stat-sources').textContent  = Object.keys(hs).length;
-  document.getElementById('web-stat-sentiment').textContent= filtered.length ? Math.round(posC/filtered.length*100)+'%' : '—';
-  document.getElementById('web-sync-badge').textContent = '🆕 ' + newI.length + ' новых';
+  document.getElementById('web-stat-sentiment').textContent= f.length ? Math.round(posC/f.length*100)+'%' : '—';
+  document.getElementById('web-sync-badge').textContent = '🆕 ' + nI.length + ' новых';
   document.getElementById('web-last-sync').textContent  = 'Проверено: ' + new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  document.getElementById('gen-web-mentions').textContent = filtered.length;
-
+  document.getElementById('gen-web-mentions').textContent = f.length;
   var h = '';
-  if (newI.length) h += sepNew('🌐 Интернет — новое с ' + lastDisp) + '<div class="web-grid">' + newI.map(function(i){ return webCard(i,true); }).join('') + '</div>';
-  if (oldI.length) h += sepOld('Ранее найденное') + '<div class="web-grid">' + oldI.map(function(i){ return webCard(i,false); }).join('') + '</div>';
-  if (!filtered.length) h = emptyState('Нет упоминаний за 2026 год','🌐','Попробуйте обновить позже');
+  if (nI.length) h += sepNew('🌐 Интернет — новое с ' + ld) + '<div class="web-grid">' + nI.map(function(i){ return webCard(i,true); }).join('') + '</div>';
+  if (oI.length) h += sepOld('Ранее найденное') + '<div class="web-grid">' + oI.map(function(i){ return webCard(i,false); }).join('') + '</div>';
+  if (!f.length) h = emptyState('Нет упоминаний за 2026','🌐','Попробуйте обновить позже');
   document.getElementById('web-content').innerHTML = h;
 }
-
 function webCard(item, isN) {
   var host = '—'; try{ host = new URL(item.url||'http://x').hostname; }catch(e){}
   var s = sentiment((item.title||'')+(item.description||''));
-  return '<div class="web-card' + (isN?' is-new':'') + '">'
-    + '<div class="wc-body"><div class="web-source-icon">📰</div>'
-    + '<div class="web-main"><div class="web-title">' + (item.title||'—') + '</div>'
-    + '<div class="web-tags">' + (isN?'<span class="web-tag wt-new">🆕 Новое</span>':'')
-    + '<span class="web-tag wt-news">Новость</span>'
-    + '<span class="b ' + sCls(s) + '" style="font-size:10px;padding:2px 7px">' + sLbl(s) + '</span></div>'
-    + '<div class="web-snippet">' + (item.description||'').substring(0,250) + '</div>'
-    + '</div></div>'
-    + '<div class="sources-strip"><span class="sources-label">Источник</span>'
-    + '<span class="sources-count">1 издание:</span>'
-    + '<a class="source-pill" href="' + (item.url||'#') + '" target="_blank">📰 ' + host
-    + (item.date?' <span class="sp-date">' + item.date + '</span>':'')
-    + '</a></div></div>';
+  return '<div class="web-card'+(isN?' is-new':'')+'">'
+    +'<div class="wc-body"><div class="web-source-icon">📰</div>'
+    +'<div class="web-main"><div class="web-title">'+(item.title||'—')+'</div>'
+    +'<div class="web-tags">'+(isN?'<span class="web-tag wt-new">🆕 Новое</span>':'')
+    +'<span class="web-tag wt-news">Новость</span>'
+    +'<span class="b '+sCls(s)+'" style="font-size:10px;padding:2px 7px">'+sLbl(s)+'</span></div>'
+    +'<div class="web-snippet">'+(item.description||'').substring(0,250)+'</div>'
+    +'</div></div>'
+    +'<div class="sources-strip"><span class="sources-label">Источник</span>'
+    +'<span class="sources-count">1 издание:</span>'
+    +'<a class="source-pill" href="'+(item.url||'#')+'" target="_blank">📰 '+host
+    +(item.date?' <span class="sp-date">'+item.date+'</span>':'')
+    +'</a></div></div>';
 }
 
-// ===== TAB SWITCH =====
 function switchTab(tab, el) {
   document.querySelectorAll('.plat-tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
