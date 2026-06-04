@@ -284,11 +284,8 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
   </div>
 </div>
 <script>
-var RAILWAY_URL = 'https://api-production-eee4.up.railway.app';
 var CFG={}; var isLoading=false;
 var EMOJIS=['🎓','🏆','🌍','📚','🎉','🔥','💡','🎯','🌟','💫'];
-
-function slugify(s){return s.toLowerCase().replace(/[^a-z0-9]/gi,'_');}
 
 window.onload=function(){
   var s=localStorage.getItem('uni_cfg_v4');
@@ -297,36 +294,16 @@ window.onload=function(){
 
 function openSettings(){document.getElementById('setupOverlay').style.display='flex';}
 
-async function startDashboard(){
+function startDashboard(){
   var name=document.getElementById('uniName').value.trim();
   var abbr=document.getElementById('uniAbbr').value.trim();
   var ig=document.getElementById('igHandle').value.trim().replace(/^@+/,'').trim();
   var tt=document.getElementById('ttHandle').value.trim().replace(/^#+/,'').trim();
-  var apifyTok=document.getElementById('apifyToken').value.trim();
+  var token=document.getElementById('apifyToken').value.trim();
   if(!name){alert('Введите название университета');return;}
-  if(!apifyTok){alert('Введите Apify API Token');return;}
+  if(!token){alert('Введите Apify API Token');return;}
   if(!ig&&!tt){alert('Укажите хотя бы один аккаунт или хэштег');return;}
-  var btn=document.querySelector('.btn-start');
-  btn.disabled=true; btn.textContent='Подключаем...';
-  var slugKey=slugify(name);
-  var uniId=localStorage.getItem('uni_id_'+slugKey);
-  var uniToken=localStorage.getItem('uni_token_'+slugKey);
-  if(!uniId){
-    try{
-      var r=await fetch(RAILWAY_URL+'/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,instagram_handle:ig,tiktok_handle:tt,web_keywords:name,apify_token:apifyTok})});
-      var d=await r.json();
-      if(!r.ok)throw new Error(d.detail||JSON.stringify(d));
-      uniId=d.university_id; uniToken=d.secret_token;
-      localStorage.setItem('uni_id_'+slugKey,uniId);
-      localStorage.setItem('uni_token_'+slugKey,uniToken);
-    }catch(e){
-      btn.disabled=false; btn.textContent='Загрузить данные и открыть дашборд →';
-      showError('Ошибка подключения к серверу: '+e.message+'. Убедитесь что сервер запущен: '+RAILWAY_URL);
-      document.getElementById('errorBar').style.display='block';
-      return;
-    }
-  }
-  CFG={name:name,abbr:abbr||name.charAt(0),ig:ig,tt:tt,uniId:uniId,uniToken:uniToken};
+  CFG={name:name,abbr:abbr||name.charAt(0),ig:ig,tt:tt,token:token};
   localStorage.setItem('uni_cfg_v4',JSON.stringify({name:name,abbr:CFG.abbr,ig:ig,tt:tt}));
   document.getElementById('headerTitle').textContent=name+' — Analytics';
   document.getElementById('headerAbbr').textContent=CFG.abbr.charAt(0).toUpperCase();
@@ -337,7 +314,6 @@ async function startDashboard(){
   document.getElementById('ttStatHandle').textContent=tt?'#'+tt:'—';
   document.getElementById('setupOverlay').style.display='none';
   document.getElementById('app').style.display='block';
-  btn.disabled=false; btn.textContent='Загрузить данные и открыть дашборд →';
   realRefresh();
 }
 
@@ -376,58 +352,69 @@ function hideLoading(){
 }
 function showError(m){var el=document.getElementById('errorBar');el.textContent='❌ '+m;el.style.display='block';}
 
+async function apifyRun(actorId,input,stepId,label){
+  setStep(stepId,'active');
+  document.getElementById('loadingText').textContent=label+' — запускаем...';
+  var r=await fetch('/.netlify/functions/apify-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actorId:actorId,input:input})});
+  var sd;try{sd=await r.json();}catch(e){throw new Error(label+': неверный ответ');}
+  if(!r.ok||sd.error)throw new Error(label+': '+(sd.error||sd.detail||r.status));
+  var runId=sd.runId;
+  for(var i=0;i<72;i++){
+    await sleep(5000);
+    document.getElementById('loadingText').textContent=label+' — '+((i+1)*5)+'с...';
+    var pr=await fetch('/.netlify/functions/apify-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:runId,getItems:true})});
+    var pd;try{pd=await pr.json();}catch(e){continue;}
+    if(pd.status==='SUCCEEDED'){setStep(stepId,'done');return pd.items||[];}
+    if(['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status)>=0)throw new Error(label+': актор '+pd.status);
+  }
+  throw new Error(label+': timeout 6 мин');
+}
+
 async function realRefresh(){
   if(isLoading)return;
-  if(!CFG.uniId){openSettings();return;}
+  if(!CFG.token){openSettings();return;}
   isLoading=true;
   var lastKey='lv_'+(CFG.ig||CFG.tt||CFG.name).replace(/[^a-z0-9]/gi,'_').toLowerCase();
   var lastVisit=localStorage.getItem(lastKey)||'2025-12-31T23:59:59Z';
   var lastDisp=fmtDate(lastVisit);
   setStep('ig','');setStep('tt','');setStep('web','');
-  showLoading('Загружаем данные...');
+  showLoading('Подготовка...');
   try{
-    var authHeaders={'Authorization':'Bearer '+CFG.uniToken,'Content-Type':'application/json'};
-    var r=await fetch(RAILWAY_URL+'/api/data/'+CFG.uniId,{headers:authHeaders});
-    var d=await r.json();
-    if(!r.ok)throw new Error(d.detail||'Ошибка загрузки ('+r.status+')');
-    var hasData=d.data&&Object.keys(d.data).length>0;
-    if(!hasData){
-      showLoading('Первый запуск — собираем данные из Apify (3-5 мин)...');
-      await fetch(RAILWAY_URL+'/api/refresh/'+CFG.uniId,{method:'POST',headers:authHeaders});
-      for(var i=0;i<72;i++){
-        await sleep(5000);
-        showLoading('Собираем данные... '+((i+1)*5)+'с (идёт первый сбор из Apify)');
-        var r2=await fetch(RAILWAY_URL+'/api/data/'+CFG.uniId,{headers:authHeaders});
-        var d2=await r2.json();
-        if(d2.data&&Object.keys(d2.data).length>0){d=d2;break;}
-      }
-    }
-    if(d.data&&d.data.instagram){
-      setStep('ig','active');
-      var igRaw=d.data.instagram.data||{};
-      var posts=igRaw.posts||[];
+    if(CFG.ig){
+      var igItems=await apifyRun('apify/instagram-scraper',
+        {usernames:[CFG.ig],resultsType:'posts',resultsLimit:30},
+        'ig','📸 Instagram'
+      );
+      var posts=igItems.filter(function(p){var ts=p.timestamp||p.taken_at_timestamp||p.takenAtTimestamp;return is2026(ts);});
+      if(igItems.length>0&&posts.length===0)posts=igItems;
       renderIG(posts,lastVisit,lastDisp);
       document.getElementById('gen-ig-posts').textContent=posts.length;
-      setStep('ig','done');
-    }else{document.getElementById('ig-content').innerHTML=emptyState('Нет данных Instagram','📸','Нажмите Обновить');}
-    if(d.data&&d.data.tiktok){
-      setStep('tt','active');
-      var ttRaw=d.data.tiktok.data||{};
-      var videos=ttRaw.videos||[];
+    }else{
+      document.getElementById('ig-content').innerHTML=emptyState('Instagram аккаунт не указан','📸','Откройте настройки');
+    }
+    if(CFG.tt){
+      var ttItems=await apifyRun('clockworks/tiktok-hashtag-scraper',
+        {hashtags:[CFG.tt],resultsPerPage:30},
+        'tt','🎵 TikTok'
+      );
+      var videos=ttItems.filter(function(v){return is2026(v.createTime||v.createTimeISO||v.timestamp);});
       renderTT(videos,lastVisit,lastDisp);
       document.getElementById('gen-tt-videos').textContent=videos.length;
-      setStep('tt','done');
-    }else{document.getElementById('tt-content').innerHTML=emptyState('Нет данных TikTok','🎵','Нажмите Обновить');}
-    if(d.data&&d.data.web){
-      setStep('web','active');
-      var webRaw=d.data.web.data||{};
-      var results=webRaw.results||[];
-      renderWeb(results,lastVisit,lastDisp);
-      setStep('web','done');
-    }else{document.getElementById('web-content').innerHTML=emptyState('Нет данных веб-мониторинга','🌐','Нажмите Обновить');}
+    }else{
+      document.getElementById('tt-content').innerHTML=emptyState('TikTok хэштег не указан','🎵','Откройте настройки');
+    }
+    var abbr=CFG.abbr||'';
+    var q=['"'+CFG.name+'" 2026',CFG.name+' site:tengrinews.kz OR site:informburo.kz OR site:kapital.kz OR site:forbes.kz 2026',(abbr.length>2?'"'+abbr+'" университет 2026':'')].filter(Boolean).join('
+');
+    var webItems=await apifyRun('apify/google-search-scraper',
+      {queries:q,maxPagesPerQuery:2,resultsPerPage:10,languageCode:'ru',countryCode:'kz'},
+      'web','🌐 Интернет'
+    );
+    renderWeb(webItems,lastVisit,lastDisp);
     localStorage.setItem(lastKey,new Date().toISOString());
-  }catch(e){console.error(e);showError(e.message);}
-  finally{
+  }catch(e){
+    console.error(e);showError(e.message);
+  }finally{
     isLoading=false;hideLoading();
     document.getElementById('lastUpdate').textContent='Обновлено: '+new Date().toLocaleString('ru',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   }
@@ -457,7 +444,7 @@ function igCard(p,isN){
   var ip=CFG.ig&&(p.ownerUsername||p.username||'').toLowerCase()===CFG.ig.toLowerCase();
   var sc=p.shortCode||p.shortcode||'';
   var url=p.url||(sc?'https://www.instagram.com/p/'+sc+'/':'#');
-  return'<div class="card"+(isN?' is-new':'')+'">'+
+  return'<div class="card'+(isN?' is-new':'')+'">'+
     '<div class="card-head"><div><div class="author">'+(p.ownerUsername||p.username||CFG.ig)+'</div><div class="date-sm">'+fmtDate(igTs(p))+'</div></div>'+
     '<div class="badges">'+(isN?'<span class="b b-new">🆕 Новое</span>':'')+(vr?'<span class="b b-viral">вирусный</span>':'')+
     '<span class="b '+(ip?'b-profile':'b-mention')+'">'+(ip?'профиль':'упоминание')+'</span>'+
@@ -466,7 +453,6 @@ function igCard(p,isN){
     '<div class="card-foot"><div class="meta"><span class="likes">❤ '+fmtNum(p.likesCount||p.likes)+'</span><span>💬 '+fmtNum(p.commentsCount||p.comments)+'</span></div>'+
     '<a class="open-link" href="'+url+'" target="_blank">Открыть →</a></div></div>';
 }
-
 function renderTT(videos,lv,ld){
   function gTs(v){return v.createTime||v.createTimeISO||v.timestamp||null;}
   function gP(v){return(v.stats&&v.stats.playCount)||(v.stats&&v.stats.plays)||v.playCount||v.plays||0;}
@@ -493,7 +479,7 @@ function renderTT(videos,lv,ld){
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN){
   var d=parseTs(gTs(v))||new Date();
   var e=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  return'<div class="tt-card"+(isN?' is-new':'')+'">'+
+  return'<div class="tt-card'+(isN?' is-new':'')+'">'+
     '<div class="tt-thumb">'+e+'<div class="tt-play"><span>▶</span></div></div>'+
     '<div class="tt-info">'+(isN?'<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕</span></div>':'')+
     '<div class="tt-views">'+fmtNum(gP(v))+'</div>'+
@@ -502,7 +488,6 @@ function ttCard(v,gTs,gP,gL,gC,gS,gD,isN){
     '<div class="tt-meta"><span>❤ '+fmtNum(gL(v))+'</span><span>💬 '+fmtNum(gC(v))+'</span><span>↗ '+fmtNum(gS(v))+'</span></div>'+
     '</div></div>';
 }
-
 function renderWeb(items,lv,ld){
   var seen={};var unique=[];
   items.forEach(function(i){var k=(i.url||i.title||'').substring(0,80);if(k&&!seen[k]){seen[k]=true;unique.push(i);}});
@@ -512,7 +497,7 @@ function renderWeb(items,lv,ld){
   var nI=f.filter(function(i){return i.date&&isNew(i.date,lv);});
   var oI=f.filter(function(i){return!i.date||!isNew(i.date,lv);});
   var hs={};f.forEach(function(i){try{hs[new URL(i.url||'http://x').hostname]=1;}catch(e){}});
-  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||''))==='pos';}).length;
+  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||'))==='pos';}).length;
   document.getElementById('web-stat-topics').textContent=f.length;
   document.getElementById('web-stat-new').textContent=nI.length;
   document.getElementById('web-stat-mentions').textContent=f.length;
@@ -530,7 +515,7 @@ function renderWeb(items,lv,ld){
 function webCard(item,isN){
   var host='—';try{host=new URL(item.url||'http://x').hostname.replace('www.','');}catch(e){}
   var s=sentiment((item.title||'')+(item.description||''));
-  return'<div class="web-card"+(isN?' is-new':'')+'">'+
+  return'<div class="web-card'+(isN?' is-new':'')+'">'+
     '<div class="wc-body"><div class="web-source-icon">📰</div>'+
     '<div class="web-main"><div class="web-title">'+(item.title||'—')+'</div>'+
     '<div class="web-tags">'+(isN?'<span class="web-tag wt-new">🆕 Новое</span>':'')+
@@ -542,7 +527,6 @@ function webCard(item,isN){
     '<a class="source-pill" href="'+(item.url||'#')+'" target="_blank">📰 '+host+(item.date?' <span>'+item.date+'</span>':'')+
     '</a></div></div>';
 }
-
 function loadIGFromExcel(input){
   var file=input.files[0];if(!file)return;
   if(typeof XLSX==='undefined'){showError('Библиотека Excel не загрузилась. Обновите страницу (F5).');return;}
@@ -581,7 +565,6 @@ function loadIGFromExcel(input){
   };
   reader.readAsArrayBuffer(file);input.value='';
 }
-
 function downloadIGTemplate(){
   if(typeof XLSX==='undefined'){showError('Библиотека Excel не загрузилась.');return;}
   var ig=CFG.ig||'your_account';
@@ -589,7 +572,6 @@ function downloadIGTemplate(){
   var ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:14},{wch:50},{wch:10},{wch:14},{wch:45},{wch:20}];
   var wbk=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wbk,ws,'Instagram');XLSX.writeFile(wbk,'instagram_posts_template.xlsx');
 }
-
 function switchTab(tab,el){
   document.querySelectorAll('.plat-tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
