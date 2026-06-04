@@ -362,7 +362,7 @@ async function apifyRun(actorId,input,stepId,label){
   for(var i=0;i<72;i++){
     await sleep(5000);
     document.getElementById('loadingText').textContent=label+' — '+((i+1)*5)+'с...';
-    var pr=await fetch('/.netlify/functions/apify-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:runId,getItems:true})});
+    var pr=await fetch('/.netlify/functions/apify-poll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:runId,token:CFG.token,getItems:true})});
     var pd;try{pd=await pr.json();}catch(e){continue;}
     if(pd.status==='SUCCEEDED'){setStep(stepId,'done');return pd.items||[];}
     if(['FAILED','ABORTED','TIMED-OUT'].indexOf(pd.status)>=0)throw new Error(label+': актор '+pd.status);
