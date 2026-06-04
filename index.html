@@ -355,7 +355,7 @@ function showError(m){var el=document.getElementById('errorBar');el.textContent=
 async function apifyRun(actorId,input,stepId,label){
   setStep(stepId,'active');
   document.getElementById('loadingText').textContent=label+' — запускаем...';
-  var r=await fetch('/.netlify/functions/apify-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actorId:actorId,input:input})});
+  var r=await fetch('/.netlify/functions/apify-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actorId:actorId,input:input,token:CFG.token})});
   var sd;try{sd=await r.json();}catch(e){throw new Error(label+': неверный ответ');}
   if(!r.ok||sd.error)throw new Error(label+': '+(sd.error||sd.detail||r.status));
   var runId=sd.runId;
@@ -497,7 +497,7 @@ function renderWeb(items,lv,ld){
   var nI=f.filter(function(i){return i.date&&isNew(i.date,lv);});
   var oI=f.filter(function(i){return!i.date||!isNew(i.date,lv);});
   var hs={};f.forEach(function(i){try{hs[new URL(i.url||'http://x').hostname]=1;}catch(e){}});
-  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||'))==='pos';}).length;
+  var posC=f.filter(function(i){return sentiment((i.title||'')+(i.description||''))==='pos';}).length;
   document.getElementById('web-stat-topics').textContent=f.length;
   document.getElementById('web-stat-new').textContent=nI.length;
   document.getElementById('web-stat-mentions').textContent=f.length;
