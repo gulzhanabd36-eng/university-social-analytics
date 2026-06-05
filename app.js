@@ -114,8 +114,9 @@ async function realRefresh() {
   showLoading("\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0430...");
   try {
     if (CFG.ig) {
+      var igUrl = "https://www.instagram.com/" + CFG.ig + "/";
       var igItems = await apifyRun("apify~instagram-scraper",
-        {usernames: [CFG.ig], resultsType: "posts", resultsLimit: 30},
+        {directUrls: [igUrl], resultsType: "posts", resultsLimit: 30},
         "ig", "\uD83D\uDCF8 Instagram"
       );
       var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
@@ -188,7 +189,8 @@ function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
   var s = sentiment(cap);
   var vr = (p.likesCount || p.likes || 0) > 500;
-  var ip = CFG.ig && (p.ownerUsername || p.username || "").toLowerCase() === CFG.ig.toLowerCase();
+  var owner = (p.ownerUsername || p.username || CFG.ig || "").replace(/^https?:\/\/[^/]*\//, "").replace(/\/$/, "");
+  var ip = CFG.ig && owner.toLowerCase() === CFG.ig.toLowerCase();
   var sc = p.shortCode || p.shortcode || "";
   var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
   return "<div class=\"card" + (isN ? " is-new" : "") + "\">" +
