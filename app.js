@@ -210,15 +210,16 @@ function renderTT(videos, lv, ld) {
 }
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
   var d = parseTs(gTs(v)) || new Date();
-  var emojis = ["🎓","🏆","🌍","📚","🎉","🔥"];
-  var e = emojis[Math.floor(Math.random() * emojis.length)];
+  var desc = gD(v);
+  var url = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + ((v.authorMeta && v.authorMeta.name) || "") + "/video/" + (v.id || ""));
   return "<div class=\"tt-card" + (isN ? " is-new" : "") + "\">" +
-    "<div class=\"tt-thumb\">" + e + "<div class=\"tt-play\"><span>▶</span></div></div>" +
-    "<div class=\"tt-info\"><div class=\"tt-views\">" + fmtNum(gP(v)) + "</div>" +
-    "<div class=\"tt-lbl\">просмотров · " + d.toLocaleDateString("ru", {day:"numeric",month:"short",year:"numeric"}) + "</div>" +
-    "<div class=\"tt-desc\">" + gD(v).substring(0,100) + "</div>" +
-    "<div class=\"tt-meta\"><span>❤ " + fmtNum(gL(v)) + "</span><span>💬 " + fmtNum(gC(v)) + "</span><span>↗ " + fmtNum(gS(v)) + "</span></div>" +
-    "</div></div>";
+    "<div class=\"tt-text-body\">" +
+    (isN ? "<span class=\"b b-new\" style=\"font-size:10px;margin-bottom:6px;display:inline-block;\">\u{1F195} \u041d\u043e\u0432\u043e\u0435</span>" : "") +
+    "<div class=\"tt-desc-full\">" + (desc ? desc.substring(0, 300) : "\u2014") + "</div>" +
+    "<div class=\"tt-row\">" +
+    "<div class=\"tt-meta\"><span>\u25b6 " + fmtNum(gP(v)) + "</span><span>\u2764 " + fmtNum(gL(v)) + "</span><span>\ud83d\udcac " + fmtNum(gC(v)) + "</span><span class=\"tt-date-sm\">" + d.toLocaleDateString("ru", {day:"numeric",month:"short",year:"numeric"}) + "</span></div>" +
+    "<a class=\"open-link\" href=\"" + url + "\" target=\"_blank\">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0432\u0438\u0434\u0435\u043e \u2192</a>" +
+    "</div></div></div>";
 }
 function renderWeb(items, lv, ld) {
   var seen = {}; var unique = [];
