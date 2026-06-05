@@ -103,6 +103,28 @@ async function apifyRun(actorId, input, stepId, label) {
   throw new Error(label + ": timeout 6 \u043c\u0438\u043d");
 }
 
+
+async function cacheRead(table, handle) {
+  try {
+    var r = await fetch("/.netlify/functions/supabase-cache", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({action: "read", table: table, handle: handle})
+    });
+    if (!r.ok) return null;
+    return await r.json(); // {fresh, items, saved_at}
+  } catch(e) { return null; }
+}
+async function cacheWrite(table, handle, items) {
+  try {
+    await fetch("/.netlify/functions/supabase-cache", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({action: "write", table: table, handle: handle, items: items})
+    });
+  } catch(e) { /* silent */ }
+}
+
 async function realRefresh() {
   if (isLoading) return;
   if (!CFG.token) { openSettings(); return; }
@@ -114,10 +136,19 @@ async function realRefresh() {
   showLoading("\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0430...");
   try {
     if (CFG.ig) {
-      var igItems = await apifyRun("apify~instagram-scraper",
-        {usernames: [CFG.ig], resultsType: "posts", resultsLimit: 30},
-        "ig", "\uD83D\uDCF8 Instagram"
-      );
+      var igCache = await cacheRead("uni_ig_posts", CFG.ig);
+      var igItems;
+      if (igCache && igCache.fresh && igCache.items && igCache.items.length) {
+        igItems = igCache.items;
+        setStep("ig", "done");
+        document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";
+      } else {
+        igItems = await apifyRun("apify~instagram-scraper",
+          {usernames: [CFG.ig], resultsType: "posts", resultsLimit: 30},
+          "ig", "\uD83D\uDCF8 Instagram"
+        );
+        cacheWrite("uni_ig_posts", CFG.ig, igItems);
+      }
       var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
       if (igItems.length > 0 && posts.length === 0) posts = igItems;
       renderIG(posts, lastVisit, lastDisp);
@@ -126,10 +157,19 @@ async function realRefresh() {
       document.getElementById("ig-content").innerHTML = emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");
     }
     if (CFG.tt) {
-      var ttItems = await apifyRun("clockworks/tiktok-hashtag-scraper",
-        {hashtags: [CFG.tt], resultsPerPage: 30},
-        "tt", "\uD83C\uDFB5 TikTok"
-      );
+      var ttCache = await cacheRead("uni_tt_videos", CFG.tt);
+      var ttItems;
+      if (ttCache && ttCache.fresh && ttCache.items && ttCache.items.length) {
+        ttItems = ttCache.items;
+        setStep("tt", "done");
+        document.getElementById("loadingText").textContent = "\uD83C\uDFB5 TikTok \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";
+      } else {
+        ttItems = await apifyRun("clockworks/tiktok-hashtag-scraper",
+          {hashtags: [CFG.tt], resultsPerPage: 30},
+          "tt", "\uD83C\uDFB5 TikTok"
+        );
+        cacheWrite("uni_tt_videos", CFG.tt, ttItems);
+      }
       var videos = ttItems.filter(function(v) { return is2026(v.createTime || v.createTimeISO || v.timestamp); });
       renderTT(videos, lastVisit, lastDisp);
       document.getElementById("gen-tt-videos").textContent = videos.length;
