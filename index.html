@@ -313,43 +313,86 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="web-stat-sources">—</div><div class="l">Источников</div></div>
       <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div></div>
     </div>
-    <div class="controls-mini"><div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
-        <span class="last-sync" id="web-last-sync">Ещё не проверено</span>
-    </div>
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
   </div>
   <div class="tab-panel" id="panel-general">
-  <div class="content" style="max-width:900px;margin:0 auto">
-    <div class="info-grid">
-      <div class="info-card">
-        <h3>&#127963; &#1054;&#1089;&#1085;&#1086;&#1074;&#1085;&#1099;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077;</h3>
-        <div class="info-row"><span class="info-key">&#1059;&#1085;&#1080;&#1074;&#1077;&#1088;&#1089;&#1080;&#1090;&#1077;&#1090;</span><span class="info-val" id="genFullName">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1055;&#1077;&#1088;&#1080;&#1086;&#1076;</span><span class="info-val">2026</span></div>
+  <div style="padding:28px;max-width:960px;margin:0 auto">
+
+    <!-- top summary row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:18px 20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#1a1a1a" id="gen-sum-ig">—</div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Постов Instagram</div>
+        <div style="font-size:11px;color:#C57E33;font-weight:600;margin-top:2px" id="gen-sum-ig-h">—</div>
       </div>
-      <div class="info-card">
-        <h3>&#128202; &#1057;&#1086;&#1094;&#1080;&#1072;&#1083;&#1100;&#1085;&#1099;&#1077; &#1089;&#1077;&#1090;&#1080;</h3>
-        <div class="info-row"><span class="info-key">&#1055;&#1086;&#1089;&#1090;&#1086;&#1074; Instagram</span><span class="info-val gold" id="gen-ig-posts">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1042;&#1080;&#1076;&#1077;&#1086; TikTok</span><span class="info-val gold" id="gen-tt-videos">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1059;&#1087;&#1086;&#1084;&#1080;&#1085;&#1072;&#1085;&#1080;&#1081; &#1074; &#1057;&#1052;&#1048;</span><span class="info-val gold" id="gen-web-mentions">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082;</span><span class="info-val">Apify API</span></div>
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:18px 20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#1a1a1a" id="gen-sum-tt">—</div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Видео TikTok</div>
+        <div style="font-size:11px;color:#C57E33;font-weight:600;margin-top:2px" id="gen-sum-tt-h">—</div>
       </div>
-      <div class="info-card">
-        <h3>&#128248; Instagram &#8212; &#1058;&#1086;&#1087; &#1082;&#1072;&#1090;&#1077;&#1075;&#1086;&#1088;&#1080;&#1080;</h3>
-        <div class="info-row"><span class="info-key" id="gen-cat1-name">&#8212;</span><span class="info-val gold" id="gen-cat1-cnt">&#8212;</span></div>
-        <div class="info-row"><span class="info-key" id="gen-cat2-name">&#8212;</span><span class="info-val" id="gen-cat2-cnt">&#8212;</span></div>
-        <div class="info-row"><span class="info-key" id="gen-cat3-name">&#8212;</span><span class="info-val" id="gen-cat3-cnt">&#8212;</span></div>
-        <div class="info-row"><span class="info-key" id="gen-cat4-name">&#8212;</span><span class="info-val" id="gen-cat4-cnt">&#8212;</span></div>
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:18px 20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#C57E33" id="gen-sum-views">—</div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Просмотров TikTok</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">суммарно</div>
       </div>
-      <div class="info-card">
-        <h3>&#127925; TikTok &#8212; &#1057;&#1090;&#1072;&#1090;&#1080;&#1089;&#1090;&#1080;&#1082;&#1072;</h3>
-        <div class="info-row"><span class="info-key">&#1042;&#1089;&#1077;&#1075;&#1086; &#1074;&#1080;&#1076;&#1077;&#1086;</span><span class="info-val gold" id="gen-tt-cnt">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1055;&#1088;&#1086;&#1089;&#1084;&#1086;&#1090;&#1088;&#1086;&#1074;</span><span class="info-val gold" id="gen-tt-views">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1051;&#1072;&#1081;&#1082;&#1086;&#1074;</span><span class="info-val gold" id="gen-tt-likes">&#8212;</span></div>
-        <div class="info-row"><span class="info-key">&#1057;&#1088;&#1077;&#1076;&#1085;&#1080;&#1081; ER</span><span class="info-val gold" id="gen-tt-er">&#8212;</span></div>
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:18px 20px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:#1a1a1a" id="gen-sum-web">—</div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-top:4px">Упоминаний СМИ</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">интернет-мониторинг</div>
       </div>
     </div>
+
+    <!-- 2-col info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+
+      <!-- university card -->
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:20px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#C57E33;margin-bottom:14px">🏛 Университет</div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">Название</span><span style="font-weight:700" id="genFullName">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">Instagram</span><span style="font-weight:700;color:#C57E33" id="genIG">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">TikTok</span><span style="font-weight:700;color:#C57E33" id="genTT">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px"><span style="color:#888">Период</span><span style="font-weight:700">2026</span></div>
+      </div>
+
+      <!-- tiktok stats -->
+      <div style="background:white;border-radius:12px;border:1px solid #eee;padding:20px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#C57E33;margin-bottom:14px">🎵 TikTok — Статистика</div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">Всего видео</span><span style="font-weight:700;color:#C57E33" id="gen-tt-cnt">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">Просмотров</span><span style="font-weight:700;color:#C57E33" id="gen-tt-views">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:#888">Лайков</span><span style="font-weight:700;color:#C57E33" id="gen-tt-likes">—</span></div>
+        <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px"><span style="color:#888">Средний ER</span><span style="font-weight:700;color:#C57E33" id="gen-tt-er">—</span></div>
+      </div>
+
+    </div>
+
+    <!-- Instagram top categories -->
+    <div style="background:white;border-radius:12px;border:1px solid #eee;padding:20px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#C57E33;margin-bottom:16px">📸 Instagram — Топ категории</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div style="background:#F5F3EE;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#C57E33" id="gen-cat1-cnt">—</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;font-weight:600" id="gen-cat1-name">—</div>
+        </div>
+        <div style="background:#F5F3EE;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#1a1a1a" id="gen-cat2-cnt">—</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;font-weight:600" id="gen-cat2-name">—</div>
+        </div>
+        <div style="background:#F5F3EE;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#1a1a1a" id="gen-cat3-cnt">—</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;font-weight:600" id="gen-cat3-name">—</div>
+        </div>
+        <div style="background:#F5F3EE;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:#1a1a1a" id="gen-cat4-cnt">—</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;font-weight:600" id="gen-cat4-name">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- hidden compatibility IDs (gen-ig-posts, gen-tt-videos, gen-web-mentions keep working) -->
+    <span id="gen-ig-posts" style="display:none"></span>
+    <span id="gen-tt-videos" style="display:none"></span>
+    <span id="gen-web-mentions" style="display:none"></span>
+
   </div>
 </div>
 </div>
