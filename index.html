@@ -167,6 +167,67 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .stripe-life{background:linear-gradient(90deg,#8B5CF6,#C4B5FD);}
 .stripe-other{background:linear-gradient(90deg,#9CA3AF,#D1D5DB);}
 </style>
+
+<style>
+/* ===== REFERENCE CARD DESIGN ===== */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:20px}
+.card{background:white;border-radius:10px;border:1px solid #eee;padding:14px;display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s;cursor:default}
+.card:hover{box-shadow:0 3px 16px rgba(0,0,0,.09);border-color:#e0e0e0}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.author{font-size:12px;font-weight:700;color:#1a1a1a}
+.date-sm{font-size:10px;color:#aaa;margin-top:2px}
+.badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.b-profile{background:#DBEAFE;color:#1D4ED8}
+.b-mentions{background:#FFF3E0;color:#C57E33}
+.b-positive{background:#DCFCE7;color:#15803D}
+.b-negative{background:#FEE2E2;color:#DC2626}
+.b-neutral{background:#F5F3EE;color:#6B7280}
+.b-viral{background:#FEF9C3;color:#854D0E}
+.cat-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:#F5F3EE;border-radius:6px;font-size:10px;color:#555;font-weight:500;width:fit-content}
+.caption{font-size:12px;color:#444;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f0f0f0;margin-top:auto}
+.meta{display:flex;gap:10px;font-size:11px;color:#888}
+.likes{color:#C57E33;font-weight:700}
+.open-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0;transition:all .15s}
+.open-link:hover{background:#C57E33;color:white;border-color:#C57E33}
+/* TikTok cards */
+.tt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px}
+.tt-card{background:white;border-radius:10px;border:1px solid #eee;padding:14px;display:flex;flex-direction:column;gap:8px;transition:box-shadow .15s}
+.tt-card:hover{box-shadow:0 3px 16px rgba(0,0,0,.09)}
+.tt-card.is-almau{border-left:3px solid #C57E33}
+.tt-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tt-author{font-size:12px;font-weight:700;color:#1a1a1a}
+.tt-date{font-size:10px;color:#aaa;margin-top:2px}
+.tt-caption{font-size:12px;color:#444;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.tt-hashtags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.tt-tag{font-size:10px;color:#C57E33;background:#FFF8EE;border:1px solid #F5D5A0;padding:2px 7px;border-radius:6px;font-weight:600}
+.tt-stats{display:flex;gap:10px;font-size:11px;color:#888;padding-top:8px;border-top:1px solid #f0f0f0;margin-top:auto;flex-wrap:wrap;align-items:center}
+.tt-views{color:#C57E33;font-weight:700}
+.tt-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0;transition:all .15s;margin-left:auto}
+.tt-link:hover{background:#C57E33;color:white}
+.tt-almau-badge{background:#C57E33;color:white;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700}
+/* Web cards reuse grid+card */
+.web-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:20px}
+/* General profile */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.info-card{background:white;border-radius:10px;border:1px solid #eee;padding:18px}
+.info-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:14px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:#666}
+.info-val{font-weight:600}
+.info-val.gold{color:#C57E33}
+/* override ig-grid/ig-card stripe styles */
+.ig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:20px}
+.ig-card{display:none!important}
+.ig-card-stripe,.ig-card-body,.ig-card-badges,.ig-card-caption,.ig-card-footer,.ig-card-meta,.ig-card-link,.ig-card-date,.ig-filter-bar{all:unset}
+.ig-filter-bar{display:flex!important;flex-wrap:wrap!important;gap:6px!important;padding:12px 0 16px!important;border-bottom:1px solid #E8E4DD!important;margin-bottom:16px!important}
+.ig-cat-btn{background:#F5F3EE;border:1.5px solid #E0DDD7;border-radius:20px;padding:5px 14px;font-size:13px;cursor:pointer;color:#555;font-family:inherit;transition:all .15s}
+.ig-cat-btn:hover{border-color:#C57E33;color:#C57E33}
+.ig-cat-btn.active{background:#C57E33;border-color:#C57E33;color:#fff;font-weight:600}
+.ig-cat-count{display:inline-block;background:rgba(0,0,0,.1);border-radius:10px;padding:0 6px;font-size:11px;margin-left:3px}
+.ig-cat-btn.active .ig-cat-count{background:rgba(255,255,255,.25)}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
@@ -266,42 +327,39 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
   </div>
   <div class="tab-panel" id="panel-general">
-    <div class="content">
-      <div class="gen-profile">
-        <div class="gen-hero">
-          <div class="gen-hero-abbr" id="genAbbrBig">U</div>
-          <div class="gen-hero-info">
-            <div class="gen-hero-name" id="genFullName">—</div>
-            <div class="gen-hero-subs">
-              <span class="gen-handle gen-handle-ig" id="genIG">@—</span>
-              <span class="gen-handle gen-handle-tt" id="genTT">#—</span>
-            </div>
-          </div>
-          <div class="gen-hero-year">2026</div>
-        </div>
-        <div class="gen-stats-row">
-          <div class="gen-stat-card gen-stat-ig">
-            <div class="gen-stat-icon">📸</div>
-            <div class="gen-stat-platform">Instagram</div>
-            <div class="gen-stat-num" id="gen-ig-posts">—</div>
-            <div class="gen-stat-lbl">постов 2026</div>
-          </div>
-          <div class="gen-stat-card gen-stat-tt">
-            <div class="gen-stat-icon">🎵</div>
-            <div class="gen-stat-platform">TikTok</div>
-            <div class="gen-stat-num" id="gen-tt-videos">—</div>
-            <div class="gen-stat-lbl">видео 2026</div>
-          </div>
-          <div class="gen-stat-card gen-stat-web">
-            <div class="gen-stat-icon">🌐</div>
-            <div class="gen-stat-platform">Интернет</div>
-            <div class="gen-stat-num" id="gen-web-mentions">—</div>
-            <div class="gen-stat-lbl">упоминаний</div>
-          </div>
-        </div>
+  <div class="content" style="max-width:900px;margin:0 auto">
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>&#127963; &#1054;&#1089;&#1085;&#1086;&#1074;&#1085;&#1099;&#1077; &#1076;&#1072;&#1085;&#1085;&#1099;&#1077;</h3>
+        <div class="info-row"><span class="info-key">&#1059;&#1085;&#1080;&#1074;&#1077;&#1088;&#1089;&#1080;&#1090;&#1077;&#1090;</span><span class="info-val" id="genFullName">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">TikTok</span><span class="info-val gold" id="genTT">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1055;&#1077;&#1088;&#1080;&#1086;&#1076;</span><span class="info-val">2026</span></div>
+      </div>
+      <div class="info-card">
+        <h3>&#128202; &#1057;&#1086;&#1094;&#1080;&#1072;&#1083;&#1100;&#1085;&#1099;&#1077; &#1089;&#1077;&#1090;&#1080;</h3>
+        <div class="info-row"><span class="info-key">&#1055;&#1086;&#1089;&#1090;&#1086;&#1074; Instagram</span><span class="info-val gold" id="gen-ig-posts">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1042;&#1080;&#1076;&#1077;&#1086; TikTok</span><span class="info-val gold" id="gen-tt-videos">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1059;&#1087;&#1086;&#1084;&#1080;&#1085;&#1072;&#1085;&#1080;&#1081; &#1074; &#1057;&#1052;&#1048;</span><span class="info-val gold" id="gen-web-mentions">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082;</span><span class="info-val">Apify API</span></div>
+      </div>
+      <div class="info-card">
+        <h3>&#128248; Instagram &#8212; &#1058;&#1086;&#1087; &#1082;&#1072;&#1090;&#1077;&#1075;&#1086;&#1088;&#1080;&#1080;</h3>
+        <div class="info-row"><span class="info-key" id="gen-cat1-name">&#8212;</span><span class="info-val gold" id="gen-cat1-cnt">&#8212;</span></div>
+        <div class="info-row"><span class="info-key" id="gen-cat2-name">&#8212;</span><span class="info-val" id="gen-cat2-cnt">&#8212;</span></div>
+        <div class="info-row"><span class="info-key" id="gen-cat3-name">&#8212;</span><span class="info-val" id="gen-cat3-cnt">&#8212;</span></div>
+        <div class="info-row"><span class="info-key" id="gen-cat4-name">&#8212;</span><span class="info-val" id="gen-cat4-cnt">&#8212;</span></div>
+      </div>
+      <div class="info-card">
+        <h3>&#127925; TikTok &#8212; &#1057;&#1090;&#1072;&#1090;&#1080;&#1089;&#1090;&#1080;&#1082;&#1072;</h3>
+        <div class="info-row"><span class="info-key">&#1042;&#1089;&#1077;&#1075;&#1086; &#1074;&#1080;&#1076;&#1077;&#1086;</span><span class="info-val gold" id="gen-tt-cnt">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1055;&#1088;&#1086;&#1089;&#1084;&#1086;&#1090;&#1088;&#1086;&#1074;</span><span class="info-val gold" id="gen-tt-views">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1051;&#1072;&#1081;&#1082;&#1086;&#1074;</span><span class="info-val gold" id="gen-tt-likes">&#8212;</span></div>
+        <div class="info-row"><span class="info-key">&#1057;&#1088;&#1077;&#1076;&#1085;&#1080;&#1081; ER</span><span class="info-val gold" id="gen-tt-er">&#8212;</span></div>
       </div>
     </div>
   </div>
+</div>
 </div>
 <script src="/app.js"></script>
 </body>
