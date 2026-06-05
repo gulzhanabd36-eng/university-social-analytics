@@ -309,8 +309,8 @@ function _renderIgCards() {
   var nP = filtered.filter(function(p){return isNew(igTs(p),lv);});
   var oP = filtered.filter(function(p){return !isNew(igTs(p),lv);});
   var h = fb;
-  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
-  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
+  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="ig-grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
+  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="ig-grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
   if (!filtered.length) h += emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u044d\u0442\u043e\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438","\u{1F4F8}","");
   document.getElementById("ig-content").innerHTML = h;
 }
@@ -318,26 +318,32 @@ function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
   var s = sentiment(cap);
   var vr = (p.likesCount || p.likes || 0) > 500;
-  var owner = (p.ownerUsername || p.username || CFG.ig || "").replace(/^https?:\/\/[^/]*\//, "").replace(/\/$/, "");
-  var ip = CFG.ig && owner.toLowerCase() === CFG.ig.toLowerCase();
-  var sc = p.shortCode || p.shortcode || "";
-  var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
-  return "<div class=\"card" + (isN ? " is-new" : "") + "\">" +
-    "<div class=\"card-text-body\">" +
-    "<div class=\"card-badges\">" +
-    (isN ? "<span class=\"b b-new\">\uD83C\uDD95 \u041d\u043e\u0432\u043e\u0435</span>" : "") +
-    (vr ? "<span class=\"b b-viral\">\u0432\u0438\u0440\u0443\u0441\u043d\u044b\u0439</span>" : "") +
-    "<span class=\"b " + (ip ? "b-profile" : "b-mention") + "\">" + (ip ? "\u043f\u0440\u043e\u0444\u0438\u043b\u044c" : "\u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435") + "</span>" +
-    "<span class=\"b b-cat\">" + catInfo(categorize(cap)).emoji + " " + catInfo(categorize(cap)).label + "</span>" +
-    "<span class=\"b " + sCls(s) + "\">" + sLbl(s) + "</span></div>" +
-    "<div class=\"card-caption\">" + (cap ? cap.substring(0, 400) : "\u2014") + "</div>" +
-    "<div class=\"card-row\">" +
-    "<div class=\"meta\"><span class=\"likes\">\u2764 " + fmtNum(p.likesCount || p.likes) + "</span>" +
-    "<span>\uD83D\uDCAC " + fmtNum(p.commentsCount || p.comments) + "</span>" +
-    "<span class=\"card-date\">" + fmtDate(igTs(p)) + "</span></div>" +
-    "<a class=\"open-link\" href=\"" + url + "\" target=\"_blank\">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043f\u043e\u0441\u0442 \u2192</a>" +
-    "</div></div></div>";
+  var sc2 = p.shortCode || p.shortcode || "";
+  var url = p.url || (sc2 ? "https://www.instagram.com/p/" + sc2 + "/" : "#");
+  var cat = catInfo(typeof categorize === "function" ? categorize(cap) : "other");
+  var stripeClass = "stripe-" + (cat.id || "other");
+  return '<div class="ig-card' + (isN ? " is-new" : "") + '">' +
+    '<div class="ig-card-stripe ' + stripeClass + '"></div>' +
+    '<div class="ig-card-body">' +
+      '<div class="ig-card-badges">' +
+        (isN ? '<span class="b b-new">\u{1F195} \u041d\u043e\u0432\u043e\u0435</span>' : "") +
+        (vr ? '<span class="b b-viral">\u0432\u0438\u0440\u0443\u0441</span>' : "") +
+        '<span class="b b-cat">' + cat.emoji + " " + cat.label + "</span>" +
+        '<span class="b ' + (s === "pos" ? "b-pos" : s === "neg" ? "b-neg" : "b-neu") + '">' + (s === "pos" ? "\u043f\u043e\u0437\u0438\u0442\u0438\u0432" : s === "neg" ? "\u043d\u0435\u0433\u0430\u0442\u0438\u0432" : "\u043d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u043e") + "</span>" +
+      "</div>" +
+      '<div class="ig-card-caption">' + (cap ? cap.substring(0, 200) : "\u2014") + "</div>" +
+      '<div class="ig-card-footer">' +
+        '<div class="ig-card-meta">' +
+          '<span class="lk">\u2764 ' + fmtNum(p.likesCount || p.likes || 0) + "</span>" +
+          '<span>\u{1F4AC} ' + fmtNum(p.commentsCount || p.comments || 0) + "</span>" +
+          '<span class="ig-card-date">' + fmtDate(igTs(p)) + "</span>" +
+        "</div>" +
+        '<a class="ig-card-link" href="' + url + '" target="_blank">\u2192</a>' +
+      "</div>" +
+    "</div>" +
+  "</div>";
 }
+
 function renderTT(videos, lv, ld) {
   function gTs(v) { return v.createTime || v.createTimeISO || v.timestamp || null; }
   function gP(v) { return (v.stats && v.stats.playCount) || v.playCount || v.plays || 0; }
