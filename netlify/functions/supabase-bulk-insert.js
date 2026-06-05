@@ -1,7 +1,7 @@
 "use strict";
 const https = require("https");
 
-const SUPABASE_URL = "https://ixmvfxehbjodnjndikzg.supabase.co";
+const SUPABASE_URL = "https://ixmvfxehbjodjnjdikzg.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bXZmeGVoYmpvZGpuamRpa3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2Njc0NTgsImV4cCI6MjA5NjI0MzQ1OH0.kiSg7UeGJLJznNJdixSQMJp1cPLnZq0at3vvv2lRX5c";
 
 function supaReq(path, method, body) {
