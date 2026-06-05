@@ -29,14 +29,14 @@ function startDashboard() {
   if (!ig && !tt) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u0438\u043d \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0438\u043b\u0438 \u0445\u044d\u0448\u0442\u0435\u0433"); return; }
   CFG = {name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token};
   localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt}));
-  document.getElementById("headerTitle").textContent = name + " \u2014 Analytics";
-  document.getElementById("headerAbbr").textContent = CFG.abbr.charAt(0).toUpperCase();
+  (function(){var _el=document.getElementById("headerTitle");if(_el)_el.textContent=name + " \u2014 Analytics";})();
+  (function(){var _el=document.getElementById("headerAbbr");if(_el)_el.textContent=CFG.abbr.charAt(0).toUpperCase();})();
   var _ab=document.getElementById("genAbbrBig");if(_ab)_ab.textContent=CFG.abbr.charAt(0).toUpperCase();
-  document.getElementById("genFullName").textContent = name;
-  document.getElementById("genIG").textContent = ig ? "@" + ig : "\u2014";
-  document.getElementById("genTT").textContent = tt ? "#" + tt : "\u2014";
-  document.getElementById("igStatHandle").textContent = ig ? "@" + ig : "\u2014";
-  document.getElementById("ttStatHandle").textContent = tt ? "#" + tt : "\u2014";
+  (function(){var _el=document.getElementById("genFullName");if(_el)_el.textContent=name;})();
+  (function(){var _el=document.getElementById("genIG");if(_el)_el.textContent=ig ? "@" + ig : "\u2014";})();
+  (function(){var _el=document.getElementById("genTT");if(_el)_el.textContent=tt ? "#" + tt : "\u2014";})();
+  (function(){var _el=document.getElementById("igStatHandle");if(_el)_el.textContent=ig ? "@" + ig : "\u2014";})();
+  (function(){var _el=document.getElementById("ttStatHandle");if(_el)_el.textContent=tt ? "#" + tt : "\u2014";})();
   document.getElementById("setupOverlay").style.display = "none";
   document.getElementById("app").style.display = "block";
   realRefresh();
@@ -102,7 +102,7 @@ function showLoading(m) {
   document.getElementById("loadingBar").classList.remove("hidden");
   document.getElementById("refreshIcon").style.animation = "spin 1s linear infinite";
   document.querySelector(".refresh-btn").disabled = true;
-  document.getElementById("loadingText").textContent = m;
+  (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=m;})();
   document.getElementById("errorBar").style.display = "none";
 }
 function hideLoading() {
@@ -114,7 +114,7 @@ function showError(m) { var el = document.getElementById("errorBar"); el.textCon
 
 async function apifyRun(actorId, input, stepId, label) {
   setStep(stepId, "active");
-  document.getElementById("loadingText").textContent = label + " \u2014 \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u043c...";
+  (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " \u2014 \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u043c...";})();
   var r = await fetch("/.netlify/functions/apify-start", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -126,7 +126,7 @@ async function apifyRun(actorId, input, stepId, label) {
   var runId = sd.runId;
   for (var i = 0; i < 72; i++) {
     await sleep(5000);
-    document.getElementById("loadingText").textContent = label + " \u2014 " + ((i+1)*5) + "\u0441...";
+    (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " \u2014 " + ((i+1)*5) + "\u0441...";})();
     var pr = await fetch("/.netlify/functions/apify-poll", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -192,14 +192,14 @@ async function realRefresh() {
       if (igDb && igDb.items && igDb.items.length) {
         igItems = igDb.items;
         setStep("ig", "done");
-        document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u0431\u0430\u0437\u044b (" + igDb.count + " \u043f\u043e\u0441\u0442\u043e\u0432)";
+        (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent="\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u0431\u0430\u0437\u044b (" + igDb.count + " \u043f\u043e\u0441\u0442\u043e\u0432)";})();
       } else {
         // 2. Try 6h cache
         var igCache = await cacheRead("uni_ig_posts", CFG.ig);
         if (igCache && igCache.fresh && igCache.items && igCache.items.length) {
           igItems = igCache.items;
           setStep("ig", "done");
-          document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u044d\u0448\u0430";
+          (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent="\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u044d\u0448\u0430";})();
         } else {
           // 3. Fetch from Apify
           igItems = await apifyRun("apify~instagram-scraper",
@@ -215,10 +215,10 @@ async function realRefresh() {
       var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
       if (igItems.length > 0 && posts.length === 0) posts = igItems;
       renderIG(posts, lastVisit, lastDisp);
-      document.getElementById("gen-ig-posts").textContent = posts.length;
+      (function(){var _el=document.getElementById("gen-ig-posts");if(_el)_el.textContent=posts.length;})();
       updateGenProfile(posts, null, null);
     } else {
-      document.getElementById("ig-content").innerHTML = emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");
+      (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
     if (CFG.tt) {
       var ttCache = await cacheRead("uni_tt_videos", CFG.tt);
@@ -226,7 +226,7 @@ async function realRefresh() {
       if (ttCache && ttCache.fresh && ttCache.items && ttCache.items.length) {
         ttItems = ttCache.items;
         setStep("tt", "done");
-        document.getElementById("loadingText").textContent = "\uD83C\uDFB5 TikTok \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";
+        (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent="\uD83C\uDFB5 TikTok \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";})();
       } else {
         ttItems = await apifyRun("clockworks/tiktok-hashtag-scraper",
           {hashtags: [CFG.tt], resultsPerPage: 30},
@@ -236,10 +236,10 @@ async function realRefresh() {
       }
       var videos = ttItems.filter(function(v) { return is2026(v.createTime || v.createTimeISO || v.timestamp); });
       renderTT(videos, lastVisit, lastDisp);
-      document.getElementById("gen-tt-videos").textContent = videos.length;
+      (function(){var _el=document.getElementById("gen-tt-videos");if(_el)_el.textContent=videos.length;})();
       updateGenProfile(null, videos, null);
     } else {
-      document.getElementById("tt-content").innerHTML = emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");
+      (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
     var q = "\"" + CFG.name + "\" 2026\n" + CFG.name + " site:tengrinews.kz OR site:informburo.kz 2026";
     var webItems = await apifyRun("apify/google-search-scraper",
@@ -267,7 +267,7 @@ async function realRefresh() {
     console.error(e); showError(e.message);
   } finally {
     isLoading = false; hideLoading();
-    document.getElementById("lastUpdate").textContent = "\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e: " + new Date().toLocaleString("ru", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+    (function(){var _el=document.getElementById("lastUpdate");if(_el)_el.textContent="\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e: " + new Date().toLocaleString("ru", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});})();
   }
 }
 
@@ -311,12 +311,12 @@ function renderIG(posts, lv, ld) {
   var tL = posts.reduce(function(s,p){return s+(p.likesCount||p.likes||0);},0);
   var tC = posts.reduce(function(s,p){return s+(p.commentsCount||p.comments||0);},0);
   var nP = posts.filter(function(p){return isNew(igTs(p),lv);});
-  document.getElementById("ig-stat-posts").textContent = posts.length;
-  document.getElementById("ig-stat-likes").textContent = fmtNum(tL);
-  document.getElementById("ig-stat-comments").textContent = fmtNum(tC);
-  document.getElementById("ig-stat-avg").textContent = posts.length ? Math.round(tL/posts.length) : 0;
-  document.getElementById("ig-stat-new").textContent = nP.length;
-  document.getElementById("ig-count").textContent = posts.length + " \u043f\u043e\u0441\u0442\u043e\u0432 \u00B7 " + nP.length + " \u043d\u043e\u0432\u044b\u0445";
+  (function(){var _el=document.getElementById("ig-stat-posts");if(_el)_el.textContent=posts.length;})();
+  (function(){var _el=document.getElementById("ig-stat-likes");if(_el)_el.textContent=fmtNum(tL);})();
+  (function(){var _el=document.getElementById("ig-stat-comments");if(_el)_el.textContent=fmtNum(tC);})();
+  (function(){var _el=document.getElementById("ig-stat-avg");if(_el)_el.textContent=posts.length ? Math.round(tL/posts.length) : 0;})();
+  (function(){var _el=document.getElementById("ig-stat-new");if(_el)_el.textContent=nP.length;})();
+  (function(){var _el=document.getElementById("ig-count");if(_el)_el.textContent=posts.length + " \u043f\u043e\u0441\u0442\u043e\u0432 \u00B7 " + nP.length + " \u043d\u043e\u0432\u044b\u0445";})();
   _renderIgCards();
 }
 function _renderIgCards() {
@@ -349,7 +349,7 @@ function _renderIgCards() {
   if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="tt-grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
   if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="tt-grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
   if (!filtered.length) h += emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u044d\u0442\u043e\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438","\u{1F4F8}","");
-  document.getElementById("ig-content").innerHTML = h;
+  (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=h;})();
 }
 function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
@@ -397,17 +397,17 @@ function renderTT(videos, lv, ld) {
   var oV = videos.filter(function(v) { return !isNew(gTs(v), lv); });
   var tViews = videos.reduce(function(s,v) { return s + gP(v); }, 0);
   var tLikes = videos.reduce(function(s,v) { return s + gL(v); }, 0);
-  document.getElementById("tt-stat-videos").textContent = videos.length;
-  document.getElementById("tt-stat-views").textContent = fmtNum(tViews);
-  document.getElementById("tt-stat-likes").textContent = fmtNum(tLikes);
-  document.getElementById("tt-stat-avg").textContent = videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;
-  document.getElementById("tt-stat-er").textContent = videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1) + "%" : "\u2014";
-  document.getElementById("tt-count").textContent = videos.length + " \u0432\u0438\u0434\u0435\u043e \u00B7 " + nV.length + " \u043d\u043e\u0432\u044b\u0445";
+  (function(){var _el=document.getElementById("tt-stat-videos");if(_el)_el.textContent=videos.length;})();
+  (function(){var _el=document.getElementById("tt-stat-views");if(_el)_el.textContent=fmtNum(tViews);})();
+  (function(){var _el=document.getElementById("tt-stat-likes");if(_el)_el.textContent=fmtNum(tLikes);})();
+  (function(){var _el=document.getElementById("tt-stat-avg");if(_el)_el.textContent=videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;})();
+  (function(){var _el=document.getElementById("tt-stat-er");if(_el)_el.textContent=videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1) + "%" : "\u2014";})();
+  (function(){var _el=document.getElementById("tt-count");if(_el)_el.textContent=videos.length + " \u0432\u0438\u0434\u0435\u043e \u00B7 " + nV.length + " \u043d\u043e\u0432\u044b\u0445";})();
   var h = "";
   if (nV.length) h += sepNew("\uD83C\uDFB5 \u041d\u043e\u0432\u043e\u0435 \u0432 TikTok \u2014 \u0441 " + ld) + "<div class=\"tiktok-grid\">" + nV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,true); }).join("") + "</div>";
   if (oV.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438") + "<div class=\"tiktok-grid\">" + oV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,false); }).join("") + "</div>";
   if (!videos.length) h = emptyState("\u041d\u0435\u0442 \u0432\u0438\u0434\u0435\u043e", "\uD83C\uDFB5", "\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b");
-  document.getElementById("tt-content").innerHTML = h;
+  (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=h;})();
 }
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
   var d = parseTs(gTs(v)) || new Date();
@@ -454,19 +454,19 @@ function renderWeb(items, lv, ld) {
   var oI = f.filter(function(i){return !i.date||!isNew(i.date,lv);});
   var hs = {}; f.forEach(function(i){try{hs[new URL(i.url||"http://x").hostname]=1;}catch(e){}});
   var posC = f.filter(function(i){return sentiment((i.title||"")+(i.description||""))==="pos";}).length;
-  document.getElementById("web-stat-topics").textContent = f.length;
-  document.getElementById("web-stat-new").textContent = nI.length;
-  document.getElementById("web-stat-mentions").textContent = f.length;
-  document.getElementById("web-stat-sources").textContent = Object.keys(hs).length;
-  document.getElementById("web-stat-sentiment").textContent = f.length ? Math.round(posC/f.length*100)+"%" : "\u2014";
-  document.getElementById("web-sync-badge").textContent = "\uD83C\uDD95 " + nI.length + " \u043d\u043e\u0432\u044b\u0445";
-  document.getElementById("web-last-sync").textContent = "\u041f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043e: " + new Date().toLocaleString("ru",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
-  document.getElementById("gen-web-mentions").textContent = f.length;
+  (function(){var _el=document.getElementById("web-stat-topics");if(_el)_el.textContent=f.length;})();
+  (function(){var _el=document.getElementById("web-stat-new");if(_el)_el.textContent=nI.length;})();
+  (function(){var _el=document.getElementById("web-stat-mentions");if(_el)_el.textContent=f.length;})();
+  (function(){var _el=document.getElementById("web-stat-sources");if(_el)_el.textContent=Object.keys(hs).length;})();
+  (function(){var _el=document.getElementById("web-stat-sentiment");if(_el)_el.textContent=f.length ? Math.round(posC/f.length*100)+"%" : "\u2014";})();
+  (function(){var _el=document.getElementById("web-sync-badge");if(_el)_el.textContent="\uD83C\uDD95 " + nI.length + " \u043d\u043e\u0432\u044b\u0445";})();
+  (function(){var _el=document.getElementById("web-last-sync");if(_el)_el.textContent="\u041f\u0440\u043e\u0432\u0435\u0440\u0435\u043d\u043e: " + new Date().toLocaleString("ru",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});})();
+  (function(){var _el=document.getElementById("gen-web-mentions");if(_el)_el.textContent=f.length;})();
   var h = "";
   if (nI.length) h += sepNew("\uD83C\uDF10 \u0418\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u2014 \u043d\u043e\u0432\u043e\u0435 \u0441 " + ld) + "<div class=\"web-grid\">" + nI.map(function(i){return webCard(i,true);}).join("") + "</div>";
   if (oI.length) h += sepOld("\u0420\u0430\u043d\u0435\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043d\u043e\u0435") + "<div class=\"web-grid\">" + oI.map(function(i){return webCard(i,false);}).join("") + "</div>";
   if (!f.length) h = emptyState("\u041d\u0435\u0442 \u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439","\uD83C\uDF10","\u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u043e\u0437\u0436\u0435");
-  document.getElementById("web-content").innerHTML = h;
+  (function(){var _el=document.getElementById("web-content");if(_el)_el.innerHTML=h;})();
 }
 function webCard(item, isN) {
   var host = "\u2014";
@@ -532,7 +532,7 @@ function loadIGFromExcel(input) {
       var lvKey = "lv_"+(CFG.ig||CFG.tt||CFG.name).replace(/[^a-z0-9]/gi,"_").toLowerCase();
       var lv = localStorage.getItem(lvKey) || "2025-12-31T23:59:59Z";
       renderIG(posts, lv, fmtDate(lv));
-      document.getElementById("gen-ig-posts").textContent = posts.length;
+      (function(){var _el=document.getElementById("gen-ig-posts");if(_el)_el.textContent=posts.length;})();
       var wb2=document.getElementById("warnBar");
       if (wb2){wb2.textContent="\uD83D\uDCC2 \u0417\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u043e: "+posts.length+" \u043f\u043e\u0441\u0442\u043e\u0432";wb2.style.display="block";setTimeout(function(){wb2.style.display="none";},5000);}
     } catch(ex) { showError("\u041e\u0448\u0438\u0431\u043a\u0430 Excel: " + ex.message); }
