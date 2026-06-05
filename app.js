@@ -57,6 +57,42 @@ function sentiment(t) {
 }
 function sLbl(s) { return {pos:"\u043f\u043e\u0437\u0438\u0442\u0438\u0432",neg:"\u043d\u0435\u0433\u0430\u0442\u0438\u0432",neu:"\u043d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u043e"}[s] || "\u043d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u043e"; }
 function sCls(s) { return {pos:"b-pos",neg:"b-neg",neu:"b-neu"}[s] || "b-neu"; }
+
+var IG_CATS = [
+  {id:"study",    emoji:"\u{1F393}", label:"\u0423\u0447\u0451\u0431\u0430",
+   words:["\u0441\u0442\u0443\u0434\u0435\u043d\u0442","\u043e\u0431\u0443\u0447\u0435\u043d","\u043a\u0443\u0440\u0441","\u043b\u0435\u043a\u0446\u0438\u044f","\u0434\u0438\u043f\u043b\u043e\u043c","\u043c\u0430\u0433\u0438\u0441\u0442\u0440","\u0431\u0430\u043a\u0430\u043b\u0430\u0432\u0440","\u044d\u043a\u0437\u0430\u043c\u0435\u043d","\u0444\u0430\u043a\u0443\u043b\u044c\u0442\u0435\u0442","\u043d\u0430\u0443\u043a\u0430","\u0441\u0442\u0430\u0436\u0438\u0440\u043e\u0432\u043a\u0430","mba","oqu","\u0431\u0456\u043b\u0456\u043c"]},
+  {id:"achieve",  emoji:"\u{1F3C6}", label:"\u0414\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u044f",
+   words:["\u043f\u043e\u0431\u0435\u0434","\u043d\u0430\u0433\u0440\u0430\u0434","\u0440\u0435\u0439\u0442\u0438\u043d\u0433","\u043f\u0435\u0440\u0432\u043e\u0435","\u0440\u0435\u043a\u043e\u0440\u0434","\u0437\u043e\u043b\u043e\u0442\u043e","winner","award","best","top","ranked","\u0430\u043a\u043a\u0440\u0435\u0434\u0438\u0442\u0430\u0446\u0438\u044f","qs","\u0432\u044b\u043f\u0443\u0441\u043a\u043d\u0438\u043a","\u0436\u0435\u04a3\u0456\u0441"]},
+  {id:"event",    emoji:"\u{1F389}", label:"\u041c\u0435\u0440\u043e\u043f\u0440\u0438\u044f\u0442\u0438\u044f",
+   words:["\u043a\u043e\u043d\u0444\u0435\u0440\u0435\u043d\u0446\u0438\u044f","\u0444\u043e\u0440\u0443\u043c","\u0446\u0435\u0440\u0435\u043c\u043e\u043d\u0438\u044f","\u043f\u0440\u0430\u0437\u0434\u043d\u0438\u043a","\u0432\u044b\u0441\u0442\u0430\u0432\u043a\u0430","\u043e\u0442\u043a\u0440\u044b\u0442\u0438\u0435","\u0444\u0435\u0441\u0442\u0438\u0432\u0430\u043b","\u044f\u0440\u043c\u0430\u0440\u043a\u0430","\u0441\u0430\u043c\u043c\u0438\u0442","\u0432\u0435\u0431\u0438\u043d\u0430\u0440","event","\u043c\u0435\u0440\u0435\u043a\u0435"]},
+  {id:"admission",emoji:"\u{1F4E2}", label:"\u041f\u043e\u0441\u0442\u0443\u043f\u043b\u0435\u043d\u0438\u0435",
+   words:["\u0430\u0431\u0438\u0442\u0443\u0440\u0438\u0435\u043d\u0442","\u043f\u043e\u0441\u0442\u0443\u043f\u043b\u0435\u043d\u0438\u0435","\u0433\u0440\u0430\u043d\u0442","\u0431\u0430\u043b\u043b","\u043f\u0440\u0438\u0435\u043c","\u0435\u043d\u0442","\u0443\u0431\u0442","\u043f\u0440\u043e\u0445\u043e\u0434\u043d\u043e\u0439","\u049b\u0430\u0431\u044b\u043b\u0434\u0430\u0443"]},
+  {id:"partner",  emoji:"\u{1F91D}", label:"\u041f\u0430\u0440\u0442\u043d\u0451\u0440\u0441\u0442\u0432\u043e",
+   words:["\u0441\u043e\u0442\u0440\u0443\u0434\u043d\u0438\u0447\u0435\u0441\u0442\u0432","\u043f\u0430\u0440\u0442\u043d\u0451\u0440","\u043c\u0435\u043c\u043e\u0440\u0430\u043d\u0434\u0443\u043c","\u0441\u043e\u0433\u043b\u0430\u0448\u0435\u043d\u0438\u0435","\u0432\u0438\u0437\u0438\u0442","\u0434\u0435\u043b\u0435\u0433\u0430\u0446\u0438\u044f","mou"]},
+  {id:"life",     emoji:"\u{1F30D}", label:"\u0421\u0442\u0443\u0434\u0436\u0438\u0437\u043d\u044c",
+   words:["\u043a\u043b\u0443\u0431","\u0432\u043e\u043b\u043e\u043d\u0442\u0451\u0440","\u0441\u043f\u043e\u0440\u0442","\u043a\u043e\u043c\u0430\u043d\u0434\u0430","\u043a\u0443\u043b\u044c\u0442\u0443\u0440\u0430","\u0430\u043a\u0442\u0438\u0432\u0438\u0441\u0442","\u043a\u0430\u043c\u043f\u0443\u0441","\u043e\u0431\u0449\u0435\u0436\u0438\u0442\u0438\u0435","\u0436\u0430\u0441\u0442\u0430\u0440"]}
+];
+function categorize(text) {
+  if (!text) return "other";
+  var t = text.toLowerCase();
+  for (var i = 0; i < IG_CATS.length; i++) {
+    for (var j = 0; j < IG_CATS[i].words.length; j++) {
+      if (t.indexOf(IG_CATS[i].words[j]) >= 0) return IG_CATS[i].id;
+    }
+  }
+  return "other";
+}
+function catInfo(id) {
+  for (var i = 0; i < IG_CATS.length; i++) { if (IG_CATS[i].id === id) return IG_CATS[i]; }
+  return {id:"other", emoji:"\u{1F4CC}", label:"\u0420\u0430\u0437\u043d\u043e\u0435"};
+}
+var _igAllPosts = [], _igLv = "", _igLd = "";
+function setIgFilter(catId) {
+  _igActiveCat = catId;
+  _renderIgCards();
+}
+var _igActiveCat = "all";
+
 function sepNew(l) { return "<div class=\"date-sep\"><div class=\"date-sep-line\"></div><div class=\"date-sep-text new-block\">" + l + "</div><div class=\"date-sep-line\"></div></div>"; }
 function sepOld(l) { return "<div class=\"date-sep\"><div class=\"date-sep-line\"></div><div class=\"date-sep-text old-block\">" + l + "</div><div class=\"date-sep-line\"></div></div>"; }
 function emptyState(m, i, s) { return "<div class=\"empty-state\"><div class=\"es-icon\">" + i + "</div><div class=\"es-text\">" + m + "</div>" + (s ? "<div class=\"es-sub\">" + s + "</div>" : "") + "</div>"; }
@@ -234,20 +270,48 @@ async function realRefresh() {
 
 function igTs(p) { return p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp || null; }
 function renderIG(posts, lv, ld) {
-  var nP = posts.filter(function(p) { return isNew(igTs(p), lv); });
-  var oP = posts.filter(function(p) { return !isNew(igTs(p), lv); });
-  var tL = posts.reduce(function(s,p) { return s + (p.likesCount || p.likes || 0); }, 0);
-  var tC = posts.reduce(function(s,p) { return s + (p.commentsCount || p.comments || 0); }, 0);
+  _igAllPosts = posts; _igLv = lv || ""; _igLd = ld || ""; _igActiveCat = "all";
+  var tL = posts.reduce(function(s,p){return s+(p.likesCount||p.likes||0);},0);
+  var tC = posts.reduce(function(s,p){return s+(p.commentsCount||p.comments||0);},0);
+  var nP = posts.filter(function(p){return isNew(igTs(p),lv);});
   document.getElementById("ig-stat-posts").textContent = posts.length;
   document.getElementById("ig-stat-likes").textContent = fmtNum(tL);
   document.getElementById("ig-stat-comments").textContent = fmtNum(tC);
   document.getElementById("ig-stat-avg").textContent = posts.length ? Math.round(tL/posts.length) : 0;
   document.getElementById("ig-stat-new").textContent = nP.length;
   document.getElementById("ig-count").textContent = posts.length + " \u043f\u043e\u0441\u0442\u043e\u0432 \u00B7 " + nP.length + " \u043d\u043e\u0432\u044b\u0445";
-  var h = "";
-  if (nP.length) h += sepNew("\uD83D\uDCF8 \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 " + ld) + "<div class=\"grid\">" + nP.map(function(p) { return igCard(p, true); }).join("") + "</div>";
-  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438") + "<div class=\"grid\">" + oP.map(function(p) { return igCard(p, false); }).join("") + "</div>";
-  if (!posts.length) h = emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432", "\uD83D\uDCF8", "\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b");
+  _renderIgCards();
+}
+function _renderIgCards() {
+  var posts = _igAllPosts; var lv = _igLv; var ld = _igLd;
+  var counts = {all: posts.length, other: 0};
+  IG_CATS.forEach(function(c){counts[c.id]=0;});
+  posts.forEach(function(p){
+    var cid = categorize(p.caption||p.alt||p.text||"");
+    if (counts[cid] !== undefined) counts[cid]++; else counts.other++;
+  });
+  posts.forEach(function(p){
+    if (categorize(p.caption||p.alt||p.text||"") === "other") counts.other++;
+  });
+  // filter bar
+  var fb = '<div class="ig-filter-bar">';
+  fb += '<button class="ig-cat-btn'+((_igActiveCat==="all")?" active":"")+'" onclick="setIgFilter(\'all\')">\u0412\u0441\u0435 <span class="ig-cat-count">'+counts.all+'</span></button>';
+  IG_CATS.forEach(function(c){
+    if (!counts[c.id]) return;
+    fb += '<button class="ig-cat-btn'+((_igActiveCat===c.id)?" active":"")+'" onclick="setIgFilter(\''+c.id+'\')">'+c.emoji+' '+c.label+' <span class="ig-cat-count">'+counts[c.id]+'</span></button>';
+  });
+  if (counts.other) fb += '<button class="ig-cat-btn'+((_igActiveCat==="other")?" active":"")+'" onclick="setIgFilter(\'other\')">\u{1F4CC} \u0420\u0430\u0437\u043d\u043e\u0435 <span class="ig-cat-count">'+counts.other+'</span></button>';
+  fb += '</div>';
+  var filtered = _igActiveCat === "all" ? posts : posts.filter(function(p){
+    var cid = categorize(p.caption||p.alt||p.text||"");
+    return _igActiveCat === "other" ? (cid === "other") : (cid === _igActiveCat);
+  });
+  var nP = filtered.filter(function(p){return isNew(igTs(p),lv);});
+  var oP = filtered.filter(function(p){return !isNew(igTs(p),lv);});
+  var h = fb;
+  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
+  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
+  if (!filtered.length) h += emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u044d\u0442\u043e\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438","\u{1F4F8}","");
   document.getElementById("ig-content").innerHTML = h;
 }
 function igCard(p, isN) {
@@ -264,6 +328,7 @@ function igCard(p, isN) {
     (isN ? "<span class=\"b b-new\">\uD83C\uDD95 \u041d\u043e\u0432\u043e\u0435</span>" : "") +
     (vr ? "<span class=\"b b-viral\">\u0432\u0438\u0440\u0443\u0441\u043d\u044b\u0439</span>" : "") +
     "<span class=\"b " + (ip ? "b-profile" : "b-mention") + "\">" + (ip ? "\u043f\u0440\u043e\u0444\u0438\u043b\u044c" : "\u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435") + "</span>" +
+    "<span class=\"b b-cat\">" + catInfo(categorize(cap)).emoji + " " + catInfo(categorize(cap)).label + "</span>" +
     "<span class=\"b " + sCls(s) + "\">" + sLbl(s) + "</span></div>" +
     "<div class=\"card-caption\">" + (cap ? cap.substring(0, 400) : "\u2014") + "</div>" +
     "<div class=\"card-row\">" +
