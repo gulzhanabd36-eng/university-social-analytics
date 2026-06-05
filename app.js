@@ -385,11 +385,13 @@ function _renderIgCards() {
 }
 function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
+  var titleLine = cap.substring(0, 120);
+  var bodyLine  = cap.length > 120 ? cap.substring(120, 380) : "";
   var s = sentiment(cap);
   var vr = (p.likesCount || p.likes || 0) > 500;
   var owner = (p.ownerUsername || p.username || CFG.ig || "").replace(/^https?:\/\/[^/]*\//, "").replace(/\/$/, "").replace(/^@/, "");
   var isProfile = CFG.ig && owner.toLowerCase() === CFG.ig.toLowerCase();
-  var sc = p.shortCode || p.shortcode || "";
+  var sc  = p.shortCode || p.shortcode || "";
   var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
   var cat = catInfo(typeof categorize === "function" ? categorize(cap) : "other");
   var sentCls = s === "pos" ? "b-positive" : s === "neg" ? "b-negative" : "b-neutral";
@@ -407,7 +409,8 @@ function igCard(p, isN) {
       '</div>' +
     '</div>' +
     '<span class="cat-tag">' + cat.emoji + ' ' + cat.label + '</span>' +
-    '<div class="caption">' + (cap ? cap.substring(0, 400) : '\u2014') + '</div>' +
+    '<div class="caption" style="font-weight:700;-webkit-line-clamp:2">' + (titleLine || '\u2014') + '</div>' +
+    (bodyLine ? '<div class="caption" style="opacity:.7">' + bodyLine + '</div>' : '') +
     '<div class="card-foot">' +
       '<div class="meta">' +
         '<span class="likes">\u2764 ' + fmtNum(p.likesCount || p.likes || 0) + '</span>' +
@@ -417,6 +420,7 @@ function igCard(p, isN) {
     '</div>' +
   '</div>';
 }
+
 
 function renderTT(videos, lv, ld) {
   function gTs(v) { return v.createTime || v.createTimeISO || v.timestamp || null; }
@@ -436,14 +440,15 @@ function renderTT(videos, lv, ld) {
   (function(){var _el=document.getElementById("tt-stat-er");if(_el)_el.textContent=videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1) + "%" : "\u2014";})();
   (function(){var _el=document.getElementById("tt-count");if(_el)_el.textContent=videos.length + " \u0432\u0438\u0434\u0435\u043e \u00B7 " + nV.length + " \u043d\u043e\u0432\u044b\u0445";})();
   var h = "";
-  if (nV.length) h += sepNew("\uD83C\uDFB5 \u041d\u043e\u0432\u043e\u0435 \u0432 TikTok \u2014 \u0441 " + ld) + "<div class=\"tiktok-grid\">" + nV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,true); }).join("") + "</div>";
-  if (oV.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438") + "<div class=\"tiktok-grid\">" + oV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,false); }).join("") + "</div>";
+  if (nV.length) h += sepNew("\uD83C\uDFB5 \u041d\u043e\u0432\u043e\u0435 \u0432 TikTok \u2014 \u0441 " + ld) + "<div class=\"web-grid\">" + nV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,true); }).join("") + "</div>";
+  if (oV.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438") + "<div class=\"web-grid\">" + oV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,false); }).join("") + "</div>";
   if (!videos.length) h = emptyState("\u041d\u0435\u0442 \u0432\u0438\u0434\u0435\u043e", "\uD83C\uDFB5", "\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b");
   (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=h;})();
 }
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
   var d = parseTs(gTs(v)) || new Date();
   var desc = gD(v);
+  var titleLine = desc.substring(0, 120);
   var url = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + ((v.authorMeta && v.authorMeta.name) || "") + "/video/" + (v.id || ""));
   var authorName = (v.authorMeta && v.authorMeta.name) || (v.author && v.author.uniqueId) || v.author || "";
   var views = gP(v), lks = gL(v), cms = gC(v), shs = gS(v);
@@ -453,28 +458,30 @@ function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
   var hashtags = v.hashtags || v.challenges || [];
   if (typeof hashtags === "string") { try { hashtags = JSON.parse(hashtags); } catch(e) { hashtags = []; } }
   var tags = Array.isArray(hashtags) ? hashtags.slice(0,5).map(function(h){ return typeof h === "object" ? (h.name || h.title || "") : String(h); }).filter(Boolean) : [];
-  return '<div class="tt-card' + (isAlmaU ? " is-almau" : "") + '">' +
-    '<div class="tt-head">' +
+  return '<div class="card' + (isN ? " is-new" : "") + '">' +
+    '<div class="card-head">' +
       '<div>' +
-        '<div class="tt-author">@' + authorName + '</div>' +
-        '<div class="tt-date">' + d.toLocaleDateString("ru", {day:"numeric",month:"long",year:"numeric"}) + '</div>' +
+        '<div class="author">@' + authorName + '</div>' +
+        '<div class="date-sm">' + d.toLocaleDateString("ru", {day:"numeric",month:"long",year:"numeric"}) + '</div>' +
       '</div>' +
       '<div class="badges">' +
-        (isAlmaU ? '<span class="tt-almau-badge">' + (CFG.tt ? "#"+CFG.tt : "AlmaU") + '</span>' : '') +
+        (isAlmaU ? '<span class="b b-profile">' + (CFG.tt ? "#"+CFG.tt : "AlmaU") + '</span>' : '<span class="b b-mentions">\u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435</span>') +
         (viral ? '<span class="b b-viral">\u0432\u0438\u0440\u0443\u0441</span>' : '') +
       '</div>' +
     '</div>' +
-    '<div class="tt-caption">' + (desc ? desc.substring(0,300) : "\u2014") + '</div>' +
-    (tags.length ? '<div class="tt-hashtags">' + tags.map(function(t){ return '<span class="tt-tag">#'+t+'</span>'; }).join("") + '</div>' : '') +
-    '<div class="tt-stats">' +
-      '<span class="tt-views">\u25b6 ' + fmtNum(views) + '</span>' +
-      '<span>\u2764 ' + fmtNum(lks) + '</span>' +
-      '<span>\ud83d\udcac ' + fmtNum(cms) + '</span>' +
-      (shs ? '<span>\u21a5 ' + fmtNum(shs) + '</span>' : '') +
-      '<a class="tt-link" href="' + url + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
+    '<div class="caption" style="font-weight:700;-webkit-line-clamp:2">' + (titleLine || '\u2014') + '</div>' +
+    (tags.length ? '<div class="meta" style="flex-wrap:wrap;gap:4px">' + tags.map(function(t){ return '<span style="font-size:10px;color:#C57E33;background:#FFF8EE;border:1px solid #F5D5A0;padding:2px 7px;border-radius:6px;font-weight:600">#'+t+'</span>'; }).join("") + '</div>' : '') +
+    '<div class="card-foot">' +
+      '<div class="meta">' +
+        '<span class="likes">\u25b6 ' + fmtNum(views) + '</span>' +
+        '<span>\u2764 ' + fmtNum(lks) + '</span>' +
+        (cms ? '<span>\ud83d\udcac ' + fmtNum(cms) + '</span>' : '') +
+      '</div>' +
+      '<a class="open-link" href="' + url + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
     '</div>' +
   '</div>';
 }
+
 
 function renderWeb(items, lv, ld) {
   var seen = {}; var unique = [];
