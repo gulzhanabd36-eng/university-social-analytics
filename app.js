@@ -114,8 +114,8 @@ async function realRefresh() {
   showLoading("Подготовка...");
   try {
     if (CFG.ig) {
-      var igItems = await apifyRun("apify/instagram-scraper",
-        {usernames: [CFG.ig], resultsType: "posts", resultsLimit: 30},
+      var igItems = await apifyRun("apify/instagram-post-scraper",
+        {usernames: [CFG.ig], resultsLimit: 30},
         "ig", "📸 Instagram"
       );
       var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
@@ -176,14 +176,24 @@ function igCard(p, isN) {
   var ip = CFG.ig && (p.ownerUsername || p.username || "").toLowerCase() === CFG.ig.toLowerCase();
   var sc = p.shortCode || p.shortcode || "";
   var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
+  var new_label = "\u{1F195} \u041D\u043E\u0432\u043E\u0435";
+  var viral_label = "\u0432\u0438\u0440\u0443\u0441\u043D\u044B\u0439";
+  var prof_label = ip ? "\u043F\u0440\u043E\u0444\u0438\u043B\u044C" : "\u0443\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435";
+  var open_label = "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u043F\u043E\u0441\u0442 \u2192";
   return "<div class=\"card" + (isN ? " is-new" : "") + "\">" +
-    "<div class=\"card-head\"><div><div class=\"author\">" + (p.ownerUsername || p.username || CFG.ig) + "</div><div class=\"date-sm\">" + fmtDate(igTs(p)) + "</div></div>" +
-    "<div class=\"badges\">" + (isN ? "<span class=\"b b-new\">🆕 Новое</span>" : "") + (vr ? "<span class=\"b b-viral\">вирусный</span>" : "") +
-    "<span class=\"b " + (ip ? "b-profile" : "b-mention") + "\">" + (ip ? "профиль" : "упоминание") + "</span>" +
-    "<span class=\"b " + sCls(s) + "\">" + sLbl(s) + "</span></div></div>" +
-    "<div class=\"caption\">" + cap.substring(0, 300) + "</div>" +
-    "<div class=\"card-foot\"><div class=\"meta\"><span class=\"likes\">❤ " + fmtNum(p.likesCount || p.likes) + "</span><span>💬 " + fmtNum(p.commentsCount || p.comments) + "</span></div>" +
-    "<a class=\"open-link\" href=\"" + url + "\" target=\"_blank\">Открыть →</a></div></div>";
+    "<div class=\"card-text-body\">" +
+    "<div class=\"card-badges\">"
+    + (isN ? "<span class=\"b b-new\">" + new_label + "</span>" : "")
+    + (vr ? "<span class=\"b b-viral\">" + viral_label + "</span>" : "")
+    + "<span class=\"b " + (ip ? "b-profile" : "b-mention") + "\">" + prof_label + "</span>"
+    + "<span class=\"b " + sCls(s) + "\">" + sLbl(s) + "</span></div>" +
+    "<div class=\"card-caption\">" + (cap ? cap.substring(0, 400) : "\u2014") + "</div>" +
+    "<div class=\"card-row\">" +
+    "<div class=\"meta\"><span class=\"likes\">\u2764 " + fmtNum(p.likesCount || p.likes) + "</span>"
+    + "<span>\uD83D\uDCAC " + fmtNum(p.commentsCount || p.comments) + "</span>"
+    + "<span class=\"card-date\">" + fmtDate(igTs(p)) + "</span></div>" +
+    "<a class=\"open-link\" href=\"" + url + "\" target=\"_blank\">" + open_label + "</a>" +
+    "</div></div></div>";
 }
 function renderTT(videos, lv, ld) {
   function gTs(v) { return v.createTime || v.createTimeISO || v.timestamp || null; }
