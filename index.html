@@ -13,38 +13,33 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .setup-card .sub{font-size:12px;color:#888;margin-bottom:28px}
 .setup-field{margin-bottom:15px}
 .setup-field label{display:block;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
-.setup-field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;background:#FAFAF8;transition:border-color .15s}
+.setup-field input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;background:#FAFAF8}
 .setup-field input:focus{border-color:#C57E33;background:white}
 .hint{font-size:11px;color:#bbb;margin-top:4px}
 .sep{border:none;border-top:1px solid #f0f0f0;margin:20px 0}
-.btn-start{width:100%;padding:13px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;transition:background .15s}
+.btn-start{width:100%;padding:13px;background:#1a1a1a;color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px}
 .btn-start:hover{background:#333}
 .btn-start:disabled{background:#999;cursor:not-allowed}
 #app{display:none}
 .header{background:#1a1a1a;color:#FAFAF8;padding:0 28px;display:flex;justify-content:space-between;align-items:center;height:58px}
 .header-left{display:flex;align-items:center;gap:12px}
-.header-abbr{width:34px;height:34px;border-radius:8px;background:#C57E33;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0}
+.header-abbr{width:34px;height:34px;border-radius:8px;background:#C57E33;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white}
 .header-text h1{font-size:16px;font-weight:700}
 .header-text .hsub{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px}
 .header-right{display:flex;align-items:center;gap:12px}
-.refresh-btn{background:#C57E33;color:white;border:none;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .15s}
-.refresh-btn:hover{opacity:.85}
+.refresh-btn{background:#C57E33;color:white;border:none;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
 .refresh-btn:disabled{opacity:.5;cursor:not-allowed}
 .settings-btn{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);padding:6px 12px;border-radius:7px;font-size:11px;cursor:pointer}
-.settings-btn:hover{border-color:rgba(255,255,255,.4);color:white}
 .last-update{font-size:10px;color:rgba(255,255,255,.35)}
 .platform-nav{background:white;border-bottom:2px solid #eee;padding:0 28px;display:flex}
-.plat-tab{padding:13px 20px;font-size:13px;font-weight:500;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:7px;white-space:nowrap;user-select:none}
-.plat-tab:hover:not(.active){color:#555;background:#FAFAF8}
+.plat-tab{padding:13px 20px;font-size:13px;font-weight:500;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:7px;white-space:nowrap}
 .plat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
-.plat-tab .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.plat-tab .dot{width:7px;height:7px;border-radius:50%}
 .dot-ig{background:#E1306C}.dot-tt{background:#010101}.dot-web{background:#3B82F6}.dot-gen{background:#C57E33}
 .loading-bar{background:#FFF8EE;border-bottom:1px solid #F5D5A0;padding:12px 28px;display:flex;align-items:center;gap:10px;font-size:12px;color:#C57E33;font-weight:600}
 .loading-bar.hidden{display:none}
 .loading-steps{display:flex;gap:16px;margin-left:auto;font-size:11px;color:#C57E33}
-.step{opacity:.35;transition:opacity .3s}
-.step.active{opacity:1;font-weight:700}
-.step.done{opacity:.6}
+.step{opacity:.35}.step.active{opacity:1;font-weight:700}.step.done{opacity:.6}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 .stats-row{display:grid;background:white;border-bottom:2px solid #eee}
@@ -58,9 +53,8 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .controls input{background:#FAFAF8;width:220px}
 .cnt{font-size:12px;color:#888;margin-left:auto;font-weight:500}
 .cat-nav{display:flex;padding:0 28px;background:white;border-bottom:2px solid #eee;overflow-x:auto}
-.cat-tab{padding:9px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px;user-select:none;flex-shrink:0}
+.cat-tab{padding:9px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:#888;border-bottom:2px solid transparent;margin-bottom:-2px}
 .cat-tab.active{color:#1a1a1a;border-bottom-color:#C57E33;font-weight:700}
-.cat-tab:hover:not(.active){color:#555;background:#FAFAF8}
 .content{padding:20px 28px}
 .date-sep{display:flex;align-items:center;gap:12px;margin:0 0 14px}
 .date-sep-line{flex:1;border-top:1px solid #eee}
@@ -68,9 +62,8 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .date-sep-text.new-block{background:#FFF8EE;color:#C57E33;border:1px solid #F5D5A0}
 .date-sep-text.old-block{background:#F5F3EE;color:#888;border:1px solid #e8e8e8}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px}
-.card{background:white;border-radius:10px;border:1px solid #eee;padding:14px;display:flex;flex-direction:column;gap:9px;transition:box-shadow .15s}
+.card{background:white;border-radius:10px;border:1px solid #eee;padding:14px;display:flex;flex-direction:column;gap:9px}
 .card.is-new{border-left:3px solid #C57E33}
-.card:hover{box-shadow:0 3px 16px rgba(0,0,0,.09);border-color:#e0e0e0}
 .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .author{font-size:12px;font-weight:700}
 .date-sm{font-size:10px;color:#aaa;margin-top:2px}
@@ -87,10 +80,9 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f0f0f0;margin-top:auto}
 .meta{display:flex;gap:10px;font-size:11px;color:#888}
 .likes{color:#C57E33;font-weight:700}
-.open-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0;transition:all .15s}
-.open-link:hover{background:#C57E33;color:white}
+.open-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0}
 .tiktok-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:20px}
-.tt-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden;transition:box-shadow .15s}
+.tt-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden}
 .tt-card.is-new{border-left:3px solid #C57E33}
 .tt-thumb{height:130px;background:linear-gradient(135deg,#F5F3EE,#e8e0d8);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
 .tt-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
@@ -101,7 +93,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .tt-desc{font-size:11px;color:#555;margin-top:6px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tt-meta{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;font-size:11px;color:#888}
 .web-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:20px}
-.web-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden;transition:box-shadow .15s}
+.web-card{background:white;border-radius:10px;border:1px solid #eee;overflow:hidden}
 .web-card.is-new{border-left:3px solid #C57E33}
 .wc-body{display:flex;gap:14px;padding:15px 18px;align-items:flex-start}
 .web-source-icon{width:36px;height:36px;border-radius:8px;background:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid #eee}
@@ -114,8 +106,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .web-snippet{font-size:12px;color:#555;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
 .sources-strip{border-top:1px solid #f5f5f5;padding:10px 18px;display:flex;align-items:center;flex-wrap:wrap}
 .sources-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-right:10px;white-space:nowrap}
-.source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none;transition:all .15s}
-.source-pill:hover{background:#FFF8EE;border-color:#F5D5A0;color:#C57E33}
+.source-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;background:#F5F3EE;border:1px solid #eee;color:#555;font-weight:500;margin:3px 4px 3px 0;text-decoration:none}
 .sync-info{margin-left:auto;display:flex;align-items:center;gap:10px}
 .sync-badge{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;background:#FFF8EE;color:#C57E33;border:1px solid #F5D5A0}
 .last-sync{font-size:11px;color:#aaa}
@@ -135,8 +126,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .empty-state .es-icon{font-size:48px;margin-bottom:14px}
 .empty-state .es-text{font-size:14px;margin-bottom:8px;color:#666}
 .empty-state .es-sub{font-size:12px}
-.ig-xls-btn{background:#F5F3EE;border:1px solid #ddd;color:#C57E33;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
-.ig-xls-btn:hover{background:#FFF8EE;border-color:#C57E33}
+.ig-xls-btn{background:#F5F3EE;border:1px solid #ddd;color:#C57E33;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
 .ig-xls-sep{width:1px;height:20px;background:#eee;margin:0 2px}
 .error-bar{background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin:14px 28px;font-size:12px;color:#DC2626;display:none}
 .warn-bar{background:#FFF8EE;border:1px solid #F5D5A0;border-radius:8px;padding:10px 16px;margin:10px 28px;font-size:12px;color:#C57E33;display:none}
@@ -159,7 +149,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="setup-field">
       <label>TikTok хэштег</label>
       <input type="text" id="ttHandle" placeholder="almau (без #)">
-      <div class="hint">Основной хэштег университета — например: almau</div>
+      <div class="hint">Основной хэштег университета</div>
     </div>
     <hr class="sep">
     <div class="setup-field">
@@ -209,9 +199,8 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск...">
       <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
-      <select><option>Любой тон</option><option>😊 Позитив</option><option>😠 Негатив</option><option>😐 Нейтрально</option></select>
       <div class="ig-xls-sep"></div>
-      <label title="Загрузить Excel"><span class="ig-xls-btn">📂 Excel</span><input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadIGFromExcel(this)"></label>
+      <label><span class="ig-xls-btn">📂 Excel</span><input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadIGFromExcel(this)"></label>
       <button class="ig-xls-btn" onclick="downloadIGTemplate()">📋 Шаблон</button>
       <div class="cnt" id="ig-count">— постов</div>
     </div>
@@ -236,7 +225,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
     <div class="controls">
       <input type="text" placeholder="🔍 Поиск по видео...">
-      <select><option>По просмотрам ↓</option><option>По дате ↓</option><option>По лайкам ↓</option></select>
+      <select><option>По просмотрам ↓</option><option>По дате ↓</option></select>
       <div class="cnt" id="tt-count">— видео</div>
     </div>
     <div class="content" id="tt-content"><div class="empty-state"><div class="es-icon">🎵</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div></div>
@@ -257,7 +246,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
         <span class="last-sync" id="web-last-sync">Ещё не проверено</span>
       </div>
     </div>
-    <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div></div>
+    <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
   </div>
   <div class="tab-panel" id="panel-general">
     <div class="content" style="max-width:1050px">
@@ -417,7 +406,7 @@ async function realRefresh() {
     } else {
       document.getElementById('tt-content').innerHTML = emptyState('TikTok хэштег не указан', '🎵', 'Откройте настройки');
     }
-    var q = ['"' + CFG.name + '" 2026', CFG.name + ' site:tengrinews.kz OR site:informburo.kz OR site:kapital.kz 2026'].join('\n');
+    var q = '"' + CFG.name + '" 2026\n' + CFG.name + ' site:tengrinews.kz OR site:informburo.kz 2026';
     var webItems = await apifyRun('apify/google-search-scraper',
       {queries: q, maxPagesPerQuery: 2, resultsPerPage: 10, languageCode: 'ru', countryCode: 'kz'},
       'web', '🌐 Интернет'
@@ -491,10 +480,10 @@ function renderTT(videos, lv, ld) {
 }
 function ttCard(v, gTs, gP, gL, gC, gS, gD, isN) {
   var d = parseTs(gTs(v)) || new Date();
-  var e = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+  var e = ['🎓','🏆','🌍','📚'][Math.floor(Math.random()*4)];
   return '<div class="tt-card' + (isN ? ' is-new' : '') + '">' +
     '<div class="tt-thumb">' + e + '<div class="tt-play"><span>▶</span></div></div>' +
-    '<div class="tt-info">' + (isN ? '<div style="margin-bottom:4px"><span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕</span></div>' : '') +
+    '<div class="tt-info">' + (isN ? '<span style="font-size:10px;font-weight:700;background:#C57E33;color:white;padding:2px 7px;border-radius:6px">🆕</span><br>' : '') +
     '<div class="tt-views">' + fmtNum(gP(v)) + '</div>' +
     '<div class="tt-lbl">просмотров · ' + d.toLocaleDateString('ru', {day:'numeric',month:'short',year:'numeric'}) + '</div>' +
     '<div class="tt-desc">' + gD(v).substring(0, 100) + '</div>' +
@@ -532,12 +521,11 @@ function webCard(item, isN) {
     '<div class="wc-body"><div class="web-source-icon">📰</div>' +
     '<div class="web-main"><div class="web-title">' + (item.title || '—') + '</div>' +
     '<div class="web-tags">' + (isN ? '<span class="web-tag wt-new">🆕 Новое</span>' : '') +
-    '<span class="web-tag wt-news">Новость</span>' +
-    '<span class="b ' + sCls(s) + '" style="font-size:10px;padding:2px 7px">' + sLbl(s) + '</span></div>' +
+    '<span class="web-tag wt-news">Новость</span></div>' +
     '<div class="web-snippet">' + (item.description || '').substring(0, 250) + '</div>' +
     '</div></div>' +
     '<div class="sources-strip"><span class="sources-label">Источник</span>' +
-    '<a class="source-pill" href="' + (item.url || '#') + '" target="_blank">📰 ' + host + (item.date ? ' <span>' + item.date + '</span>' : '') + '</a></div></div>';
+    '<a class="source-pill" href="' + (item.url || '#') + '" target="_blank">📰 ' + host + '</a></div></div>';
 }
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
@@ -579,8 +567,8 @@ function loadIGFromExcel(input) {
       renderIG(posts, lv, fmtDate(lv));
       document.getElementById('gen-ig-posts').textContent = posts.length;
       var wb2 = document.getElementById('warnBar');
-      if (wb2) { wb2.textContent = '📂 Загружено из Excel: ' + posts.length + ' постов'; wb2.style.display = 'block'; setTimeout(function() { wb2.style.display = 'none'; }, 5000); }
-    } catch(ex) { showError('Ошибка чтения Excel: ' + ex.message); }
+      if (wb2) { wb2.textContent = '📂 Загружено: ' + posts.length + ' постов'; wb2.style.display = 'block'; setTimeout(function() { wb2.style.display = 'none'; }, 5000); }
+    } catch(ex) { showError('Ошибка Excel: ' + ex.message); }
   };
   reader.readAsArrayBuffer(file);
   input.value = '';
@@ -588,12 +576,11 @@ function loadIGFromExcel(input) {
 function downloadIGTemplate() {
   if (typeof XLSX === 'undefined') { showError('Библиотека Excel не загрузилась.'); return; }
   var ig = CFG.ig || 'your_account';
-  var data = [['Дата','Подпись','Лайки','Комментарии','Ссылка','Автор'],['15.01.2026','Текст поста Instagram',150,12,'https://www.instagram.com/p/XXXX/',ig],['20.02.2026','Второй пост',320,28,'https://www.instagram.com/p/YYYY/',ig]];
+  var data = [['Дата','Подпись','Лайки','Комментарии','Ссылка','Автор'],['15.01.2026','Текст поста Instagram',150,12,'https://www.instagram.com/p/XXXX/',ig]];
   var ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wch:14},{wch:50},{wch:10},{wch:14},{wch:45},{wch:20}];
   var wbk = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wbk, ws, 'Instagram');
-  XLSX.writeFile(wbk, 'instagram_posts_template.xlsx');
+  XLSX.writeFile(wbk, 'template.xlsx');
 }
 function switchTab(tab, el) {
   document.querySelectorAll('.plat-tab').forEach(function(t) { t.classList.remove('active'); });
