@@ -10,6 +10,7 @@ window.onload = function() {
       if (c.abbr) document.getElementById("uniAbbr").value = c.abbr;
       if (c.ig) document.getElementById("igHandle").value = c.ig;
       if (c.tt) document.getElementById("ttHandle").value = c.tt;
+      if (c.location && document.getElementById("uniLocation")) document.getElementById("uniLocation").value = c.location;
     } catch(e) {}
   }
 };
@@ -23,12 +24,13 @@ function startDashboard() {
   var abbr = document.getElementById("uniAbbr").value.trim();
   var ig = document.getElementById("igHandle").value.trim().replace(/^@+/, "").trim();
   var tt = document.getElementById("ttHandle").value.trim().replace(/^#+/, "").trim();
+  var loc = document.getElementById("uniLocation") ? document.getElementById("uniLocation").value.trim() : "";
   var token = document.getElementById("apifyToken").value.trim();
   if (!name) { alert("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430"); return; }
   if (!token) { alert("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 Apify API Token"); return; }
   if (!ig && !tt) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u0438\u043d \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0438\u043b\u0438 \u0445\u044d\u0448\u0442\u0435\u0433"); return; }
-  CFG = {name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token};
-  localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt}));
+  CFG = {name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token, location: loc};
+  localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt, location: loc}));
   (function(){var _el=document.getElementById("headerTitle");if(_el)_el.textContent=name + " \u2014 Analytics";})();
   (function(){var _el=document.getElementById("headerAbbr");if(_el)_el.textContent=CFG.abbr.charAt(0).toUpperCase();})();
   var _ab=document.getElementById("genAbbrBig");if(_ab)_ab.textContent=CFG.abbr.charAt(0).toUpperCase();
@@ -308,6 +310,14 @@ function updateGenProfile(posts, videos, webItems) {
 
 // sync summary row in general profile
 function _syncGenSummary() {
+  // sync social card mirrors
+  var ttCnt = document.getElementById("gen-tt-cnt");
+  var ttViews = document.getElementById("gen-tt-views");
+  var sc1 = document.getElementById("gen-soc-tt-cnt");
+  var sc2 = document.getElementById("gen-soc-tt-views");
+  if (sc1 && ttCnt) sc1.textContent = ttCnt.textContent || "—";
+  if (sc2 && ttViews) sc2.textContent = ttViews.textContent || "—";
+
   var igP = document.getElementById("gen-ig-posts");
   var ttV = document.getElementById("gen-tt-videos");
   var webM = document.getElementById("gen-web-mentions");
@@ -333,7 +343,8 @@ function renderIG(posts, lv, ld) {
   var tC = posts.reduce(function(s,p){return s+(p.commentsCount||p.comments||0);},0);
   var nP = posts.filter(function(p){return isNew(igTs(p),lv);});
   (function(){var _el=document.getElementById("ig-stat-posts");if(_el)_el.textContent=posts.length;})();
-  (function(){var _el=document.getElementById("ig-stat-likes");if(_el)_el.textContent=fmtNum(tL);})();
+  (function(){var _el=document.getElementById("ig-stat-likes");if(_el)_el.textContent=fmtNum(tL);})()
+  ;(function(){var _el=document.getElementById("gen-ig-likes");if(_el)_el.textContent=fmtNum(tL);})();
   (function(){var _el=document.getElementById("ig-stat-comments");if(_el)_el.textContent=fmtNum(tC);})();
   (function(){var _el=document.getElementById("ig-stat-avg");if(_el)_el.textContent=posts.length ? Math.round(tL/posts.length) : 0;})();
   (function(){var _el=document.getElementById("ig-stat-new");if(_el)_el.textContent=nP.length;})();
