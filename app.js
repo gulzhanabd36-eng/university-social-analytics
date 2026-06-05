@@ -31,6 +31,7 @@ function startDashboard() {
   localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt}));
   document.getElementById("headerTitle").textContent = name + " \u2014 Analytics";
   document.getElementById("headerAbbr").textContent = CFG.abbr.charAt(0).toUpperCase();
+  var _ab=document.getElementById("genAbbrBig");if(_ab)_ab.textContent=CFG.abbr.charAt(0).toUpperCase();
   document.getElementById("genFullName").textContent = name;
   document.getElementById("genIG").textContent = ig ? "@" + ig : "\u2014";
   document.getElementById("genTT").textContent = tt ? "#" + tt : "\u2014";
@@ -368,22 +369,32 @@ function renderTT(videos, lv, ld) {
   document.getElementById("tt-content").innerHTML = h;
 }
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
-  var d = parseTs(gTs(v)) || new Date();
-  var desc = gD(v);
-  var url = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + ((v.authorMeta && v.authorMeta.name) || "") + "/video/" + (v.id || ""));
-  return "<div class=\"tt-card" + (isN ? " is-new" : "") + "\">" +
-    "<div class=\"tt-text-body\">" +
-    (isN ? "<span class=\"b b-new\" style=\"display:inline-block;margin-bottom:6px\">\uD83C\uDD95 \u041d\u043e\u0432\u043e\u0435</span>" : "") +
-    "<div class=\"tt-desc-full\">" + (desc ? desc.substring(0, 300) : "\u2014") + "</div>" +
-    "<div class=\"tt-row\">" +
-    "<div class=\"tt-meta\">" +
-    "<span>\u25B6 " + fmtNum(gP(v)) + "</span>" +
-    "<span>\u2764 " + fmtNum(gL(v)) + "</span>" +
-    "<span>\uD83D\uDCAC " + fmtNum(gC(v)) + "</span>" +
-    "<span class=\"tt-date-sm\">" + d.toLocaleDateString("ru", {day:"numeric",month:"short",year:"numeric"}) + "</span></div>" +
-    "<a class=\"open-link\" href=\"" + url + "\" target=\"_blank\">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0432\u0438\u0434\u0435\u043e \u2192</a>" +
-    "</div></div></div>";
+  var d=parseTs(gTs(v))||new Date();
+  var desc=gD(v);
+  var url=v.webVideoUrl||v.url||('https://www.tiktok.com/@'+((v.authorMeta&&v.authorMeta.name)||'')+'/video/'+(v.id||''));
+  var views=gP(v),lks=gL(v),cms=gC(v),viral=views>100000;
+  return '<div class="ig-card'+(isN?' is-new':'')+'">'
+    +'<div class="ig-card-stripe" style="background:linear-gradient(90deg,#1a1a1a,#69C9D0)"></div>'
+    +'<div class="ig-card-body">'
+      +'<div class="ig-card-badges">'
+        +(isN?'<span class="b b-new">🆕 Новое</span>':'')
+        +(viral?'<span class="b b-viral">🔥 viral</span>':'')
+        +'<span class="b b-neu">TikTok</span>'
+      +'</div>'
+      +'<div class="ig-card-caption">'+(desc?desc.substring(0,200):'—')+'</div>'
+      +'<div class="ig-card-footer">'
+        +'<div class="ig-card-meta">'
+          +'<span class="lk">▶ '+fmtNum(views)+'</span>'
+          +'<span>❤ '+fmtNum(lks)+'</span>'
+          +'<span>💬 '+fmtNum(cms)+'</span>'
+          +'<span class="ig-card-date">'+d.toLocaleDateString('ru',{day:'numeric',month:'short'})+'</span>'
+        +'</div>'
+        +'<a class="ig-card-link" href="'+url+'" target="_blank">→</a>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
 }
+
 function renderWeb(items, lv, ld) {
   var seen = {}; var unique = [];
   items.forEach(function(i) { var k=(i.url||i.title||"").substring(0,80); if(k&&!seen[k]){seen[k]=true;unique.push(i);} });
@@ -408,19 +419,30 @@ function renderWeb(items, lv, ld) {
   if (!f.length) h = emptyState("\u041d\u0435\u0442 \u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439","\uD83C\uDF10","\u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u043e\u0437\u0436\u0435");
   document.getElementById("web-content").innerHTML = h;
 }
-function webCard(item, isN) {
-  var host="\u2014"; try{host=new URL(item.url||"http://x").hostname.replace("www.","");}catch(e){}
-  var s = sentiment((item.title||"")+(item.description||""));
-  return "<div class=\"web-card"+(isN?" is-new":"")+"\">" +
-    "<div class=\"wc-body\"><div class=\"web-source-icon\">\uD83D\uDCF0</div>" +
-    "<div class=\"web-main\"><div class=\"web-title\">"+(item.title||"\u2014")+"</div>" +
-    "<div class=\"web-tags\">"+(isN?"<span class=\"web-tag wt-new\">\uD83C\uDD95 \u041d\u043e\u0432\u043e\u0435</span>":"")+
-    "<span class=\"web-tag wt-news\">\u041d\u043e\u0432\u043e\u0441\u0442\u044c</span></div>" +
-    "<div class=\"web-snippet\">"+(item.description||"").substring(0,250)+"</div>" +
-    "</div></div>" +
-    "<div class=\"sources-strip\"><span class=\"sources-label\">\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a</span>" +
-    "<a class=\"source-pill\" href=\""+(item.url||"#")+"\" target=\"_blank\">\uD83D\uDCF0 "+host+"</a></div></div>";
+function webCard(item,isN) {
+  var host='—';
+  try{host=new URL(item.url||'http://x').hostname.replace('www.','');}catch(e){}
+  var s=sentiment((item.title||'')+(item.description||''));
+  var sc4=s==='pos'?'b-pos':s==='neg'?'b-neg':'b-neu';
+  var sl4=s==='pos'?'позитив':s==='neg'?'негатив':'нейтрал';
+  return '<div class="ig-card'+(isN?' is-new':'')+'">'
+    +'<div class="ig-card-stripe" style="background:linear-gradient(90deg,#3B82F6,#93C5FD)"></div>'
+    +'<div class="ig-card-body">'
+      +'<div class="ig-card-badges">'
+        +(isN?'<span class="b b-new">🆕 Новое</span>':'')
+        +'<span class="b '+sc4+'">'+sl4+'</span>'
+        +'<span style="background:#EFF6FF;color:#2563EB;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600">📰 '+host+'</span>'
+      +'</div>'
+      +'<div class="ig-card-caption" style="font-weight:700;-webkit-line-clamp:2">'+(item.title||'—')+'</div>'
+      +'<div class="ig-card-caption" style="margin-top:4px;opacity:.7;font-size:11px">'+(item.description||'').substring(0,130)+'</div>'
+      +'<div class="ig-card-footer">'
+        +'<div class="ig-card-meta"><span class="ig-card-date">'+(item.date||'')+'</span></div>'
+        +'<a class="ig-card-link" href="'+(item.url||'#')+'" target="_blank">→</a>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
 }
+
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
   if (typeof XLSX === "undefined") { showError("\u0411\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430 Excel \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0430\u0441\u044c."); return; }
