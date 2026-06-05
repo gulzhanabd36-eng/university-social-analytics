@@ -114,7 +114,7 @@ async function realRefresh() {
   showLoading("\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0430...");
   try {
     if (CFG.ig) {
-      var igUrl = "https://www.instagram.com/" + CFG.ig + "/";
+      var igUrl = "https://www.instagram.com/" + CFG.ig;
       var igItems = await apifyRun("apify~instagram-scraper",
         {directUrls: [igUrl], resultsType: "posts", resultsLimit: 30},
         "ig", "\uD83D\uDCF8 Instagram"
