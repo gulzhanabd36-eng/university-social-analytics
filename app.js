@@ -125,6 +125,19 @@ async function cacheWrite(table, handle, items) {
   } catch(e) { /* silent */ }
 }
 
+
+async function supaRead(table, handle) {
+  try {
+    var r = await fetch("/.netlify/functions/supabase-read", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({table: table, handle: handle})
+    });
+    if (!r.ok) return null;
+    return await r.json(); // {items, count}
+  } catch(e) { return null; }
+}
+
 async function realRefresh() {
   if (isLoading) return;
   if (!CFG.token) { openSettings(); return; }
@@ -136,21 +149,31 @@ async function realRefresh() {
   showLoading("\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0430...");
   try {
     if (CFG.ig) {
-      var igCache = await cacheRead("uni_ig_posts", CFG.ig);
+      // 1. Try full 2026 history from Supabase first
+      var igDb = await supaRead("uni_ig_2026", CFG.ig);
       var igItems;
-      if (igCache && igCache.fresh && igCache.items && igCache.items.length) {
-        igItems = igCache.items;
+      if (igDb && igDb.items && igDb.items.length) {
+        igItems = igDb.items;
         setStep("ig", "done");
-        document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";
+        document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u0431\u0430\u0437\u044b (" + igDb.count + " \u043f\u043e\u0441\u0442\u043e\u0432)";
       } else {
-        igItems = await apifyRun("apify~instagram-scraper",
-          (function(){
-            var h = CFG.ig.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^\/+|\/+$/g, "").replace(/^@/, "").trim();
-            return {directUrls: ["https://www.instagram.com/" + h + "/"], resultsType: "posts", resultsLimit: 30, addParentData: false};
-          })(),
-          "ig", "\uD83D\uDCF8 Instagram"
-        );
-        cacheWrite("uni_ig_posts", CFG.ig, igItems);
+        // 2. Try 6h cache
+        var igCache = await cacheRead("uni_ig_posts", CFG.ig);
+        if (igCache && igCache.fresh && igCache.items && igCache.items.length) {
+          igItems = igCache.items;
+          setStep("ig", "done");
+          document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u044d\u0448\u0430";
+        } else {
+          // 3. Fetch from Apify
+          igItems = await apifyRun("apify~instagram-scraper",
+            (function(){
+              var h = CFG.ig.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^\/+|\/+$/g, "").replace(/^@/, "").trim();
+              return {directUrls: ["https://www.instagram.com/" + h + "/"], resultsType: "posts", resultsLimit: 30, addParentData: false};
+            })(),
+            "ig", "\uD83D\uDCF8 Instagram"
+          );
+          cacheWrite("uni_ig_posts", CFG.ig, igItems);
+        }
       }
       var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
       if (igItems.length > 0 && posts.length === 0) posts = igItems;
