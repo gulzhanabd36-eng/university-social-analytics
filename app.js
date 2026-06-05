@@ -141,7 +141,22 @@ async function realRefresh() {
       {queries: q, maxPagesPerQuery: 2, resultsPerPage: 10, languageCode: "ru", countryCode: "kz"},
       "web", "\uD83C\uDF10 \u0418\u043d\u0442\u0435\u0440\u043d\u0435\u0442"
     );
-    renderWeb(webItems, lastVisit, lastDisp);
+    var flatWeb = [];
+    webItems.forEach(function(item) {
+      if (item.organicResults && Array.isArray(item.organicResults)) {
+        item.organicResults.forEach(function(r) {
+          if (r.url && r.url.indexOf("google.") === -1) {
+            flatWeb.push({title: r.title || "", url: r.url || "", description: r.description || r.snippet || "", date: r.date || ""});
+          }
+        });
+      } else {
+        var itemUrl = item.link || item.url || "";
+        if (itemUrl && itemUrl.indexOf("google.") === -1) {
+          flatWeb.push({title: item.title || "", url: itemUrl, description: item.description || item.snippet || "", date: item.date || ""});
+        }
+      }
+    });
+    renderWeb(flatWeb.length ? flatWeb : webItems, lastVisit, lastDisp);
     localStorage.setItem(lastKey, new Date().toISOString());
   } catch(e) {
     console.error(e); showError(e.message);
