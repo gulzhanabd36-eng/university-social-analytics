@@ -216,7 +216,7 @@ async function realRefresh() {
       if (igItems.length > 0 && posts.length === 0) posts = igItems;
       renderIG(posts, lastVisit, lastDisp);
       (function(){var _el=document.getElementById("gen-ig-posts");if(_el)_el.textContent=posts.length;})();
-      updateGenProfile(posts, null, null);
+      updateGenProfile(posts, null, null); _syncGenSummary();
     } else {
       (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
@@ -237,7 +237,7 @@ async function realRefresh() {
       var videos = ttItems.filter(function(v) { return is2026(v.createTime || v.createTimeISO || v.timestamp); });
       renderTT(videos, lastVisit, lastDisp);
       (function(){var _el=document.getElementById("gen-tt-videos");if(_el)_el.textContent=videos.length;})();
-      updateGenProfile(null, videos, null);
+      updateGenProfile(null, videos, null); _syncGenSummary();
     } else {
       (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
@@ -303,6 +303,27 @@ function updateGenProfile(posts, videos, webItems) {
     el=document.getElementById("gen-tt-likes"); if(el) el.textContent=fmtNum(tL2);
     el=document.getElementById("gen-tt-er"); if(el) el.textContent=er;
   }
+}
+
+
+// sync summary row in general profile
+function _syncGenSummary() {
+  var igP = document.getElementById("gen-ig-posts");
+  var ttV = document.getElementById("gen-tt-videos");
+  var webM = document.getElementById("gen-web-mentions");
+  var s1 = document.getElementById("gen-sum-ig");
+  var s2 = document.getElementById("gen-sum-tt");
+  var s3 = document.getElementById("gen-sum-views");
+  var s4 = document.getElementById("gen-sum-web");
+  var h1 = document.getElementById("gen-sum-ig-h");
+  var h2 = document.getElementById("gen-sum-tt-h");
+  if (s1 && igP) s1.textContent = igP.textContent || "—";
+  if (h1 && CFG && CFG.ig) h1.textContent = "@" + CFG.ig;
+  if (s2 && ttV) s2.textContent = ttV.textContent || "—";
+  if (h2 && CFG && CFG.tt) h2.textContent = "#" + CFG.tt;
+  var ttViews = document.getElementById("gen-tt-views");
+  if (s3 && ttViews) s3.textContent = ttViews.textContent || "—";
+  if (s4 && webM) s4.textContent = webM.textContent || "—";
 }
 
 function igTs(p) { return p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp || null; }
