@@ -231,16 +231,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="ig-stat-avg">—</div><div class="l">Ср. ❤</div></div>
       <div class="stat"><div class="v" id="ig-stat-new">—</div><div class="l">Новых</div><div class="s" id="igStatHandle">@—</div></div>
     </div>
-    <div class="controls">
-      <input type="text" placeholder="🔍 Поиск...">
-      <select><option>Все источники</option><option>Профиль</option><option>Упоминания</option></select>
-      <div class="ig-xls-sep"></div>
-      <label><span class="ig-xls-btn">📂 Excel</span><input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadIGFromExcel(this)"></label>
-      <button class="ig-xls-btn" onclick="downloadIGTemplate()">📋 Шаблон</button>
-      <div class="cnt" id="ig-count">— постов</div>
-    </div>
-    <div class="cat-nav">
-      <div class="cat-tab active">Все</div>
+    <div class="controls-mini"><span id="ig-count">— постов</span></div>
       <div class="cat-tab">🎓 Поступление</div>
       <div class="cat-tab">🏆 Достижения</div>
       <div class="cat-tab">🎉 Мероприятия</div>
@@ -258,11 +249,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="tt-stat-avg">—</div><div class="l">Ср. просм.</div></div>
       <div class="stat"><div class="v" id="tt-stat-er">—</div><div class="l">ER</div><div class="s" id="ttStatHandle">#—</div></div>
     </div>
-    <div class="controls">
-      <input type="text" placeholder="🔍 Поиск по видео...">
-      <select><option>По просмотрам ↓</option><option>По дате ↓</option></select>
-      <div class="cnt" id="tt-count">— видео</div>
-    </div>
+    <div class="controls-mini"><span id="tt-count">— видео</span></div>
     <div class="content" id="tt-content"><div class="empty-state"><div class="es-icon">🎵</div><div class="es-text">Данные загружаются...</div><div class="es-sub">Подождите 3–5 минут</div></div></div>
   </div>
   <div class="tab-panel" id="panel-web">
@@ -273,28 +260,44 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="web-stat-sources">—</div><div class="l">Источников</div></div>
       <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div></div>
     </div>
-    <div class="web-toolbar">
-      <input type="text" placeholder="🔍 Поиск по теме...">
-      <select><option>Все источники</option><option>📰 Новости</option></select>
-      <div class="sync-info">
-        <div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
+    <div class="controls-mini"><div class="sync-badge" id="web-sync-badge">🆕 — новых</div>
         <span class="last-sync" id="web-last-sync">Ещё не проверено</span>
-      </div>
     </div>
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
   </div>
   <div class="tab-panel" id="panel-general">
-    <div class="content" style="max-width:1050px">
-      <div class="info-grid">
-        <div class="info-card"><h3>🏙 Основные данные</h3>
-          <div class="info-row"><span class="info-key">Полное название</span><span class="info-val" id="genFullName">—</span></div>
-          <div class="info-row"><span class="info-key">Instagram</span><span class="info-val gold" id="genIG">—</span></div>
-          <div class="info-row"><span class="info-key">TikTok хэштег</span><span class="info-val gold" id="genTT">—</span></div>
+    <div class="content">
+      <div class="gen-profile">
+        <div class="gen-hero">
+          <div class="gen-hero-abbr" id="genAbbrBig">U</div>
+          <div class="gen-hero-info">
+            <div class="gen-hero-name" id="genFullName">—</div>
+            <div class="gen-hero-subs">
+              <span class="gen-handle gen-handle-ig" id="genIG">@—</span>
+              <span class="gen-handle gen-handle-tt" id="genTT">#—</span>
+            </div>
+          </div>
+          <div class="gen-hero-year">2026</div>
         </div>
-        <div class="info-card"><h3>📰 Мониторинг 2026</h3>
-          <div class="info-row"><span class="info-key">Постов Instagram</span><span class="info-val gold" id="gen-ig-posts">—</span></div>
-          <div class="info-row"><span class="info-key">Видео TikTok</span><span class="info-val gold" id="gen-tt-videos">—</span></div>
-          <div class="info-row"><span class="info-key">Упоминаний в СМИ</span><span class="info-val gold" id="gen-web-mentions">—</span></div>
+        <div class="gen-stats-row">
+          <div class="gen-stat-card gen-stat-ig">
+            <div class="gen-stat-icon">📸</div>
+            <div class="gen-stat-platform">Instagram</div>
+            <div class="gen-stat-num" id="gen-ig-posts">—</div>
+            <div class="gen-stat-lbl">постов 2026</div>
+          </div>
+          <div class="gen-stat-card gen-stat-tt">
+            <div class="gen-stat-icon">🎵</div>
+            <div class="gen-stat-platform">TikTok</div>
+            <div class="gen-stat-num" id="gen-tt-videos">—</div>
+            <div class="gen-stat-lbl">видео 2026</div>
+          </div>
+          <div class="gen-stat-card gen-stat-web">
+            <div class="gen-stat-icon">🌐</div>
+            <div class="gen-stat-platform">Интернет</div>
+            <div class="gen-stat-num" id="gen-web-mentions">—</div>
+            <div class="gen-stat-lbl">упоминаний</div>
+          </div>
         </div>
       </div>
     </div>
