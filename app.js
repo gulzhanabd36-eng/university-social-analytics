@@ -144,7 +144,10 @@ async function realRefresh() {
         document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u0435\u0448\u0430";
       } else {
         igItems = await apifyRun("apify~instagram-scraper",
-          {directUrls: ["https://www.instagram.com/" + CFG.ig + "/"], resultsType: "posts", resultsLimit: 30, addParentData: false},
+          (function(){
+            var h = CFG.ig.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^\/+|\/+$/g, "").replace(/^@/, "").trim();
+            return {directUrls: ["https://www.instagram.com/" + h + "/"], resultsType: "posts", resultsLimit: 30, addParentData: false};
+          })(),
           "ig", "\uD83D\uDCF8 Instagram"
         );
         cacheWrite("uni_ig_posts", CFG.ig, igItems);
