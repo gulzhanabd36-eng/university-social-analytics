@@ -216,6 +216,7 @@ async function realRefresh() {
       if (igItems.length > 0 && posts.length === 0) posts = igItems;
       renderIG(posts, lastVisit, lastDisp);
       document.getElementById("gen-ig-posts").textContent = posts.length;
+      updateGenProfile(posts, null, null);
     } else {
       document.getElementById("ig-content").innerHTML = emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");
     }
@@ -236,6 +237,7 @@ async function realRefresh() {
       var videos = ttItems.filter(function(v) { return is2026(v.createTime || v.createTimeISO || v.timestamp); });
       renderTT(videos, lastVisit, lastDisp);
       document.getElementById("gen-tt-videos").textContent = videos.length;
+      updateGenProfile(null, videos, null);
     } else {
       document.getElementById("tt-content").innerHTML = emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");
     }
@@ -266,6 +268,40 @@ async function realRefresh() {
   } finally {
     isLoading = false; hideLoading();
     document.getElementById("lastUpdate").textContent = "\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e: " + new Date().toLocaleString("ru", {day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  }
+}
+
+
+// Update general profile stats
+function updateGenProfile(posts, videos, webItems) {
+  if (posts !== null) {
+    var tL = posts.reduce(function(s,p){return s+(p.likesCount||p.likes||0);},0);
+    // top categories
+    var catCounts = {};
+    posts.forEach(function(p){
+      var cid = typeof categorize==="function" ? categorize(p.caption||p.alt||p.text||"") : "other";
+      var ci = catInfo(cid);
+      var label = ci.emoji + " " + ci.label;
+      catCounts[label] = (catCounts[label]||0)+1;
+    });
+    var catArr = Object.keys(catCounts).map(function(k){return {k:k,v:catCounts[k]};}).sort(function(a,b){return b.v-a.v;});
+    [1,2,3,4].forEach(function(i){
+      var cn=document.getElementById("gen-cat"+i+"-name"), cv=document.getElementById("gen-cat"+i+"-cnt");
+      if (cn && cv) { var c=catArr[i-1]; if(c){cn.textContent=c.k;cv.textContent=c.v;}else{cn.textContent="—";cv.textContent="—";} }
+    });
+  }
+  if (videos !== null) {
+    var tV=0, tL2=0;
+    videos.forEach(function(v){
+      var s=v.stats||{};
+      tV+=(s.playCount||v.playCount||0);
+      tL2+=(s.diggCount||v.diggCount||0);
+    });
+    var er=tV>0?((tL2/tV)*100).toFixed(1)+"%":"—";
+    var el=document.getElementById("gen-tt-cnt"); if(el) el.textContent=videos.length;
+    el=document.getElementById("gen-tt-views"); if(el) el.textContent=fmtNum(tV);
+    el=document.getElementById("gen-tt-likes"); if(el) el.textContent=fmtNum(tL2);
+    el=document.getElementById("gen-tt-er"); if(el) el.textContent=er;
   }
 }
 
@@ -310,8 +346,8 @@ function _renderIgCards() {
   var nP = filtered.filter(function(p){return isNew(igTs(p),lv);});
   var oP = filtered.filter(function(p){return !isNew(igTs(p),lv);});
   var h = fb;
-  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="ig-grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
-  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="ig-grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
+  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="tt-grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
+  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="tt-grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
   if (!filtered.length) h += emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u044d\u0442\u043e\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438","\u{1F4F8}","");
   document.getElementById("ig-content").innerHTML = h;
 }
@@ -319,30 +355,35 @@ function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
   var s = sentiment(cap);
   var vr = (p.likesCount || p.likes || 0) > 500;
-  var sc2 = p.shortCode || p.shortcode || "";
-  var url = p.url || (sc2 ? "https://www.instagram.com/p/" + sc2 + "/" : "#");
+  var owner = (p.ownerUsername || p.username || CFG.ig || "").replace(/^https?:\/\/[^/]*\//, "").replace(/\/$/, "").replace(/^@/, "");
+  var isProfile = CFG.ig && owner.toLowerCase() === CFG.ig.toLowerCase();
+  var sc = p.shortCode || p.shortcode || "";
+  var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
   var cat = catInfo(typeof categorize === "function" ? categorize(cap) : "other");
-  var stripeClass = "stripe-" + (cat.id || "other");
-  return '<div class="ig-card' + (isN ? " is-new" : "") + '">' +
-    '<div class="ig-card-stripe ' + stripeClass + '"></div>' +
-    '<div class="ig-card-body">' +
-      '<div class="ig-card-badges">' +
-        (isN ? '<span class="b b-new">\u{1F195} \u041d\u043e\u0432\u043e\u0435</span>' : "") +
-        (vr ? '<span class="b b-viral">\u0432\u0438\u0440\u0443\u0441</span>' : "") +
-        '<span class="b b-cat">' + cat.emoji + " " + cat.label + "</span>" +
-        '<span class="b ' + (s === "pos" ? "b-pos" : s === "neg" ? "b-neg" : "b-neu") + '">' + (s === "pos" ? "\u043f\u043e\u0437\u0438\u0442\u0438\u0432" : s === "neg" ? "\u043d\u0435\u0433\u0430\u0442\u0438\u0432" : "\u043d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u043e") + "</span>" +
-      "</div>" +
-      '<div class="ig-card-caption">' + (cap ? cap.substring(0, 200) : "\u2014") + "</div>" +
-      '<div class="ig-card-footer">' +
-        '<div class="ig-card-meta">' +
-          '<span class="lk">\u2764 ' + fmtNum(p.likesCount || p.likes || 0) + "</span>" +
-          '<span>\u{1F4AC} ' + fmtNum(p.commentsCount || p.comments || 0) + "</span>" +
-          '<span class="ig-card-date">' + fmtDate(igTs(p)) + "</span>" +
-        "</div>" +
-        '<a class="ig-card-link" href="' + url + '" target="_blank">\u2192</a>' +
-      "</div>" +
-    "</div>" +
-  "</div>";
+  var sentCls = s === "pos" ? "b-positive" : s === "neg" ? "b-negative" : "b-neutral";
+  var sentLbl = s === "pos" ? "\u043f\u043e\u0437\u0438\u0442\u0438\u0432" : s === "neg" ? "\u043d\u0435\u0433\u0430\u0442\u0438\u0432" : "\u043d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u043e";
+  return '<div class="card' + (isN ? " is-new" : "") + '">' +
+    '<div class="card-head">' +
+      '<div>' +
+        '<div class="author">@' + owner + '</div>' +
+        '<div class="date-sm">' + fmtDate(igTs(p)) + '</div>' +
+      '</div>' +
+      '<div class="badges">' +
+        '<span class="b ' + (isProfile ? "b-profile" : "b-mentions") + '">' + (isProfile ? "\u043f\u0440\u043e\u0444\u0438\u043b\u044c" : "\u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435") + '</span>' +
+        '<span class="b ' + sentCls + '">' + sentLbl + '</span>' +
+        (vr ? '<span class="b b-viral">\u0432\u0438\u0440\u0443\u0441</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<span class="cat-tag">' + cat.emoji + ' ' + cat.label + '</span>' +
+    '<div class="caption">' + (cap ? cap.substring(0, 400) : '\u2014') + '</div>' +
+    '<div class="card-foot">' +
+      '<div class="meta">' +
+        '<span class="likes">\u2764 ' + fmtNum(p.likesCount || p.likes || 0) + '</span>' +
+        '<span>\ud83d\udcac ' + fmtNum(p.commentsCount || p.comments || 0) + '</span>' +
+      '</div>' +
+      '<a class="open-link" href="' + url + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderTT(videos, lv, ld) {
@@ -369,30 +410,38 @@ function renderTT(videos, lv, ld) {
   document.getElementById("tt-content").innerHTML = h;
 }
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
-  var d=parseTs(gTs(v))||new Date();
-  var desc=gD(v);
-  var url=v.webVideoUrl||v.url||('https://www.tiktok.com/@'+((v.authorMeta&&v.authorMeta.name)||'')+'/video/'+(v.id||''));
-  var views=gP(v),lks=gL(v),cms=gC(v),viral=views>100000;
-  return '<div class="ig-card'+(isN?' is-new':'')+'">'
-    +'<div class="ig-card-stripe" style="background:linear-gradient(90deg,#1a1a1a,#69C9D0)"></div>'
-    +'<div class="ig-card-body">'
-      +'<div class="ig-card-badges">'
-        +(isN?'<span class="b b-new">🆕 Новое</span>':'')
-        +(viral?'<span class="b b-viral">🔥 viral</span>':'')
-        +'<span class="b b-neu">TikTok</span>'
-      +'</div>'
-      +'<div class="ig-card-caption">'+(desc?desc.substring(0,200):'—')+'</div>'
-      +'<div class="ig-card-footer">'
-        +'<div class="ig-card-meta">'
-          +'<span class="lk">▶ '+fmtNum(views)+'</span>'
-          +'<span>❤ '+fmtNum(lks)+'</span>'
-          +'<span>💬 '+fmtNum(cms)+'</span>'
-          +'<span class="ig-card-date">'+d.toLocaleDateString('ru',{day:'numeric',month:'short'})+'</span>'
-        +'</div>'
-        +'<a class="ig-card-link" href="'+url+'" target="_blank">→</a>'
-      +'</div>'
-    +'</div>'
-  +'</div>';
+  var d = parseTs(gTs(v)) || new Date();
+  var desc = gD(v);
+  var url = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + ((v.authorMeta && v.authorMeta.name) || "") + "/video/" + (v.id || ""));
+  var authorName = (v.authorMeta && v.authorMeta.name) || (v.author && v.author.uniqueId) || v.author || "";
+  var views = gP(v), lks = gL(v), cms = gC(v), shs = gS(v);
+  var viral = views > 100000;
+  var isAlmaU = authorName.toLowerCase().indexOf(CFG.tt ? CFG.tt.toLowerCase() : "almau") >= 0 ||
+                (desc && desc.toLowerCase().indexOf(CFG.tt ? CFG.tt.toLowerCase() : "almau") >= 0);
+  var hashtags = v.hashtags || v.challenges || [];
+  if (typeof hashtags === "string") { try { hashtags = JSON.parse(hashtags); } catch(e) { hashtags = []; } }
+  var tags = Array.isArray(hashtags) ? hashtags.slice(0,5).map(function(h){ return typeof h === "object" ? (h.name || h.title || "") : String(h); }).filter(Boolean) : [];
+  return '<div class="tt-card' + (isAlmaU ? " is-almau" : "") + '">' +
+    '<div class="tt-head">' +
+      '<div>' +
+        '<div class="tt-author">@' + authorName + '</div>' +
+        '<div class="tt-date">' + d.toLocaleDateString("ru", {day:"numeric",month:"long",year:"numeric"}) + '</div>' +
+      '</div>' +
+      '<div class="badges">' +
+        (isAlmaU ? '<span class="tt-almau-badge">' + (CFG.tt ? "#"+CFG.tt : "AlmaU") + '</span>' : '') +
+        (viral ? '<span class="b b-viral">\u0432\u0438\u0440\u0443\u0441</span>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="tt-caption">' + (desc ? desc.substring(0,300) : "\u2014") + '</div>' +
+    (tags.length ? '<div class="tt-hashtags">' + tags.map(function(t){ return '<span class="tt-tag">#'+t+'</span>'; }).join("") + '</div>' : '') +
+    '<div class="tt-stats">' +
+      '<span class="tt-views">\u25b6 ' + fmtNum(views) + '</span>' +
+      '<span>\u2764 ' + fmtNum(lks) + '</span>' +
+      '<span>\ud83d\udcac ' + fmtNum(cms) + '</span>' +
+      (shs ? '<span>\u21a5 ' + fmtNum(shs) + '</span>' : '') +
+      '<a class="tt-link" href="' + url + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderWeb(items, lv, ld) {
@@ -419,28 +468,30 @@ function renderWeb(items, lv, ld) {
   if (!f.length) h = emptyState("\u041d\u0435\u0442 \u0443\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439","\uD83C\uDF10","\u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u043f\u043e\u0437\u0436\u0435");
   document.getElementById("web-content").innerHTML = h;
 }
-function webCard(item,isN) {
-  var host='—';
-  try{host=new URL(item.url||'http://x').hostname.replace('www.','');}catch(e){}
-  var s=sentiment((item.title||'')+(item.description||''));
-  var sc4=s==='pos'?'b-pos':s==='neg'?'b-neg':'b-neu';
-  var sl4=s==='pos'?'позитив':s==='neg'?'негатив':'нейтрал';
-  return '<div class="ig-card'+(isN?' is-new':'')+'">'
-    +'<div class="ig-card-stripe" style="background:linear-gradient(90deg,#3B82F6,#93C5FD)"></div>'
-    +'<div class="ig-card-body">'
-      +'<div class="ig-card-badges">'
-        +(isN?'<span class="b b-new">🆕 Новое</span>':'')
-        +'<span class="b '+sc4+'">'+sl4+'</span>'
-        +'<span style="background:#EFF6FF;color:#2563EB;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600">📰 '+host+'</span>'
-      +'</div>'
-      +'<div class="ig-card-caption" style="font-weight:700;-webkit-line-clamp:2">'+(item.title||'—')+'</div>'
-      +'<div class="ig-card-caption" style="margin-top:4px;opacity:.7;font-size:11px">'+(item.description||'').substring(0,130)+'</div>'
-      +'<div class="ig-card-footer">'
-        +'<div class="ig-card-meta"><span class="ig-card-date">'+(item.date||'')+'</span></div>'
-        +'<a class="ig-card-link" href="'+(item.url||'#')+'" target="_blank">→</a>'
-      +'</div>'
-    +'</div>'
-  +'</div>';
+function webCard(item, isN) {
+  var host = "\u2014";
+  try { host = new URL(item.url || "http://x").hostname.replace("www.",""); } catch(e) {}
+  var s = sentiment((item.title || "") + (item.description || ""));
+  var sentCls = s === "pos" ? "b-positive" : s === "neg" ? "b-negative" : "b-neutral";
+  var sentLbl = s === "pos" ? "\u043f\u043e\u0437\u0438\u0442\u0438\u0432" : s === "neg" ? "\u043d\u0435\u0433\u0430\u0442\u0438\u0432" : "\u043d\u0435\u0439\u0442\u0440\u0430\u043b";
+  return '<div class="card' + (isN ? " is-new" : "") + '">' +
+    '<div class="card-head">' +
+      '<div>' +
+        '<div class="author">' + host + '</div>' +
+        '<div class="date-sm">' + (item.date || "") + '</div>' +
+      '</div>' +
+      '<div class="badges">' +
+        (isN ? '<span class="b b-new">\ud83c\udd95 \u041d\u043e\u0432\u043e\u0435</span>' : '') +
+        '<span class="b ' + sentCls + '">' + sentLbl + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="caption" style="font-weight:700;-webkit-line-clamp:2">' + (item.title || "\u2014") + '</div>' +
+    '<div class="caption" style="opacity:.7">' + (item.description || "").substring(0,250) + '</div>' +
+    '<div class="card-foot">' +
+      '<div class="meta"><span>\ud83d\udcf0 ' + host + '</span></div>' +
+      '<a class="open-link" href="' + (item.url || "#") + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
+    '</div>' +
+  '</div>';
 }
 
 function loadIGFromExcel(input) {
