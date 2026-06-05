@@ -142,6 +142,31 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .ig-cat-btn.active .ig-cat-count{background:rgba(255,255,255,.25);}
 .b-cat{background:#EEF4FF;color:#4A6FA5;border-color:#C8D8F0;}
 </style>
+
+<style>
+/* IG post card grid */
+.ig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-bottom:20px;}
+.ig-card{background:white;border-radius:12px;border:1px solid #eee;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .15s;}
+.ig-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.ig-card.is-new{border-top:3px solid #C57E33;}
+.ig-card-stripe{height:4px;width:100%;}
+.ig-card-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:6px;}
+.ig-card-badges{display:flex;gap:4px;flex-wrap:wrap;}
+.ig-card-caption{font-size:12px;color:#333;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;flex:1;}
+.ig-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f0f0f0;margin-top:4px;}
+.ig-card-meta{display:flex;gap:8px;font-size:11px;color:#888;}
+.ig-card-meta .lk{color:#C57E33;font-weight:700;}
+.ig-card-date{font-size:10px;color:#bbb;}
+.ig-card-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid #F5D5A0;white-space:nowrap;}
+/* category stripe colors */
+.stripe-study{background:linear-gradient(90deg,#6366F1,#818CF8);}
+.stripe-achieve{background:linear-gradient(90deg,#F59E0B,#FCD34D);}
+.stripe-event{background:linear-gradient(90deg,#EC4899,#F9A8D4);}
+.stripe-admission{background:linear-gradient(90deg,#10B981,#6EE7B7);}
+.stripe-partner{background:linear-gradient(90deg,#3B82F6,#93C5FD);}
+.stripe-life{background:linear-gradient(90deg,#8B5CF6,#C4B5FD);}
+.stripe-other{background:linear-gradient(90deg,#9CA3AF,#D1D5DB);}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
