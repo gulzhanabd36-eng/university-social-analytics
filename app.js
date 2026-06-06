@@ -177,6 +177,26 @@ async function supaRead(table, handle) {
   } catch(e) { return null; }
 }
 
+
+// Phase 1: Accumulation helper
+async function accFetch(action, handle, items) {
+  try {
+    var payload = {action: action, handle: handle};
+    if (items) payload.items = items;
+    var r = await fetch("/.netlify/functions/supabase-accumulate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { console.warn("accFetch error:", e); return null; }
+}
+function setIgBadge(text) {
+  var el = document.getElementById("ig-acc-badge");
+  if (el) { el.style.display = "block"; el.textContent = text; }
+}
+
 async function realRefresh() {
   if (isLoading) return;
   if (!CFG.token) { openSettings(); return; }
@@ -188,41 +208,77 @@ async function realRefresh() {
   showLoading("\u041f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u0430...");
   try {
     if (CFG.ig) {
-      // 1. Try full 2026 history from Supabase first
-      var igDb = await supaRead("uni_ig_2026", CFG.ig);
-      var igItems;
-      if (igDb && igDb.items && igDb.items.length) {
-        igItems = igDb.items;
+      var igHandle = CFG.ig.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^\/+|\/+$/g, "").replace(/^@/, "").trim();
+
+      // ── Step 1: Load existing accumulation from Supabase ──
+      setIgBadge("\u23F3 \u0427\u0438\u0442\u0430\u0435\u043c \u0431\u0430\u0437\u0443...");
+      var igAcc = await accFetch("read", igHandle, null);
+      var igAllItems = (igAcc && igAcc.items && igAcc.items.length) ? igAcc.items : [];
+
+      // ── Step 2: Show existing posts immediately (fast render) ──
+      if (igAllItems.length > 0) {
         setStep("ig", "done");
-        (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent="\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u0431\u0430\u0437\u044b (" + igDb.count + " \u043f\u043e\u0441\u0442\u043e\u0432)";})();
-      } else {
-        // 2. Try 6h cache
-        var igCache = await cacheRead("uni_ig_posts", CFG.ig);
-        if (igCache && igCache.fresh && igCache.items && igCache.items.length) {
-          igItems = igCache.items;
-          setStep("ig", "done");
-          (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent="\uD83D\uDCF8 Instagram \u2014 \u0438\u0437 \u043a\u044d\u0448\u0430";})();
-        } else {
-          // 3. Fetch from Apify
-          igItems = await apifyRun("apify~instagram-scraper",
-            (function(){
-              var h = CFG.ig.replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^\/+|\/+$/g, "").replace(/^@/, "").trim();
-              return {directUrls: ["https://www.instagram.com/" + h + "/"], resultsType: "posts", resultsLimit: 30, addParentData: false};
-            })(),
-            "ig", "\uD83D\uDCF8 Instagram"
-          );
-          cacheWrite("uni_ig_posts", CFG.ig, igItems);
-        }
+        setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043f\u043e\u0441\u0442\u043e\u0432 \u2014 \u0438\u0449\u0435\u043c \u043d\u043e\u0432\u044b\u0435...");
+        document.getElementById("loadingText").textContent = "\uD83D\uDCF8 Instagram \u2014 " + igAllItems.length + " \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u0431\u0430\u0437\u0435, \u0438\u0449\u0435\u043c \u043d\u043e\u0432\u044b\u0435...";
+        renderIG(igAllItems, lastVisit, lastDisp);
+        var _igp1 = document.getElementById("gen-ig-posts"); if(_igp1) _igp1.textContent = igAllItems.length;
+        updateGenProfile(igAllItems, null, null);
+        if (typeof _syncGenSummary === "function") _syncGenSummary();
       }
-      var posts = igItems.filter(function(p) { var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp; return is2026(ts); });
-      if (igItems.length > 0 && posts.length === 0) posts = igItems;
-      renderIG(posts, lastVisit, lastDisp);
-      (function(){var _el=document.getElementById("gen-ig-posts");if(_el)_el.textContent=posts.length;})();
-      updateGenProfile(posts, null, null); _syncGenSummary();
+
+      // ── Step 3: Get latest timestamp for incremental fetch ──
+      var igLatestTs = null;
+      if (igAllItems.length > 0) {
+        var igLatResp = await accFetch("latest", igHandle, null);
+        if (igLatResp && igLatResp.timestamp) igLatestTs = igLatResp.timestamp;
+      }
+
+      // ── Step 4: Fetch from Apify (1000 posts max) ──
+      var igApifyInput = (function() {
+        var inp = {
+          directUrls: ["https://www.instagram.com/" + igHandle + "/"],
+          resultsType: "posts",
+          resultsLimit: 1000,
+          addParentData: false
+        };
+        if (igLatestTs) inp.onlyPostsNewerThan = igLatestTs.substring(0, 10); // YYYY-MM-DD
+        return inp;
+      })();
+
+      var igApifyLabel = igAllItems.length > 0
+        ? "\uD83D\uDCF8 Instagram \u2014 \u043D\u043E\u0432\u044B\u0435 \u043F\u043E\u0441\u0442\u044B"
+        : "\uD83D\uDCF8 Instagram \u2014 \u043F\u0435\u0440\u0432\u0438\u0447\u043D\u0430\u044F \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430";
+
+      var igNew = await apifyRun("apify~instagram-scraper", igApifyInput, "ig", igApifyLabel);
+
+      // ── Step 5: Upsert new posts to accumulation table ──
+      if (igNew && igNew.length > 0) {
+        setIgBadge("\uD83D\uDCBE \u0421\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u043C " + igNew.length + " \u043D\u043E\u0432\u044B\u0445 \u043F\u043E\u0441\u0442\u043E\u0432...");
+        await accFetch("upsert", igHandle, igNew);
+
+        // Re-read full accumulation
+        var igAccFull = await accFetch("read", igHandle, null);
+        if (igAccFull && igAccFull.items && igAccFull.items.length) {
+          igAllItems = igAccFull.items;
+        }
+        setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043F\u043E\u0441\u0442\u043E\u0432 \u00B7 +" + igNew.length + " \u043D\u043E\u0432\u044B\u0445 \u00B7 " + new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"}));
+      } else {
+        setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043F\u043E\u0441\u0442\u043E\u0432 \u00B7 \u043D\u043E\u0432\u044B\u0445 \u043D\u0435\u0442 \u00B7 " + new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"}));
+      }
+
+      // ── Step 6: Final render ──
+      renderIG(igAllItems, lastVisit, lastDisp);
+      var _igp2 = document.getElementById("gen-ig-posts"); if(_igp2) _igp2.textContent = igAllItems.length;
+      updateGenProfile(igAllItems, null, null);
+      if (typeof _syncGenSummary === "function") _syncGenSummary();
+      cacheWrite("uni_ig_posts", CFG.ig, (igAllItems || []).slice(0, 100));
+
     } else {
-      (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
+      var _igCont = document.getElementById("ig-content");
+      if (_igCont) _igCont.innerHTML = emptyState("Instagram \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83D\uDCF8", "\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438");
     }
-    if (CFG.tt) {
+
+        if (CFG.tt) {
       var ttCache = await cacheRead("uni_tt_videos", CFG.tt);
       var ttItems;
       if (ttCache && ttCache.fresh && ttCache.items && ttCache.items.length) {
