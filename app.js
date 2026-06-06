@@ -260,8 +260,20 @@ async function realRefresh() {
         var igAccFull = await accFetch("read", igHandle, null);
         if (igAccFull && igAccFull.items && igAccFull.items.length) {
           igAllItems = igAccFull.items;
+        } else {
+          // Fallback: upsert may have failed (RLS?) — use Apify results directly
+          igAllItems = igNew;
         }
         setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043F\u043E\u0441\u0442\u043E\u0432 \u00B7 +" + igNew.length + " \u043D\u043E\u0432\u044B\u0445 \u00B7 " + new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"}));
+      } else if (igAllItems.length === 0) {
+        // Apify returned nothing AND no DB data — try old caches as last resort
+        var igDb = await supaRead("uni_ig_2026", CFG.ig);
+        if (igDb && igDb.items && igDb.items.length) igAllItems = igDb.items;
+        if (!igAllItems.length) {
+          var igCacheFb = await cacheRead("uni_ig_posts", CFG.ig);
+          if (igCacheFb && igCacheFb.items && igCacheFb.items.length) igAllItems = igCacheFb.items;
+        }
+        setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043F\u043E\u0441\u0442\u043E\u0432 \u00B7 \u043D\u043E\u0432\u044B\u0445 \u043D\u0435\u0442 \u00B7 " + new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"}));
       } else {
         setIgBadge("\uD83D\uDCE6 \u0411\u0430\u0437\u0430: " + igAllItems.length + " \u043F\u043E\u0441\u0442\u043E\u0432 \u00B7 \u043D\u043E\u0432\u044B\u0445 \u043D\u0435\u0442 \u00B7 " + new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"}));
       }
