@@ -963,16 +963,12 @@ async function addCompetitor() {
         resultsType: "posts", resultsLimit: 200, addParentData: false
       }, "ig", "\uD83D\uDCF8 " + name + " Instagram");
       // Cache in supabase-cache
-      cacheWrite("comp_ig_" + ig, ig, igItems);
-      comp.igPosts = igItems.filter(function(p) {
-        var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
-        return is2026(ts);
-      });
-      if (!comp.igPosts.length) comp.igPosts = igItems.slice(0, 100);
+      // cache skipped — use in-memory only
+      // Take all scraped posts (sorted newest first by default from Apify)
+      comp.igPosts = igItems.slice(0, 500);
     } catch(e) {
-      // Try cache
-      var cached = await cacheRead("comp_ig_" + ig, ig);
-      if (cached && cached.items) comp.igPosts = cached.items;
+      console.warn("Competitor IG fetch error:", e.message);
+      comp.igPosts = [];
     }
   }
 
@@ -982,14 +978,11 @@ async function addCompetitor() {
       var ttItems = await apifyRun("clockworks/tiktok-hashtag-scraper", {
         hashtags: [tt], resultsPerPage: 50
       }, "tt", "\uD83C\uDFB5 " + name + " TikTok");
-      cacheWrite("comp_tt_" + tt, tt, ttItems);
-      comp.ttVideos = ttItems.filter(function(v) {
-        return is2026(v.createTime || v.createTimeISO || v.timestamp);
-      });
-      if (!comp.ttVideos.length) comp.ttVideos = ttItems.slice(0, 50);
+      // cache skipped — use in-memory only
+      comp.ttVideos = ttItems.slice(0, 500);
     } catch(e) {
-      var cachedTT = await cacheRead("comp_tt_" + tt, tt);
-      if (cachedTT && cachedTT.items) comp.ttVideos = cachedTT.items;
+      console.warn("Competitor TT fetch error:", e.message);
+      comp.ttVideos = [];
     }
   }
 
