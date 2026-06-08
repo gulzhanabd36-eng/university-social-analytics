@@ -249,6 +249,29 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .month-body{overflow:hidden;transition:max-height .3s ease}
 .month-body.collapsed{max-height:0!important}
 </style>
+
+<style>
+/* ===== PHASE 3: Analytics tab ===== */
+.top-section{margin-bottom:28px}
+.top-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#888;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.top-section-title span{font-size:16px}
+.top-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.top-card{background:white;border-radius:12px;border:1px solid #eee;padding:16px;display:flex;flex-direction:column;gap:8px;position:relative}
+.top-rank{position:absolute;top:12px;right:12px;font-size:20px;font-weight:800;color:#f0f0f0}
+.top-rank.gold{color:#C57E33;opacity:.5}
+.top-author{font-size:11px;font-weight:700;color:#888}
+.top-caption{font-size:12px;color:#1a1a1a;font-weight:600;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.top-metric{font-size:22px;font-weight:800;color:#C57E33;margin-top:auto}
+.top-metric-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:-4px}
+.top-link{font-size:11px;color:#C57E33;text-decoration:none;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid #F5D5A0;width:fit-content;margin-top:4px}
+.top-link:hover{background:#C57E33;color:white}
+.chart-section{background:white;border-radius:12px;border:1px solid #eee;padding:20px;margin-bottom:24px}
+.chart-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#888;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.chart-tabs{display:flex;gap:6px}
+.chart-tab-btn{background:#F5F3EE;border:1.5px solid #E0DDD7;border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;color:#555;font-family:inherit}
+.chart-tab-btn.active{background:#C57E33;border-color:#C57E33;color:white;font-weight:700}
+.chart-wrap{position:relative;height:220px}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
@@ -297,6 +320,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="plat-tab active" onclick="switchTab('instagram',this)"><div class="dot dot-ig"></div> Instagram</div>
     <div class="plat-tab" onclick="switchTab('tiktok',this)"><div class="dot dot-tt"></div> TikTok</div>
     <div class="plat-tab" onclick="switchTab('web',this)"><div class="dot dot-web"></div> Интернет-мониторинг</div>
+    <div class="plat-tab" onclick="switchTab('analytics',this)"><div class="dot" style="background:#10B981"></div> Аналитика</div>
     <div class="plat-tab" onclick="switchTab('general',this)"><div class="dot dot-gen"></div> Общий профиль</div>
   </div>
   <div class="loading-bar hidden" id="loadingBar">
@@ -339,6 +363,39 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div></div>
     </div>
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
+  </div>
+  <div class="tab-panel" id="panel-analytics">
+    <div style="padding:24px 28px;max-width:960px;margin:0 auto">
+
+      <!-- Activity Chart -->
+      <div class="chart-section">
+        <div class="chart-title">
+          <span>📈 Активность по месяцам</span>
+          <div class="chart-tabs">
+            <button class="chart-tab-btn active" onclick="switchChart('ig', this)" id="chart-btn-ig">Instagram</button>
+            <button class="chart-tab-btn" onclick="switchChart('tt', this)" id="chart-btn-tt">TikTok</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
+      </div>
+
+      <!-- Top Instagram -->
+      <div class="top-section">
+        <div class="top-section-title"><span>📸</span> Топ Instagram — по лайкам</div>
+        <div class="top-cards" id="top-ig-cards">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:#ccc">Загрузите данные Instagram</div>
+        </div>
+      </div>
+
+      <!-- Top TikTok -->
+      <div class="top-section">
+        <div class="top-section-title"><span>🎵</span> Топ TikTok — по просмотрам</div>
+        <div class="top-cards" id="top-tt-cards">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;color:#ccc">Загрузите данные TikTok</div>
+        </div>
+      </div>
+
+    </div>
   </div>
   <div class="tab-panel" id="panel-general">
   <div style="padding:24px 28px;max-width:960px;margin:0 auto">
@@ -401,6 +458,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
   </div>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>
