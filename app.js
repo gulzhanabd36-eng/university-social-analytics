@@ -284,6 +284,7 @@ async function realRefresh() {
       updateGenProfile(igAllItems, null, null);
       if (typeof _syncGenSummary === "function") _syncGenSummary();
       cacheWrite("uni_ig_posts", CFG.ig, (igAllItems || []).slice(0, 100));
+      updateAnalytics(igAllItems, null);
 
     } else {
       var _igCont = document.getElementById("ig-content");
@@ -308,6 +309,7 @@ async function realRefresh() {
       renderTT(videos, lastVisit, lastDisp);
       (function(){var _el=document.getElementById("gen-tt-videos");if(_el)_el.textContent=videos.length;})();
       updateGenProfile(null, videos, null); _syncGenSummary();
+      updateAnalytics(null, videos);
     } else {
       (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
@@ -719,6 +721,192 @@ function webCard(item, isN) {
       '<a class="open-link" href="' + (item.url || "#") + '" target="_blank">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
     '</div>' +
   '</div>';
+}
+
+
+// ═══════════════════════════════════════════════
+// PHASE 3: Analytics — Chart + Top Posts
+// ═══════════════════════════════════════════════
+
+var _chartInstance = null;
+var _chartIgData   = {};  // { "2026-01": {posts:N, likes:N}, ... }
+var _chartTtData   = {};  // { "2026-01": {videos:N, views:N}, ... }
+var _activeChart   = "ig";
+
+function buildChartData(items, getTs, getMetric) {
+  var data = {};
+  items.forEach(function(item) {
+    var d = parseTs(getTs(item));
+    if (!d || isNaN(d)) return;
+    var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    if (!data[key]) data[key] = {count: 0, metric: 0};
+    data[key].count++;
+    data[key].metric += getMetric(item);
+  });
+  return data;
+}
+
+function renderActivityChart(type) {
+  var data = type === "ig" ? _chartIgData : _chartTtData;
+  var keys = Object.keys(data).sort();
+  if (!keys.length) return;
+
+  var labels = keys.map(function(k) {
+    var parts = k.split("-");
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+    return d.toLocaleDateString("ru", {month: "short", year: "2-digit"});
+  });
+  var counts  = keys.map(function(k) { return data[k].count; });
+  var metrics = keys.map(function(k) { return data[k].metric; });
+
+  var metricLabel = type === "ig" ? "\u041B\u0430\u0439\u043A\u0438" : "\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u044B";
+  var countLabel  = type === "ig" ? "\u041F\u043E\u0441\u0442\u044B" : "\u0412\u0438\u0434\u0435\u043E";
+
+  var canvas = document.getElementById("activityChart");
+  if (!canvas) return;
+  var ctx = canvas.getContext("2d");
+
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+
+  _chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: countLabel,
+          data: counts,
+          backgroundColor: "rgba(197, 126, 51, 0.7)",
+          borderColor: "#C57E33",
+          borderWidth: 1.5,
+          borderRadius: 5,
+          yAxisID: "y"
+        },
+        {
+          label: metricLabel,
+          data: metrics,
+          type: "line",
+          borderColor: "#1a1a1a",
+          backgroundColor: "rgba(26,26,26,0.07)",
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: "#1a1a1a",
+          tension: 0.35,
+          yAxisID: "y1",
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "top", labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { bodyFont: { size: 11 }, titleFont: { size: 11 } }
+      },
+      scales: {
+        x:  { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y:  { position: "left",  ticks: { font: { size: 10 } }, grid: { color: "#f5f5f5" } },
+        y1: { position: "right", ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function switchChart(type, btn) {
+  _activeChart = type;
+  document.querySelectorAll(".chart-tab-btn").forEach(function(b) { b.classList.remove("active"); });
+  if (btn) btn.classList.add("active");
+  renderActivityChart(type);
+}
+
+// Top cards
+function renderTopCard(rank, caption, author, metric, metricLabel, url) {
+  var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
+  var medal = medals[rank] || "#" + (rank + 1);
+  return '<div class="top-card">' +
+    '<div class="top-rank' + (rank === 0 ? " gold" : "") + '">' + (rank + 1) + '</div>' +
+    '<div class="top-author">' + medal + ' ' + (author || "") + '</div>' +
+    '<div class="top-caption">' + (caption || "\u2014") + '</div>' +
+    '<div class="top-metric">' + fmtNum(metric) + '</div>' +
+    '<div class="top-metric-label">' + metricLabel + '</div>' +
+    '<a class="top-link" href="' + (url || "#") + '" target="_blank">\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u2192</a>' +
+  '</div>';
+}
+
+function updateAnalytics(igPosts, ttVideos) {
+  // ── Build chart data ──
+  if (igPosts && igPosts.length) {
+    _chartIgData = buildChartData(
+      igPosts,
+      function(p) { return p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp || null; },
+      function(p) { return p.likesCount || p.likes || 0; }
+    );
+  }
+  if (ttVideos && ttVideos.length) {
+    var _ttGetTs = function(v) { return v.createTime || v.createTimeISO || v.timestamp || null; };
+    var _ttGetV  = function(v) { return (v.stats && v.stats.playCount) || v.playCount || v.plays || 0; };
+    _chartTtData = buildChartData(ttVideos, _ttGetTs, _ttGetV);
+  }
+
+  // Re-render chart if Analytics tab is visible
+  var panel = document.getElementById("panel-analytics");
+  if (panel && panel.classList.contains("active")) {
+    renderActivityChart(_activeChart);
+  }
+
+  // ── Top IG posts ──
+  if (igPosts && igPosts.length) {
+    var sorted = igPosts.slice().sort(function(a, b) {
+      return (b.likesCount || b.likes || 0) - (a.likesCount || a.likes || 0);
+    });
+    var top3 = sorted.slice(0, 3);
+    var html = top3.map(function(p, i) {
+      var cap = p.caption || p.alt || p.text || "";
+      var owner = (p.ownerUsername || p.username || "").replace(/^@/, "");
+      var sc = p.shortCode || p.shortcode || "";
+      var url = p.url || (sc ? "https://www.instagram.com/p/" + sc + "/" : "#");
+      return renderTopCard(i, cap.substring(0, 150), "@" + owner,
+        p.likesCount || p.likes || 0, "\u043B\u0430\u0439\u043A\u043E\u0432", url);
+    }).join("");
+    var el = document.getElementById("top-ig-cards");
+    if (el) el.innerHTML = html;
+  }
+
+  // ── Top TT videos ──
+  if (ttVideos && ttVideos.length) {
+    var sortedTT = ttVideos.slice().sort(function(a, b) {
+      var vA = (a.stats && a.stats.playCount) || a.playCount || a.plays || 0;
+      var vB = (b.stats && b.stats.playCount) || b.playCount || b.plays || 0;
+      return vB - vA;
+    });
+    var top3tt = sortedTT.slice(0, 3);
+    var htmlTT = top3tt.map(function(v, i) {
+      var desc = v.desc || v.text || v.description || "";
+      var author = (v.authorMeta && v.authorMeta.name) || (v.author && v.author.uniqueId) || v.author || "";
+      var views = (v.stats && v.stats.playCount) || v.playCount || v.plays || 0;
+      var url = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + author + "/video/" + (v.id || ""));
+      return renderTopCard(i, desc.substring(0, 150), "@" + author,
+        views, "\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432", url);
+    }).join("");
+    var elTT = document.getElementById("top-tt-cards");
+    if (elTT) elTT.innerHTML = htmlTT;
+  }
+}
+
+// Re-render chart when switching to Analytics tab
+var _origSwitchTab = typeof switchTab === "function" ? switchTab : null;
+function switchTab(tab, el) {
+  document.querySelectorAll(".plat-tab").forEach(function(t) { t.classList.remove("active"); });
+  if (el) el.classList.add("active");
+  document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+  var panel = document.getElementById("panel-" + tab);
+  if (panel) panel.classList.add("active");
+  // Render chart when Analytics tab opens
+  if (tab === "analytics") {
+    setTimeout(function() { renderActivityChart(_activeChart); }, 50);
+  }
 }
 
 function loadIGFromExcel(input) {
