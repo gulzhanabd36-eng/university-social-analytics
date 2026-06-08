@@ -28,7 +28,7 @@ exports.handler = async (event) => {
 
     if (status === 'SUCCEEDED' && getItems) {
       const ir = await fetch(
-        'https://api.apify.com/v2/actor-runs/' + runId + '/dataset/items?token=' + token + '&limit=200&clean=true'
+        'https://api.apify.com/v2/actor-runs/' + runId + '/dataset/items?token=' + token + '&limit=1000&clean=true'
       );
       const items = await ir.json();
       return {
