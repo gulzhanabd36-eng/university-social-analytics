@@ -404,6 +404,85 @@ function _syncGenSummary() {
   if (s4 && webM) s4.textContent = webM.textContent || "—";
 }
 
+
+// Phase 2: group items by year-month
+function groupByMonth(items, getTs) {
+  var groups = {};
+  items.forEach(function(item) {
+    var d = parseTs(getTs(item));
+    if (!d || isNaN(d)) d = new Date("2000-01-01");
+    var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  // Sort keys descending (newest first)
+  var keys = Object.keys(groups).sort(function(a, b) { return b > a ? 1 : -1; });
+  return keys.map(function(k) {
+    var parts = k.split("-");
+    var yr = parseInt(parts[0]), mo = parseInt(parts[1]);
+    var d = new Date(yr, mo - 1, 1);
+    var label = d.toLocaleDateString("ru", {month: "long", year: "numeric"});
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    var half = mo <= 6 ? "H1" : "H2";
+    return {key: k, year: yr, month: mo, half: half, label: label, items: groups[k]};
+  });
+}
+
+// Phase 2: render semester banner
+function semesterBanner(half, year) {
+  var label = half === "H1"
+    ? "\uD83D\uDCC5 \u041F\u0435\u0440\u0432\u043E\u0435 \u043F\u043E\u043B\u0443\u0433\u043E\u0434\u0438\u0435 " + year + " \u2014 \u044F\u043D\u0432\u0430\u0440\u044C \u2014 \u0438\u044E\u043D\u044C"
+    : "\uD83D\uDCC5 \u0412\u0442\u043E\u0440\u043E\u0435 \u043F\u043E\u043B\u0443\u0433\u043E\u0434\u0438\u0435 " + year + " \u2014 \u0438\u044E\u043B\u044C \u2014 \u0434\u0435\u043A\u0430\u0431\u0440\u044C";
+  return '<div class="semester-banner"><div class="semester-line"></div><div class="semester-label">' + label + '</div><div class="semester-line"></div></div>';
+}
+
+// Phase 2: render one month section (collapsible)
+function monthSection(group, renderCard, isNewFn, uid) {
+  var newCount = group.items.filter(isNewFn).length;
+  var totalLikes = group.items.reduce(function(s, p) {
+    return s + (p.likesCount || p.likes || (p.stats && p.stats.diggCount) || p.diggCount || 0);
+  }, 0);
+  var statsHtml =
+    '<span class="month-stat-item">' + group.items.length + ' \u043F\u0443\u0431\u043B.'  + '</span>' +
+    (totalLikes ? '<span class="month-stat-item">\u2764 ' + fmtNum(totalLikes) + '</span>' : '') +
+    (newCount ? '<span class="month-stat-item"><span class="month-new-dot"></span>' + newCount + ' \u043D\u043E\u0432\u044B\u0445</span>' : '');
+  var bodyId = "mbody-" + uid;
+  // First month open, rest open too (all open by default)
+  var cards = group.items.map(renderCard).join("");
+  return '<div class="month-section">' +
+    '<div class="month-header" onclick="toggleMonth(\'' + bodyId + '\', this)">' +
+      '<div class="month-header-left">' +
+        '<span class="month-name">' + group.label + '</span>' +
+        '<div class="month-stats">' + statsHtml + '</div>' +
+      '</div>' +
+      '<span class="month-chevron open">&#9660;</span>' +
+    '</div>' +
+    '<div class="month-body" id="' + bodyId + '" style="max-height:99999px">' +
+      '<div class="web-grid">' + cards + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// Phase 2: toggle month collapse
+function toggleMonth(bodyId, headerEl) {
+  var body = document.getElementById(bodyId);
+  var chev = headerEl.querySelector(".month-chevron");
+  if (!body) return;
+  if (body.classList.contains("collapsed")) {
+    body.style.maxHeight = body.scrollHeight + "px";
+    body.classList.remove("collapsed");
+    if (chev) chev.classList.add("open");
+    // after transition, set to auto so content can grow
+    setTimeout(function() { if (!body.classList.contains("collapsed")) body.style.maxHeight = "99999px"; }, 320);
+  } else {
+    body.style.maxHeight = body.scrollHeight + "px";
+    requestAnimationFrame(function() {
+      body.classList.add("collapsed");
+      if (chev) chev.classList.remove("open");
+    });
+  }
+}
+
 function igTs(p) { return p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp || null; }
 function renderIG(posts, lv, ld) {
   _igAllPosts = posts; _igLv = lv || ""; _igLd = ld || ""; _igActiveCat = "all";
@@ -422,35 +501,57 @@ function renderIG(posts, lv, ld) {
 function _renderIgCards() {
   var posts = _igAllPosts; var lv = _igLv; var ld = _igLd;
   var counts = {all: posts.length, other: 0};
-  IG_CATS.forEach(function(c){counts[c.id]=0;});
-  posts.forEach(function(p){
-    var cid = categorize(p.caption||p.alt||p.text||"");
+  IG_CATS.forEach(function(c) { counts[c.id] = 0; });
+  posts.forEach(function(p) {
+    var cid = categorize(p.caption || p.alt || p.text || "");
     if (counts[cid] !== undefined) counts[cid]++; else counts.other++;
   });
-  posts.forEach(function(p){
-    if (categorize(p.caption||p.alt||p.text||"") === "other") counts.other++;
+  posts.forEach(function(p) {
+    if (categorize(p.caption || p.alt || p.text || "") === "other") counts.other++;
   });
-  // filter bar
+
+  // ── Filter bar ──
   var fb = '<div class="ig-filter-bar">';
-  fb += '<button class="ig-cat-btn'+((_igActiveCat==="all")?" active":"")+'" onclick="setIgFilter(\'all\')">\u0412\u0441\u0435 <span class="ig-cat-count">'+counts.all+'</span></button>';
-  IG_CATS.forEach(function(c){
+  fb += '<button class="ig-cat-btn' + (_igActiveCat === "all" ? " active" : "") + '" onclick="setIgFilter(\'all\')">\u0412\u0441\u0435 <span class="ig-cat-count">' + counts.all + '</span></button>';
+  IG_CATS.forEach(function(c) {
     if (!counts[c.id]) return;
-    fb += '<button class="ig-cat-btn'+((_igActiveCat===c.id)?" active":"")+'" onclick="setIgFilter(\''+c.id+'\')">'+c.emoji+' '+c.label+' <span class="ig-cat-count">'+counts[c.id]+'</span></button>';
+    fb += '<button class="ig-cat-btn' + (_igActiveCat === c.id ? " active" : "") + '" onclick="setIgFilter(\'' + c.id + '\')">' + c.emoji + ' ' + c.label + ' <span class="ig-cat-count">' + counts[c.id] + '</span></button>';
   });
-  if (counts.other) fb += '<button class="ig-cat-btn'+((_igActiveCat==="other")?" active":"")+'" onclick="setIgFilter(\'other\')">\u{1F4CC} \u0420\u0430\u0437\u043d\u043e\u0435 <span class="ig-cat-count">'+counts.other+'</span></button>';
+  if (counts.other) fb += '<button class="ig-cat-btn' + (_igActiveCat === "other" ? " active" : "") + '" onclick="setIgFilter(\'other\')">\uD83D\uDCCC \u0420\u0430\u0437\u043D\u043E\u0435 <span class="ig-cat-count">' + counts.other + '</span></button>';
   fb += '</div>';
-  var filtered = _igActiveCat === "all" ? posts : posts.filter(function(p){
-    var cid = categorize(p.caption||p.alt||p.text||"");
+
+  // ── Filter posts ──
+  var filtered = _igActiveCat === "all" ? posts : posts.filter(function(p) {
+    var cid = categorize(p.caption || p.alt || p.text || "");
     return _igActiveCat === "other" ? (cid === "other") : (cid === _igActiveCat);
   });
-  var nP = filtered.filter(function(p){return isNew(igTs(p),lv);});
-  var oP = filtered.filter(function(p){return !isNew(igTs(p),lv);});
+
+  if (!filtered.length) {
+    (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=fb+emptyState("\u041D\u0435\u0442 \u043F\u043E\u0441\u0442\u043E\u0432 \u0432 \u044D\u0442\u043E\u0439 \u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u0438","\uD83D\uDCF8","");})();
+    return;
+  }
+
+  // ── Group by month ──
+  var groups = groupByMonth(filtered, igTs);
   var h = fb;
-  if (nP.length) h += sepNew("\u{1F4F8} \u041d\u043e\u0432\u043e\u0435 \u0432 Instagram \u2014 \u0441 "+ld)+'<div class="tt-grid">'+nP.map(function(p){return igCard(p,true);}).join("")+"</div>";
-  if (oP.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438")+'<div class="tt-grid">'+oP.map(function(p){return igCard(p,false);}).join("")+"</div>";
-  if (!filtered.length) h += emptyState("\u041d\u0435\u0442 \u043f\u043e\u0441\u0442\u043e\u0432 \u0432 \u044d\u0442\u043e\u0439 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438","\u{1F4F8}","");
+  var lastHalf = null; var lastYear = null;
+
+  groups.forEach(function(g, idx) {
+    // Semester banner when half or year changes
+    var halfKey = g.year + "-" + g.half;
+    if (halfKey !== (lastYear + "-" + lastHalf)) {
+      h += semesterBanner(g.half, g.year);
+      lastHalf = g.half; lastYear = g.year;
+    }
+    h += monthSection(g, function(p) {
+      return igCard(p, isNew(igTs(p), lv));
+    }, function(p) { return isNew(igTs(p), lv); }, "ig" + idx);
+  });
+
   (function(){var _el=document.getElementById("ig-content");if(_el)_el.innerHTML=h;})();
 }
+
+
 function igCard(p, isN) {
   var cap = p.caption || p.alt || p.text || "";
   var titleLine = cap.substring(0, 120);
@@ -497,22 +598,41 @@ function renderTT(videos, lv, ld) {
   function gC(v) { return (v.stats && v.stats.commentCount) || v.commentCount || v.comments || 0; }
   function gS(v) { return (v.stats && v.stats.shareCount) || v.shareCount || v.shares || 0; }
   function gD(v) { return v.desc || v.text || v.description || ""; }
-  var nV = videos.filter(function(v) { return isNew(gTs(v), lv); });
-  var oV = videos.filter(function(v) { return !isNew(gTs(v), lv); });
+
   var tViews = videos.reduce(function(s,v) { return s + gP(v); }, 0);
   var tLikes = videos.reduce(function(s,v) { return s + gL(v); }, 0);
+  var nV = videos.filter(function(v) { return isNew(gTs(v), lv); });
   (function(){var _el=document.getElementById("tt-stat-videos");if(_el)_el.textContent=videos.length;})();
   (function(){var _el=document.getElementById("tt-stat-views");if(_el)_el.textContent=fmtNum(tViews);})();
   (function(){var _el=document.getElementById("tt-stat-likes");if(_el)_el.textContent=fmtNum(tLikes);})();
   (function(){var _el=document.getElementById("tt-stat-avg");if(_el)_el.textContent=videos.length ? fmtNum(Math.round(tViews/videos.length)) : 0;})();
   (function(){var _el=document.getElementById("tt-stat-er");if(_el)_el.textContent=videos.length && tViews ? ((tLikes/tViews)*100).toFixed(1) + "%" : "\u2014";})();
-  (function(){var _el=document.getElementById("tt-count");if(_el)_el.textContent=videos.length + " \u0432\u0438\u0434\u0435\u043e \u00B7 " + nV.length + " \u043d\u043e\u0432\u044b\u0445";})();
+  (function(){var _el=document.getElementById("tt-count");if(_el)_el.textContent=videos.length + " \u0432\u0438\u0434\u0435\u043E \u00B7 " + nV.length + " \u043D\u043E\u0432\u044B\u0445";})();
+
+  if (!videos.length) {
+    (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=emptyState("\u041D\u0435\u0442 \u0432\u0438\u0434\u0435\u043E","\uD83C\uDFB5","\u0414\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u044B");})();
+    return;
+  }
+
+  var groups = groupByMonth(videos, gTs);
   var h = "";
-  if (nV.length) h += sepNew("\uD83C\uDFB5 \u041d\u043e\u0432\u043e\u0435 \u0432 TikTok \u2014 \u0441 " + ld) + "<div class=\"web-grid\">" + nV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,true); }).join("") + "</div>";
-  if (oV.length) h += sepOld("\u0411\u044b\u043b\u043e \u043f\u0440\u0438 \u043f\u0440\u043e\u0448\u043b\u043e\u043c \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438") + "<div class=\"web-grid\">" + oV.map(function(v) { return ttCard(v,gTs,gP,gL,gC,gS,gD,false); }).join("") + "</div>";
-  if (!videos.length) h = emptyState("\u041d\u0435\u0442 \u0432\u0438\u0434\u0435\u043e", "\uD83C\uDFB5", "\u0414\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u044b");
+  var lastHalf = null; var lastYear = null;
+
+  groups.forEach(function(g, idx) {
+    var halfKey = g.year + "-" + g.half;
+    if (halfKey !== (lastYear + "-" + lastHalf)) {
+      h += semesterBanner(g.half, g.year);
+      lastHalf = g.half; lastYear = g.year;
+    }
+    h += monthSection(g, function(v) {
+      return ttCard(v, gTs, gP, gL, gC, gS, gD, isNew(gTs(v), lv));
+    }, function(v) { return isNew(gTs(v), lv); }, "tt" + idx);
+  });
+
   (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=h;})();
 }
+
+
 function ttCard(v,gTs,gP,gL,gC,gS,gD,isN) {
   var d = parseTs(gTs(v)) || new Date();
   var desc = gD(v);
