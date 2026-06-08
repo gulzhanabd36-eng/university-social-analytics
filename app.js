@@ -960,12 +960,16 @@ async function addCompetitor() {
     try {
       var igItems = await apifyRun("apify~instagram-scraper", {
         directUrls: ["https://www.instagram.com/" + ig + "/"],
-        resultsType: "posts", resultsLimit: 200, addParentData: false
-      }, "ig", "\uD83D\uDCF8 " + name + " Instagram");
-      // Cache in supabase-cache
-      // cache skipped — use in-memory only
-      // Take all scraped posts (sorted newest first by default from Apify)
-      comp.igPosts = igItems.slice(0, 500);
+        resultsType: "posts",
+        resultsLimit: 1000,
+        addParentData: false
+      }, "comp", "\uD83D\uDCF8 " + name + " Instagram");
+      // Filter 2026 posts, fallback to all if none found (same as main university)
+      var igFiltered = igItems.filter(function(p) {
+        var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
+        return is2026(ts);
+      });
+      comp.igPosts = (igItems.length > 0 && igFiltered.length === 0) ? igItems : igFiltered;
     } catch(e) {
       console.warn("Competitor IG fetch error:", e.message);
       comp.igPosts = [];
