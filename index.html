@@ -272,6 +272,41 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .chart-tab-btn.active{background:#C57E33;border-color:#C57E33;color:white;font-weight:700}
 .chart-wrap{position:relative;height:220px}
 </style>
+
+<style>
+/* ===== PHASE 4: Competitors ===== */
+.comp-add-form{background:white;border-radius:12px;border:1px solid #eee;padding:20px;margin-bottom:20px}
+.comp-add-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#888;margin-bottom:14px}
+.comp-fields{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.comp-field{display:flex;flex-direction:column;gap:4px}
+.comp-field label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.comp-field input{padding:8px 11px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;background:#FAFAF8;width:160px}
+.comp-field input:focus{border-color:#C57E33;background:white}
+.comp-add-btn{background:#C57E33;color:white;border:none;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.comp-add-btn:hover{background:#a86828}
+.comp-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.comp-chip{display:inline-flex;align-items:center;gap:7px;background:white;border:1.5px solid #eee;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#1a1a1a}
+.comp-chip.loading{border-color:#F5D5A0;color:#C57E33}
+.comp-chip.done{border-color:#C57E33}
+.comp-chip-remove{cursor:pointer;color:#ccc;font-size:14px;line-height:1}
+.comp-chip-remove:hover{color:#DC2626}
+.comp-table-wrap{background:white;border-radius:12px;border:1px solid #eee;overflow:hidden;margin-bottom:20px}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:#F5F3EE;padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;border-bottom:1px solid #eee}
+.comp-table th.own{color:#C57E33;background:#FFF8EE}
+.comp-table td{padding:10px 14px;border-bottom:1px solid #f5f5f5;color:#1a1a1a}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table td.metric{font-weight:600}
+.comp-table td.best{color:#C57E33;font-weight:800}
+.comp-table td.label{color:#888;font-size:11px}
+.comp-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.comp-cat-card{background:white;border-radius:12px;border:1px solid #eee;padding:16px}
+.comp-cat-name{font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f0f0f0}
+.comp-cat-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;color:#555}
+.comp-cat-bar{height:3px;background:#F5F3EE;border-radius:2px;margin-top:2px}
+.comp-cat-fill{height:3px;background:#C57E33;border-radius:2px;transition:width .4s}
+.comp-empty{text-align:center;padding:60px;color:#ccc;font-size:13px}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
@@ -320,6 +355,7 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="plat-tab active" onclick="switchTab('instagram',this)"><div class="dot dot-ig"></div> Instagram</div>
     <div class="plat-tab" onclick="switchTab('tiktok',this)"><div class="dot dot-tt"></div> TikTok</div>
     <div class="plat-tab" onclick="switchTab('web',this)"><div class="dot dot-web"></div> Интернет-мониторинг</div>
+    <div class="plat-tab" onclick="switchTab('competitors',this)"><div class="dot" style="background:#6366F1"></div> Конкуренты</div>
     <div class="plat-tab" onclick="switchTab('analytics',this)"><div class="dot" style="background:#10B981"></div> Аналитика</div>
     <div class="plat-tab" onclick="switchTab('general',this)"><div class="dot dot-gen"></div> Общий профиль</div>
   </div>
@@ -363,6 +399,42 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
       <div class="stat"><div class="v" id="web-stat-sentiment">—</div><div class="l">Позитив</div></div>
     </div>
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
+  </div>
+  <div class="tab-panel" id="panel-competitors">
+    <div style="padding:24px 28px;max-width:960px;margin:0 auto">
+
+      <!-- Add competitor form -->
+      <div class="comp-add-form">
+        <div class="comp-add-title">➕ Добавить конкурента (макс. 3)</div>
+        <div class="comp-fields">
+          <div class="comp-field">
+            <label>Название</label>
+            <input type="text" id="comp-name" placeholder="Narxoz University">
+          </div>
+          <div class="comp-field">
+            <label>Instagram (без @)</label>
+            <input type="text" id="comp-ig" placeholder="narxoz_university">
+          </div>
+          <div class="comp-field">
+            <label>TikTok хэштег (без #)</label>
+            <input type="text" id="comp-tt" placeholder="narxoz">
+          </div>
+          <button class="comp-add-btn" onclick="addCompetitor()">Загрузить данные →</button>
+        </div>
+      </div>
+
+      <!-- Competitor chips -->
+      <div class="comp-list" id="comp-chips"></div>
+
+      <!-- Comparison table -->
+      <div id="comp-table-container">
+        <div class="comp-empty">Добавьте конкурента чтобы увидеть сравнение</div>
+      </div>
+
+      <!-- Top categories comparison -->
+      <div id="comp-cats-container"></div>
+
+    </div>
   </div>
   <div class="tab-panel" id="panel-analytics">
     <div style="padding:24px 28px;max-width:960px;margin:0 auto">
