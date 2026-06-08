@@ -955,18 +955,16 @@ async function addCompetitor() {
   saveCompetitors();
   renderCompChips();
 
-  // Fetch IG
+  // Fetch IG — identical to main university fetch
   if (ig) {
-    // Update chip to show loading
-    comp._igStatus = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C Instagram...";
+    comp._igStatus = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Instagram...";
     renderCompChips();
     try {
       var igItems = await apifyRun("apify~instagram-scraper", {
         directUrls: ["https://www.instagram.com/" + ig + "/"],
         resultsType: "posts",
         resultsLimit: 1000,
-        addParentData: false,
-        scrapeType: "posts"
+        addParentData: false
       }, "comp", "\uD83D\uDCF8 " + name + " Instagram");
 
       // Filter 2026 posts, fallback to all if none found
@@ -974,13 +972,13 @@ async function addCompetitor() {
         var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
         return is2026(ts);
       });
-      comp.igPosts = (igItems.length > 0 && igFiltered.length === 0) ? igItems : igFiltered;
-      comp._igStatus = "\u2705 Instagram: " + comp.igPosts.length + " \u043F\u043E\u0441\u0442\u043E\u0432";
+      comp.igPosts = (igFiltered.length > 0) ? igFiltered : igItems.slice(0, 500);
+      comp._igStatus = "\u2705 " + comp.igPosts.length + " \u043F\u043E\u0441\u0442\u043E\u0432 (2026)";
       renderCompChips();
     } catch(e) {
-      console.warn("Competitor IG fetch error:", e.message);
+      console.warn("Competitor IG error:", e.message);
       comp.igPosts = [];
-      comp._igStatus = "\u26A0\uFE0F IG error: " + e.message.substring(0, 50);
+      comp._igStatus = "\u26A0\uFE0F \u041E\u0448\u0438\u0431\u043A\u0430: " + e.message.substring(0, 60);
       renderCompChips();
     }
   }
