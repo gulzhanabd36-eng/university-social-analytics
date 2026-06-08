@@ -310,6 +310,7 @@ async function realRefresh() {
       (function(){var _el=document.getElementById("gen-tt-videos");if(_el)_el.textContent=videos.length;})();
       updateGenProfile(null, videos, null); _syncGenSummary();
       updateAnalytics(null, videos);
+      _lastTTVideos = videos;
     } else {
       (function(){var _el=document.getElementById("tt-content");if(_el)_el.innerHTML=emptyState("TikTok \u0445\u044d\u0448\u0442\u0435\u0433 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d", "\uD83C\uDFB5", "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438");})();
     }
@@ -907,7 +908,224 @@ function switchTab(tab, el) {
   if (tab === "analytics") {
     setTimeout(function() { renderActivityChart(_activeChart); }, 50);
   }
+  if (tab === "competitors") {
+    loadCompetitors();
+    renderCompChips();
+    renderComparisonTable();
+    renderCompCats();
+  }
 }
+
+
+// ═══════════════════════════════════════════════
+// PHASE 4: Competitors
+// ═══════════════════════════════════════════════
+
+var _competitors = [];   // [{name, ig, tt, igPosts:[], ttVideos:[]}]
+
+function loadCompetitors() {
+  try {
+    var s = localStorage.getItem("uni_competitors_v1");
+    if (s) _competitors = JSON.parse(s);
+  } catch(e) { _competitors = []; }
+}
+
+function saveCompetitors() {
+  // Save only name/ig/tt, not posts (too large)
+  var slim = _competitors.map(function(c) {
+    return {name: c.name, ig: c.ig, tt: c.tt};
+  });
+  localStorage.setItem("uni_competitors_v1", JSON.stringify(slim));
+}
+
+async function addCompetitor() {
+  if (_competitors.length >= 3) {
+    alert("\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c 3 \u043a\u043e\u043d\u043a\u0443\u0440\u0435\u043d\u0442\u0430");
+    return;
+  }
+  var name = (document.getElementById("comp-name") || {}).value || "";
+  var ig   = ((document.getElementById("comp-ig") || {}).value || "").replace(/^@/, "").trim();
+  var tt   = ((document.getElementById("comp-tt") || {}).value || "").replace(/^#/, "").trim();
+  if (!name) { alert("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435"); return; }
+  if (!ig && !tt) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 Instagram \u0438\u043b\u0438 TikTok"); return; }
+  if (!CFG.token) { alert("\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u043e\u0441\u043d\u043e\u0432\u043d\u043e\u0433\u043e \u0443\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430"); return; }
+
+  var comp = {name: name, ig: ig, tt: tt, igPosts: [], ttVideos: [], loading: true};
+  _competitors.push(comp);
+  saveCompetitors();
+  renderCompChips();
+
+  // Fetch IG
+  if (ig) {
+    try {
+      var igItems = await apifyRun("apify~instagram-scraper", {
+        directUrls: ["https://www.instagram.com/" + ig + "/"],
+        resultsType: "posts", resultsLimit: 200, addParentData: false
+      }, "ig", "\uD83D\uDCF8 " + name + " Instagram");
+      // Cache in supabase-cache
+      cacheWrite("comp_ig_" + ig, ig, igItems);
+      comp.igPosts = igItems.filter(function(p) {
+        var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
+        return is2026(ts);
+      });
+      if (!comp.igPosts.length) comp.igPosts = igItems.slice(0, 100);
+    } catch(e) {
+      // Try cache
+      var cached = await cacheRead("comp_ig_" + ig, ig);
+      if (cached && cached.items) comp.igPosts = cached.items;
+    }
+  }
+
+  // Fetch TT
+  if (tt) {
+    try {
+      var ttItems = await apifyRun("clockworks/tiktok-hashtag-scraper", {
+        hashtags: [tt], resultsPerPage: 50
+      }, "tt", "\uD83C\uDFB5 " + name + " TikTok");
+      cacheWrite("comp_tt_" + tt, tt, ttItems);
+      comp.ttVideos = ttItems.filter(function(v) {
+        return is2026(v.createTime || v.createTimeISO || v.timestamp);
+      });
+      if (!comp.ttVideos.length) comp.ttVideos = ttItems.slice(0, 50);
+    } catch(e) {
+      var cachedTT = await cacheRead("comp_tt_" + tt, tt);
+      if (cachedTT && cachedTT.items) comp.ttVideos = cachedTT.items;
+    }
+  }
+
+  comp.loading = false;
+  if (document.getElementById("comp-name")) document.getElementById("comp-name").value = "";
+  if (document.getElementById("comp-ig"))   document.getElementById("comp-ig").value = "";
+  if (document.getElementById("comp-tt"))   document.getElementById("comp-tt").value = "";
+  renderCompChips();
+  renderComparisonTable();
+  renderCompCats();
+}
+
+function removeCompetitor(idx) {
+  _competitors.splice(idx, 1);
+  saveCompetitors();
+  renderCompChips();
+  renderComparisonTable();
+  renderCompCats();
+}
+
+function renderCompChips() {
+  var el = document.getElementById("comp-chips");
+  if (!el) return;
+  if (!_competitors.length) { el.innerHTML = ""; return; }
+  el.innerHTML = _competitors.map(function(c, i) {
+    return '<div class="comp-chip' + (c.loading ? " loading" : " done") + '">' +
+      (c.loading ? "\u23F3 " : "\u2705 ") + c.name +
+      (c.ig ? ' <span style="color:#aaa;font-weight:400">@' + c.ig + '</span>' : '') +
+      '<span class="comp-chip-remove" onclick="removeCompetitor(' + i + ')">\u00D7</span>' +
+    '</div>';
+  }).join("");
+}
+
+function compStats(igPosts, ttVideos) {
+  var igCount   = igPosts.length;
+  var igLikes   = igPosts.reduce(function(s,p){return s+(p.likesCount||p.likes||0);},0);
+  var igAvg     = igCount ? Math.round(igLikes / igCount) : 0;
+  var ttCount   = ttVideos.length;
+  var ttViews   = ttVideos.reduce(function(s,v){return s+((v.stats&&v.stats.playCount)||v.playCount||v.plays||0);},0);
+  var ttLikes   = ttVideos.reduce(function(s,v){return s+((v.stats&&v.stats.diggCount)||v.diggCount||v.likes||0);},0);
+  var ttER      = ttViews > 0 ? ((ttLikes / ttViews) * 100).toFixed(1) : 0;
+  return {igCount:igCount, igLikes:igLikes, igAvg:igAvg, ttCount:ttCount, ttViews:ttViews, ttLikes:ttLikes, ttER:ttER};
+}
+
+function renderComparisonTable() {
+  var el = document.getElementById("comp-table-container");
+  if (!el) return;
+
+  var ownIG = typeof _igAllPosts !== "undefined" ? _igAllPosts : [];
+  var ownTT = [];
+  // Gather TT from last renderTT call — use global if set
+  if (typeof _lastTTVideos !== "undefined") ownTT = _lastTTVideos;
+
+  var allUnis = [{name: CFG.name || "\u0421\u0432\u043e\u0439 \u0443\u043d\u0438\u0432.", ig: ownIG, tt: ownTT, own: true}]
+    .concat(_competitors.filter(function(c){return !c.loading;}).map(function(c){
+      return {name: c.name, ig: c.igPosts||[], tt: c.ttVideos||[], own: false};
+    }));
+
+  if (allUnis.length <= 1 && !_competitors.length) {
+    el.innerHTML = '<div class="comp-empty">\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u043a\u043e\u043d\u043a\u0443\u0440\u0435\u043d\u0442\u0430 \u0447\u0442\u043e\u0431\u044b \u0443\u0432\u0438\u0434\u0435\u0442\u044c \u0441\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u0435</div>';
+    return;
+  }
+
+  var stats = allUnis.map(function(u) { return compStats(u.ig, u.tt); });
+
+  var rows = [
+    {label: "\u041f\u043e\u0441\u0442\u043e\u0432 Instagram", key: "igCount", fmt: function(v){return String(v);}, higher: true},
+    {label: "\u041b\u0430\u0439\u043a\u043e\u0432 Instagram", key: "igLikes", fmt: fmtNum, higher: true},
+    {label: "\u0421\u0440. \u043b\u0430\u0439\u043a\u043e\u0432 \u043d\u0430 \u043f\u043e\u0441\u0442", key: "igAvg", fmt: fmtNum, higher: true},
+    {label: "\u0412\u0438\u0434\u0435\u043e TikTok", key: "ttCount", fmt: function(v){return String(v);}, higher: true},
+    {label: "\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u043e\u0432 TikTok", key: "ttViews", fmt: fmtNum, higher: true},
+    {label: "\u041b\u0430\u0439\u043a\u043e\u0432 TikTok", key: "ttLikes", fmt: fmtNum, higher: true},
+    {label: "ER TikTok", key: "ttER", fmt: function(v){return v+"%";}, higher: true}
+  ];
+
+  var thead = '<tr><th>\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c</th>' +
+    allUnis.map(function(u,i){ return '<th' + (u.own?' class="own"':'') + '>' + u.name + '</th>'; }).join("") +
+  '</tr>';
+
+  var tbody = rows.map(function(row) {
+    var vals = stats.map(function(s){ return parseFloat(s[row.key]) || 0; });
+    var maxVal = Math.max.apply(null, vals);
+    return '<tr>' +
+      '<td class="label">' + row.label + '</td>' +
+      vals.map(function(v, i) {
+        var isBest = row.higher && v === maxVal && maxVal > 0;
+        return '<td class="metric' + (isBest ? ' best' : '') + '">' +
+          row.fmt(stats[i][row.key]) +
+          (isBest ? ' \uD83C\uDFC6' : '') +
+        '</td>';
+      }).join("") +
+    '</tr>';
+  }).join("");
+
+  el.innerHTML = '<div class="comp-table-wrap"><table class="comp-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+}
+
+function renderCompCats() {
+  var el = document.getElementById("comp-cats-container");
+  if (!el || !_competitors.length) { if(el) el.innerHTML = ""; return; }
+
+  var ownIG = typeof _igAllPosts !== "undefined" ? _igAllPosts : [];
+  var allUnis = [{name: CFG.name || "\u0421\u0432\u043e\u0439", ig: ownIG, own: true}]
+    .concat(_competitors.filter(function(c){return !c.loading;}).map(function(c){
+      return {name: c.name, ig: c.igPosts||[], own: false};
+    }));
+
+  var title = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#888;margin-bottom:12px">\uD83D\uDCCA \u0421\u0440\u0430\u0432\u043d\u0435\u043d\u0438\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0439 Instagram</div>';
+
+  var cards = allUnis.map(function(u) {
+    if (!u.ig.length) return '';
+    var counts = {};
+    u.ig.forEach(function(p) {
+      var cid = categorize(p.caption || p.alt || p.text || "");
+      var ci = catInfo(cid);
+      var lbl = ci.emoji + " " + ci.label;
+      counts[lbl] = (counts[lbl]||0) + 1;
+    });
+    var arr = Object.keys(counts).map(function(k){return {k:k,v:counts[k]};}).sort(function(a,b){return b.v-a.v;}).slice(0,5);
+    var max = arr.length ? arr[0].v : 1;
+    var rows = arr.map(function(item){
+      var pct = Math.round((item.v / max) * 100);
+      return '<div class="comp-cat-row"><span>' + item.k + '</span><span style="font-weight:700">' + item.v + '</span></div>' +
+        '<div class="comp-cat-bar"><div class="comp-cat-fill" style="width:' + pct + '%"></div></div>';
+    }).join("");
+    return '<div class="comp-cat-card">' +
+      '<div class="comp-cat-name">' + (u.own ? '\uD83C\uDFC0 ' : '') + u.name + ' <span style="color:#aaa;font-weight:400;font-size:10px">(' + u.ig.length + ' \u043f\u043e\u0441\u0442\u043e\u0432)</span></div>' +
+      rows +
+    '</div>';
+  }).join("");
+
+  el.innerHTML = title + '<div class="comp-cats">' + cards + '</div>';
+}
+
+// Store last TT videos for comparison
+var _lastTTVideos = [];
 
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
