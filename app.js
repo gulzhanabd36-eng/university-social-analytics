@@ -957,22 +957,31 @@ async function addCompetitor() {
 
   // Fetch IG
   if (ig) {
+    // Update chip to show loading
+    comp._igStatus = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C Instagram...";
+    renderCompChips();
     try {
       var igItems = await apifyRun("apify~instagram-scraper", {
         directUrls: ["https://www.instagram.com/" + ig + "/"],
         resultsType: "posts",
         resultsLimit: 1000,
-        addParentData: false
+        addParentData: false,
+        scrapeType: "posts"
       }, "comp", "\uD83D\uDCF8 " + name + " Instagram");
-      // Filter 2026 posts, fallback to all if none found (same as main university)
+
+      // Filter 2026 posts, fallback to all if none found
       var igFiltered = igItems.filter(function(p) {
         var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
         return is2026(ts);
       });
       comp.igPosts = (igItems.length > 0 && igFiltered.length === 0) ? igItems : igFiltered;
+      comp._igStatus = "\u2705 Instagram: " + comp.igPosts.length + " \u043F\u043E\u0441\u0442\u043E\u0432";
+      renderCompChips();
     } catch(e) {
       console.warn("Competitor IG fetch error:", e.message);
       comp.igPosts = [];
+      comp._igStatus = "\u26A0\uFE0F IG error: " + e.message.substring(0, 50);
+      renderCompChips();
     }
   }
 
@@ -1012,9 +1021,11 @@ function renderCompChips() {
   if (!el) return;
   if (!_competitors.length) { el.innerHTML = ""; return; }
   el.innerHTML = _competitors.map(function(c, i) {
+    var statusStr = c._igStatus ? '<span style="color:#888;font-size:10px;margin-left:6px">' + c._igStatus + '</span>' : '';
     return '<div class="comp-chip' + (c.loading ? " loading" : " done") + '">' +
       (c.loading ? "\u23F3 " : "\u2705 ") + c.name +
       (c.ig ? ' <span style="color:#aaa;font-weight:400">@' + c.ig + '</span>' : '') +
+      statusStr +
       '<span class="comp-chip-remove" onclick="removeCompetitor(' + i + ')">\u00D7</span>' +
     '</div>';
   }).join("");
