@@ -230,6 +230,25 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .ig-cat-btn.active .ig-cat-count{background:rgba(255,255,255,.25)}
 </style>
 
+
+<style>
+/* ===== PHASE 2: Month/Semester sections ===== */
+.semester-banner{display:flex;align-items:center;gap:12px;padding:14px 0 10px;margin-bottom:4px}
+.semester-line{flex:1;border-top:2px solid #C57E33;opacity:.25}
+.semester-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#C57E33;padding:5px 14px;background:#FFF8EE;border:1.5px solid #F5D5A0;border-radius:20px;white-space:nowrap}
+.month-section{margin-bottom:6px}
+.month-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:white;border:1px solid #eee;border-radius:10px;cursor:pointer;user-select:none;transition:background .15s;margin-bottom:4px}
+.month-header:hover{background:#FAFAF8;border-color:#e0e0e0}
+.month-header-left{display:flex;align-items:center;gap:10px}
+.month-name{font-size:13px;font-weight:700;color:#1a1a1a}
+.month-stats{font-size:11px;color:#888;display:flex;gap:10px}
+.month-stat-item{white-space:nowrap}
+.month-new-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C57E33;margin-right:4px;vertical-align:middle}
+.month-chevron{font-size:12px;color:#aaa;transition:transform .2s;display:inline-block}
+.month-chevron.open{transform:rotate(180deg)}
+.month-body{overflow:hidden;transition:max-height .3s ease}
+.month-body.collapsed{max-height:0!important}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
