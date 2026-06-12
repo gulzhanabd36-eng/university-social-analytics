@@ -307,6 +307,51 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
 .comp-cat-fill{height:3px;background:#C57E33;border-radius:2px;transition:width .4s}
 .comp-empty{text-align:center;padding:60px;color:#ccc;font-size:13px}
 </style>
+
+<style>
+/* Reviews tab */
+.review-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.review-stat{background:white;border-radius:12px;border:1px solid #eee;padding:16px;text-align:center}
+.review-stat-num{font-size:26px;font-weight:800;color:#1a1a1a}
+.review-stat-num.pos{color:#10B981}
+.review-stat-num.neg{color:#EF4444}
+.review-stat-num.gold{color:#C57E33}
+.review-stat-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.review-stars{color:#C57E33;font-size:13px;letter-spacing:1px}
+.star-bars{background:white;border-radius:12px;border:1px solid #eee;padding:18px 20px;margin-bottom:20px}
+.star-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:11px}
+.star-bar-track{flex:1;height:6px;background:#F5F3EE;border-radius:3px;overflow:hidden}
+.star-bar-fill{height:6px;border-radius:3px;transition:width .4s}
+.star-bar-cnt{min-width:24px;text-align:right;color:#888;font-weight:600}
+.review-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.review-filter-btn{background:white;border:1.5px solid #eee;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;color:#555}
+.review-filter-btn.active{background:#1a1a1a;border-color:#1a1a1a;color:white}
+.review-filter-btn.pos-btn.active{background:#10B981;border-color:#10B981}
+.review-filter-btn.neg-btn.active{background:#EF4444;border-color:#EF4444}
+.review-card{background:white;border-radius:12px;border:1px solid #eee;padding:16px;margin-bottom:10px}
+.review-card.negative{border-left:3px solid #EF4444}
+.review-card.positive{border-left:3px solid #10B981}
+.review-card.neutral{border-left:3px solid #E5E7EB}
+.review-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.review-author{font-size:12px;font-weight:700;color:#1a1a1a}
+.review-date{font-size:10px;color:#aaa}
+.review-text{font-size:12px;color:#444;line-height:1.6}
+.review-foot{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* Trends tab */
+.trends-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.trends-load-btn{background:#EC4899;color:white;border:none;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+.trends-load-btn:hover{background:#db2777}
+.trends-load-btn:disabled{background:#ccc;cursor:not-allowed}
+.trend-card{background:white;border-radius:12px;border:1px solid #eee;padding:16px;margin-bottom:10px}
+.trend-views{font-size:22px;font-weight:800;color:#EC4899}
+.trend-views-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px}
+.trend-desc{font-size:12px;color:#333;line-height:1.5;margin:8px 0;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.trend-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.trend-tag{font-size:10px;color:#EC4899;background:#FDF2F8;border:1px solid #FBCFE8;padding:2px 7px;border-radius:6px;font-weight:600}
+.trend-source{font-size:10px;color:#888;font-weight:600}
+.trends-empty{text-align:center;padding:60px 20px;color:#ccc;font-size:13px}
+</style>
 </head>
 <body>
 <div class="setup-overlay" id="setupOverlay">
@@ -329,6 +374,11 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="setup-field">
       <label>Местоположение</label>
       <input type="text" id="uniLocation" placeholder="Алматы, Казахстан">
+    </div>
+    <div class="setup-field">
+      <label>2ГИС — ссылка на организацию</label>
+      <input type="text" id="gis2Url" placeholder="https://2gis.kz/almaty/firm/...">
+      <div class="hint">Откройте 2ГИС → найдите университет → скопируйте URL</div>
     </div>
     <hr class="sep">
     <div class="setup-field">
@@ -355,7 +405,8 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     <div class="plat-tab active" onclick="switchTab('instagram',this)"><div class="dot dot-ig"></div> Instagram</div>
     <div class="plat-tab" onclick="switchTab('tiktok',this)"><div class="dot dot-tt"></div> TikTok</div>
     <div class="plat-tab" onclick="switchTab('web',this)"><div class="dot dot-web"></div> Интернет-мониторинг</div>
-    <div class="plat-tab" onclick="switchTab('competitors',this)"><div class="dot" style="background:#6366F1"></div> Конкуренты</div>
+    <div class="plat-tab" onclick="switchTab('reviews',this)"><div class="dot" style="background:#10B981"></div> Отзывы 2ГИС</div>
+    <div class="plat-tab" onclick="switchTab('trends',this)"><div class="dot" style="background:#EC4899"></div> Тренды 🌍</div>
     <div class="plat-tab" onclick="switchTab('analytics',this)"><div class="dot" style="background:#10B981"></div> Аналитика</div>
     <div class="plat-tab" onclick="switchTab('general',this)"><div class="dot dot-gen"></div> Общий профиль</div>
   </div>
@@ -400,42 +451,83 @@ body{font-family:Arial,sans-serif;background:#FAFAF8;color:#1a1a1a;font-size:13p
     </div>
     <div class="content" id="web-content"><div class="empty-state"><div class="es-icon">🌐</div><div class="es-text">Данные загружаются...</div></div></div>
   </div>
-  <div class="tab-panel" id="panel-competitors">
+    <div class="tab-panel" id="panel-reviews">
     <div style="padding:24px 28px;max-width:960px;margin:0 auto">
 
-      <!-- Add competitor form -->
-      <div class="comp-add-form">
-        <div class="comp-add-title">➕ Добавить конкурента (макс. 3)</div>
-        <div class="comp-fields">
-          <div class="comp-field">
-            <label>Название</label>
-            <input type="text" id="comp-name" placeholder="Narxoz University">
-          </div>
-          <div class="comp-field">
-            <label>Instagram (без @)</label>
-            <input type="text" id="comp-ig" placeholder="narxoz_university">
-          </div>
-          <div class="comp-field">
-            <label>TikTok хэштег (без #)</label>
-            <input type="text" id="comp-tt" placeholder="narxoz">
-          </div>
-          <button class="comp-add-btn" onclick="addCompetitor()">Загрузить данные →</button>
-        </div>
+      <!-- Stats row -->
+      <div class="review-stats" id="review-stats-row">
+        <div class="review-stat"><div class="review-stat-num gold" id="rev-total">—</div><div class="review-stat-label">Всего отзывов</div></div>
+        <div class="review-stat"><div class="review-stat-num gold" id="rev-avg">—</div><div class="review-stat-label">Средний рейтинг</div><div class="review-stars" id="rev-stars">—</div></div>
+        <div class="review-stat"><div class="review-stat-num pos" id="rev-pos">—</div><div class="review-stat-label">Позитивных</div></div>
+        <div class="review-stat"><div class="review-stat-num neg" id="rev-neg">—</div><div class="review-stat-label">Негативных</div></div>
       </div>
 
-      <!-- Competitor chips -->
-      <div class="comp-list" id="comp-chips"></div>
-
-      <!-- Comparison table -->
-      <div id="comp-table-container">
-        <div class="comp-empty">Добавьте конкурента чтобы увидеть сравнение</div>
+      <!-- Star distribution -->
+      <div class="star-bars" id="rev-star-bars" style="display:none">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#888;margin-bottom:12px;letter-spacing:.5px">Распределение оценок</div>
+        <div id="rev-bars-content"></div>
       </div>
 
-      <!-- Top categories comparison -->
-      <div id="comp-cats-container"></div>
+      <!-- Load button (if no 2GIS URL) -->
+      <div id="rev-load-section" style="display:none;text-align:center;padding:30px 0;margin-bottom:20px">
+        <div style="font-size:13px;color:#888;margin-bottom:12px">Укажите ссылку на 2ГИС в настройках ⚙</div>
+        <button onclick="openSettings()" style="background:#1a1a1a;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600">Открыть настройки →</button>
+      </div>
+
+      <!-- Fetch button -->
+      <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+        <button id="rev-fetch-btn" onclick="fetch2GISReviews()" style="background:#10B981;color:white;border:none;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🔄 Загрузить отзывы</button>
+        <span id="rev-status" style="font-size:11px;color:#888"></span>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="review-filter-bar" id="rev-filter-bar" style="display:none">
+        <button class="review-filter-btn active" onclick="setRevFilter('all',this)">Все <span id="rf-all">0</span></button>
+        <button class="review-filter-btn pos-btn" onclick="setRevFilter('pos',this)">⭐ Позитивные <span id="rf-pos">0</span></button>
+        <button class="review-filter-btn" onclick="setRevFilter('neu',this)">😐 Нейтральные <span id="rf-neu">0</span></button>
+        <button class="review-filter-btn neg-btn" onclick="setRevFilter('neg',this)">👎 Негативные <span id="rf-neg">0</span></button>
+      </div>
+
+      <!-- Reviews list -->
+      <div id="rev-content">
+        <div style="text-align:center;padding:60px;color:#ccc">Нажмите «Загрузить отзывы» для получения данных</div>
+      </div>
 
     </div>
   </div>
+
+  <div class="tab-panel" id="panel-trends">
+    <div style="padding:24px 28px;max-width:960px;margin:0 auto">
+
+      <div class="trends-header">
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#1a1a1a">🌍 Глобальные тренды в образовании</div>
+          <div style="font-size:11px;color:#aaa;margin-top:3px">Что сейчас вирусно у университетов мира в TikTok</div>
+        </div>
+        <button class="trends-load-btn" id="trends-btn" onclick="loadGlobalTrends()">🔄 Загрузить тренды</button>
+      </div>
+
+      <!-- Hashtags used -->
+      <div style="margin-bottom:20px;display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:#888">
+        Ищем по хэштегам:
+        <span style="color:#EC4899;font-weight:600">#universitytiktok</span>
+        <span style="color:#EC4899;font-weight:600">#studytok</span>
+        <span style="color:#EC4899;font-weight:600">#collegelife</span>
+        <span style="color:#EC4899;font-weight:600">#universitylife</span>
+        <span style="color:#EC4899;font-weight:600">#studentlife</span>
+      </div>
+
+      <!-- Status -->
+      <div id="trends-status" style="font-size:11px;color:#888;margin-bottom:16px"></div>
+
+      <!-- Content -->
+      <div id="trends-content">
+        <div class="trends-empty">Нажмите «Загрузить тренды» чтобы увидеть что вирусно у университетов мира 🌍</div>
+      </div>
+
+    </div>
+  </div>
+
   <div class="tab-panel" id="panel-analytics">
     <div style="padding:24px 28px;max-width:960px;margin:0 auto">
 
