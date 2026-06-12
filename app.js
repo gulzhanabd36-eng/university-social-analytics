@@ -1,4 +1,68 @@
 var CFG = {};
+
+// ═══════════════════════════════════════════════
+// 2GIS UNIVERSITY DATABASE (auto-lookup by name)
+// ═══════════════════════════════════════════════
+var UNI_2GIS_DB = [
+  {
+    keywords: ["almau", "almaty management", "\u0430\u043b\u043c\u0430\u044e", "\u0430\u043b\u044c\u043c\u0430\u044e"],
+    name: "AlmaU",
+    branches: [
+      { label: "\u0410\u043b\u043c\u0430\u0442\u044b — \u0420\u043e\u0437\u044b\u0431\u0430\u043a\u0438\u0435\u0432\u0430 227", url: "https://2gis.kz/almaty/firm/9429940000927160" },
+      { label: "\u0410\u0442\u044b\u0440\u0430\u0443", url: "https://2gis.kz/atyrau/firm/70000001035051272" }
+    ]
+  },
+  {
+    keywords: ["narxoz", "\u043d\u0430\u0440\u0445\u043e\u0437", "\u043d\u0430\u0440\u0445\u043e\u0437"],
+    name: "Narxoz",
+    branches: [
+      { label: "\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u043a\u043e\u0440\u043f\u0443\u0441 — \u0416\u0430\u043d\u0434\u043e\u0441\u043e\u0432\u0430 55", url: "https://2gis.kz/almaty/firm/9429940000796151" },
+      { label: "2-\u0439 \u043a\u043e\u0440\u043f\u0443\u0441 — 1-\u0439 \u043c\u043a\u0440", url: "https://2gis.kz/almaty/firm/70000001024926051" },
+      { label: "Narxoz Business School", url: "https://2gis.kz/almaty/firm/9429940001143920" }
+    ]
+  },
+  {
+    keywords: ["kaznu", "\u043a\u0430\u0437\u043d\u0443", "\u0430\u043b\u044c-\u0444\u0430\u0440\u0430\u0431\u0438", "al-farabi"],
+    name: "KazNU",
+    branches: [
+      { label: "\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u043a\u0430\u043c\u043f\u0443\u0441", url: "https://2gis.kz/almaty/firm/9429940000928527" }
+    ]
+  },
+  {
+    keywords: ["kbtu", "\u043a\u0431\u0442\u0443", "british technical"],
+    name: "KBTU",
+    branches: [
+      { label: "\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u043a\u0430\u043c\u043f\u0443\u0441", url: "https://2gis.kz/almaty/firm/9429940000927993" }
+    ]
+  },
+  {
+    keywords: ["iab", "uib", "\u043c\u0435\u0436\u0434\u0443\u043d\u0430\u0440\u043e\u0434\u043d\u044b\u0439 \u0431\u0438\u0437\u043d\u0435\u0441", "international business"],
+    name: "UIB",
+    branches: [
+      { label: "\u0413\u043b\u0430\u0432\u043d\u044b\u0439 \u043a\u0430\u043c\u043f\u0443\u0441", url: "https://2gis.kz/almaty/firm/9429940000928031" }
+    ]
+  },
+  {
+    keywords: ["turan", "\u0442\u0443\u0440\u0430\u043d"],
+    name: "Turan",
+    branches: [
+      { label: "\u0410\u043b\u043c\u0430\u0442\u044b", url: "https://2gis.kz/almaty/firm/9429940000928165" }
+    ]
+  }
+];
+
+function detectUni2GIS(name) {
+  if (!name) return null;
+  var t = name.toLowerCase();
+  for (var i = 0; i < UNI_2GIS_DB.length; i++) {
+    var uni = UNI_2GIS_DB[i];
+    for (var k = 0; k < uni.keywords.length; k++) {
+      if (t.indexOf(uni.keywords[k]) >= 0) return uni;
+    }
+  }
+  return null;
+}
+
 var isLoading = false;
 
 window.onload = function() {
@@ -911,9 +975,15 @@ function switchTab(tab, el) {
     setTimeout(function() { renderActivityChart(_activeChart); }, 50);
   }
   if (tab === "reviews") {
-    if (_allReviews.length===0 && CFG && CFG.gis2) {
-      cacheRead("uni_reviews_2gis",CFG.gis2).then(function(c){
-        if(c&&c.items&&c.items.length){_allReviews=c.items;renderReviewStats(_allReviews);renderReviewCards();var s=document.getElementById("rev-status");if(s)s.textContent="\u0418\u0437 \u043a\u044d\u0448\u0430: "+_allReviews.length;}
+    // Show auto-detected university info
+    var _uni2gis = detectUni2GIS(CFG.name || "");
+    var _revStatus = document.getElementById("rev-status");
+    if (_uni2gis && _revStatus && _revStatus.textContent === "") {
+      _revStatus.textContent = "?? Найдено " + _uni2gis.branches.length + " филиала " + _uni2gis.name + " — нажмите «Загрузить»";
+    }
+    if (_allReviews.length === 0) {
+      cacheRead("uni_reviews_2gis", CFG.name || "uni").then(function(c){
+        if(c&&c.items&&c.items.length){_allReviews=c.items;renderReviewStats(_allReviews);renderReviewCards();var s=document.getElementById("rev-status");if(s)s.textContent="Из кеша: "+_allReviews.length+" отзывов";}
       });
     }
   }
@@ -1272,26 +1342,82 @@ function renderReviewStats(reviews) {
 }
 
 async function fetch2GISReviews() {
-  if (!CFG || !CFG.gis2) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0441\u0441\u044b\u043b\u043a\u0443 2\u0413\u0418\u0421 \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445"); openSettings(); return; }
-  var btn=document.getElementById("rev-fetch-btn"), status=document.getElementById("rev-status");
-  if (btn) btn.disabled=true;
+  var btn = document.getElementById("rev-fetch-btn");
+  var status = document.getElementById("rev-status");
+  if (btn) btn.disabled = true;
+
+  // Auto-detect university from name
+  var uni = detectUni2GIS(CFG.name || "");
+  var urls = [];
+
+  if (uni) {
+    urls = uni.branches.map(function(b) { return b.url; });
+    if (status) status.textContent = "\uD83D\uDD0D \u041D\u0430\u0439\u0434\u0435\u043D\u043E: " + uni.name + " (" + uni.branches.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430)";
+  } else if (CFG.gis2) {
+    urls = [CFG.gis2];
+    if (status) status.textContent = "\uD83D\uDD0D \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u043C URL \u0438\u0437 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043A";
+  } else {
+    if (status) status.textContent = "\u26A0\uFE0F \u0423\u043D\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u0432 \u0431\u0430\u0437\u0435. \u0423\u043A\u0430\u0436\u0438\u0442\u0435 2\u0413\u0418\u0421 \u0441\u0441\u044B\u043B\u043A\u0443 \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445";
+    if (btn) btn.disabled = false;
+    return;
+  }
+
   try {
-    var items = await apifyRunCompetitor("__2gis__","\u041e\u0442\u0437\u044b\u0432\u044b", function(msg){if(status)status.textContent=msg;}, {
-      actorId: "eunit/2gis-reviews-scraper",
-      input: {startUrls:[{url:CFG.gis2}], maxReviews:500}
-    });
-    _allReviews = items.filter(function(r){return r.rating||r.text;});
-    renderReviewStats(_allReviews);
-    _revFilter="all";
-    renderReviewCards();
-    if(status) status.textContent="\u2705 "+_allReviews.length+" \u043e\u0442\u0437\u044b\u0432\u043e\u0432";
-    cacheWrite("uni_reviews_2gis", CFG.gis2, _allReviews);
+    var allReviews = [];
+
+    for (var ui = 0; ui < urls.length; ui++) {
+      var branchUrl = urls[ui];
+      var branchLabel = uni ? uni.branches[ui].label : "\u0424\u0438\u043B\u0438\u0430\u043B";
+      if (status) status.textContent = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430: " + branchLabel + " (" + (ui+1) + "/" + urls.length + ")...";
+
+      try {
+        var items = await apifyRunCompetitor("__2gis_" + ui + "__", branchLabel, function(msg) {
+          if (status) status.textContent = msg;
+        }, {
+          actorId: "eunit/2gis-reviews-scraper",
+          input: { startUrls: [{ url: branchUrl }], maxReviews: 500 }
+        });
+
+        // Add branch label to each review
+        items.forEach(function(r) { r._branch = branchLabel; });
+        allReviews = allReviews.concat(items);
+      } catch(e) {
+        console.warn("2GIS branch error [" + branchLabel + "]:", e.message);
+      }
+    }
+
+    _allReviews = allReviews.filter(function(r) { return r.rating || r.text || r.body; });
+
+    if (_allReviews.length > 0) {
+      renderReviewStats(_allReviews);
+      _revFilter = "all";
+      renderReviewCards();
+      if (status) status.textContent = "\u2705 " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u0438\u0437 " + urls.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430";
+      cacheWrite("uni_reviews_2gis", CFG.name || "uni", _allReviews);
+    } else {
+      if (status) status.textContent = "\u26A0\uFE0F \u041E\u0442\u0437\u044B\u0432\u044B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B. \u0410\u043A\u0442\u043E\u0440 eunit/2gis-reviews-scraper \u043C\u043E\u0436\u0435\u0442 \u043D\u0435 \u0431\u044B\u0442\u044C \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D";
+      // Show branch info at least
+      if (uni) {
+        var el = document.getElementById("rev-content");
+        if (el) el.innerHTML = '<div style="padding:20px;background:white;border-radius:12px;border:1px solid #eee">' +
+          '<div style="font-size:12px;font-weight:700;margin-bottom:12px">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0435 \u0444\u0438\u043B\u0438\u0430\u043B\u044B ' + uni.name + ':</div>' +
+          uni.branches.map(function(b) {
+            return '<div style="padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:11px">' +
+              '<span style="font-weight:600">' + b.label + '</span> &nbsp;' +
+              '<a href="' + b.url + '" target="_blank" style="color:#10B981;font-size:10px">\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 2\u0413\u0418\u0421 \u2192</a>' +
+            '</div>';
+          }).join("") +
+          '<div style="margin-top:12px;font-size:10px;color:#aaa">\u0410\u043A\u0442\u043E\u0440 eunit/2gis-reviews-scraper \u0434\u043E\u043B\u0436\u0435\u043D \u0431\u044B\u0442\u044C \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D \u0432 Apify. <a href="https://apify.com/eunit/2gis-reviews-scraper" target="_blank" style="color:#C57E33">\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0430\u043A\u0442\u043E\u0440 \u2192</a></div>' +
+        '</div>';
+      }
+    }
   } catch(e) {
-    if(status) status.textContent="\u26A0\uFE0F "+e.message;
-    var cached=await cacheRead("uni_reviews_2gis",CFG.gis2||"");
-    if(cached&&cached.items&&cached.items.length){_allReviews=cached.items;renderReviewStats(_allReviews);renderReviewCards();}
-  } finally { if(btn) btn.disabled=false; }
+    if (status) status.textContent = "\u26A0\uFE0F " + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
+
 
 // === PHASE 5: GLOBAL TRENDS ===
 async function loadGlobalTrends() {
