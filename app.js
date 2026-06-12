@@ -982,7 +982,7 @@ function switchTab(tab, el) {
       _revStatus.textContent = "?? Найдено " + _uni2gis.branches.length + " филиала " + _uni2gis.name + " — нажмите «Загрузить»";
     }
     if (_allReviews.length === 0) {
-      cacheRead("uni_reviews_2gis", CFG.name || "uni").then(function(c){
+      cacheRead("uni_reviews_gmaps", CFG.name || "uni").then(function(c){
         if(c&&c.items&&c.items.length){_allReviews=c.items;renderReviewStats(_allReviews);renderReviewCards();var s=document.getElementById("rev-status");if(s)s.textContent="Из кеша: "+_allReviews.length+" отзывов";}
       });
     }
@@ -1349,115 +1349,98 @@ async function fetch2GISReviews() {
 
   var uniName = CFG.name || "";
   if (!uniName) {
-    if (status) status.textContent = "\u26A0\uFE0F \u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0443\u043D\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430 \u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D\u043E";
+    if (status) status.textContent = "\u26a0\ufe0f \u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430 \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d\u043e \u2014 \u043e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438";
     if (btn) btn.disabled = false;
     return;
   }
 
   try {
-    // ── STEP 1: Search 2GIS for university by name ──
-    if (status) status.textContent = "\uD83D\uDD0D \u0428\u0430\u0433 1: \u0418\u0449\u0435\u043C \u00AB" + uniName + "\u00BB \u0432 2\u0413\u0418\u0421...";
-    if (content) content.innerHTML = '<div style="text-align:center;padding:40px;color:#888">\uD83D\uDD0D \u041F\u043E\u0438\u0441\u043A \u0444\u0438\u043B\u0438\u0430\u043B\u043E\u0432...</div>';
+    if (status) status.textContent = "\uD83D\uDD0D \u0418\u0449\u0435\u043c \u00ab" + uniName + "\u00bb \u0432 Google Maps...";
+    if (content) content.innerHTML = '<div style="text-align:center;padding:40px;color:#888">\uD83D\uDD0D \u041f\u043e\u0438\u0441\u043a \u0432 Google Maps...</div>';
 
-    var searchItems = await apifyRunCompetitor(
-      "__2gis_search__",
-      "\uD83D\uDD0D 2\u0413\u0418\u0421 \u043F\u043E\u0438\u0441\u043A",
-      function(msg) { if (status) status.textContent = "\uD83D\uDD0D \u0428\u0430\u0433 1: " + msg; },
+    // ── Google Maps via Apify crawler-google-places ──
+    var items = await apifyRunCompetitor(
+      "__gmaps__",
+      "\u2b50 Google Maps",
+      function(msg) { if (status) status.textContent = msg; },
       {
-        actorId: "drobnikj/2gis-scraper",
+        actorId: "apify~google-maps-scraper",
         input: {
-          startUrls: [{ url: "https://2gis.kz/search/" + encodeURIComponent(uniName) }],
-          maxItems: 20,
-          proxy: { useApifyProxy: true }
+          searchStringsArray: [uniName + " university"],
+          maxCrawledPlacesPerSearch: 10,
+          language: "ru",
+          reviewsSort: "newest",
+          maxReviews: 500,
+          reviewsTranslation: "originalAndTranslated",
+          scrapeReviewerInfo: true
         }
       }
     );
 
-    // Extract 2GIS firm URLs from search results
-    var branches = [];
-    searchItems.forEach(function(item) {
-      var url = item.url || item.link || item.firmUrl || "";
-      var name = item.name || item.title || item.firmName || "";
-      // Only keep results that look like the university
-      if (url && url.indexOf("2gis") >= 0 && url.indexOf("/firm/") >= 0) {
-        var nameL = name.toLowerCase();
-        var queryL = uniName.toLowerCase().split(" ");
-        var match = queryL.some(function(w) { return w.length > 3 && nameL.indexOf(w) >= 0; });
-        if (match || branches.length === 0) {
-          branches.push({ url: url, label: name || url });
-        }
+    // Extract reviews from all found places
+    var allReviews = [];
+    var placesFound = 0;
+
+    items.forEach(function(place) {
+      var placeName = place.title || place.name || "";
+      var nameL = placeName.toLowerCase();
+      var queryL = uniName.toLowerCase().split(" ");
+      // Match if place name contains any significant word from query
+      var isMatch = queryL.some(function(w) { return w.length > 3 && nameL.indexOf(w) >= 0; });
+      if (!isMatch && placesFound === 0) isMatch = true; // Take at least first result
+
+      if (isMatch && place.reviews) {
+        placesFound++;
+        place.reviews.forEach(function(rv) {
+          allReviews.push({
+            rating: rv.stars || rv.rating || 0,
+            text: rv.text || rv.textTranslated || "",
+            authorName: rv.name || rv.reviewerName || "\u0410\u043d\u043e\u043d\u0438\u043c",
+            date: rv.publishedAtDate || rv.date || "",
+            _place: placeName,
+            _placeRating: place.totalScore || place.rating,
+            _placeReviewCount: place.reviewsCount
+          });
+        });
       }
     });
 
-    if (!branches.length) {
-      // Fallback: use search URL directly as review source
-      branches = [{ url: "https://2gis.kz/search/" + encodeURIComponent(uniName), label: uniName }];
+    // If no reviews in nested structure, items themselves might be reviews
+    if (allReviews.length === 0 && items.length > 0 && items[0].stars !== undefined) {
+      allReviews = items.map(function(rv) {
+        return {
+          rating: rv.stars || rv.rating || 0,
+          text: rv.text || rv.textTranslated || "",
+          authorName: rv.name || rv.reviewerName || "\u0410\u043d\u043e\u043d\u0438\u043c",
+          date: rv.publishedAtDate || rv.date || ""
+        };
+      });
     }
 
-    if (content) content.innerHTML = '<div style="text-align:center;padding:20px;color:#888">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043E: ' + branches.length + ' \u0444\u0438\u043B\u0438\u0430\u043B\u0430. \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u043E\u0442\u0437\u044B\u0432\u044B...</div>';
-    if (status) status.textContent = "\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043E " + branches.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430, \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u043E\u0442\u0437\u044B\u0432\u044B...";
-
-    // ── STEP 2: Fetch reviews for each branch ──
-    var allReviews = [];
-    for (var bi = 0; bi < Math.min(branches.length, 5); bi++) {
-      var branch = branches[bi];
-      if (status) status.textContent = "\u23F3 \u0428\u0430\u0433 2: \u041E\u0442\u0437\u044B\u0432\u044B \u00AB" + branch.label.substring(0, 30) + "\u00BB (" + (bi+1) + "/" + Math.min(branches.length, 5) + ")...";
-      try {
-        var reviews = await apifyRunCompetitor(
-          "__2gis_rev_" + bi + "__",
-          "\u2B50 " + branch.label.substring(0, 20),
-          function(msg) { if (status) status.textContent = "\u23F3 \u0428\u0430\u0433 2 (" + (bi+1) + "): " + msg; },
-          {
-            actorId: "eunit/2gis-reviews-scraper",
-            input: { startUrls: [{ url: branch.url }], maxReviews: 500 }
-          }
-        );
-        reviews.forEach(function(r) { r._branch = branch.label; });
-        allReviews = allReviews.concat(reviews);
-        if (status) status.textContent = "\u2705 " + branch.label.substring(0, 25) + ": " + reviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432";
-      } catch(e) {
-        console.warn("Reviews error for branch", branch.label, ":", e.message);
-        if (status) status.textContent = "\u26A0\uFE0F " + branch.label.substring(0, 20) + ": " + e.message.substring(0, 40);
-      }
-    }
-
-    // ── STEP 3: Render ──
-    _allReviews = allReviews.filter(function(r) { return r.rating || r.text || r.body; });
+    _allReviews = allReviews.filter(function(r) { return r.rating || r.text; });
 
     if (_allReviews.length > 0) {
       renderReviewStats(_allReviews);
       _revFilter = "all";
       renderReviewCards();
-      if (status) status.textContent = "\u2705 " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u0438\u0437 " + Math.min(branches.length, 5) + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430 | " + uniName;
-      cacheWrite("uni_reviews_2gis", CFG.name || "uni", _allReviews);
+      if (status) status.textContent = "\u2705 " + _allReviews.length + " \u043e\u0442\u0437\u044b\u0432\u043e\u0432 \u0438\u0437 Google Maps | " + uniName;
+      cacheWrite("uni_reviews_gmaps", CFG.name || "uni", _allReviews);
     } else {
-      // Both actors returned nothing — show found branches for manual check
-      if (status) status.textContent = "\u26A0\uFE0F \u041E\u0442\u0437\u044B\u0432\u044B \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u044B. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Apify: eunit/2gis-reviews-scraper";
-      if (content) content.innerHTML =
-        '<div style="background:white;border-radius:12px;border:1px solid #eee;padding:20px">' +
-          '<div style="font-size:12px;font-weight:700;margin-bottom:12px">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0435 \u0444\u0438\u043B\u0438\u0430\u043B\u044B:</div>' +
-          branches.slice(0, 5).map(function(b) {
-            return '<div style="padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:11px;display:flex;justify-content:space-between">' +
-              '<span style="font-weight:600">' + b.label.substring(0, 50) + '</span>' +
-              '<a href="' + b.url + '" target="_blank" style="color:#10B981;font-weight:700;font-size:10px">\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u2192</a>' +
-            '</div>';
-          }).join("") +
-          '<div style="margin-top:14px;padding:12px;background:#FFF8EE;border-radius:8px;font-size:11px;color:#888">' +
-            '\u0414\u043B\u044F \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u043D\u0443\u0436\u0435\u043D Apify \u0430\u043A\u0442\u043E\u0440: ' +
-            '<a href="https://apify.com/eunit/2gis-reviews-scraper" target="_blank" style="color:#C57E33;font-weight:700">eunit/2gis-reviews-scraper</a>. ' +
-            '\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0441\u0441\u044B\u043B\u043A\u0443 \u0432 Apify Console \u0438 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u00AB\u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C\u00BB \u2014 \u043F\u043E\u0441\u043B\u0435 \u044D\u0442\u043E\u0433\u043E \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.' +
-          '</div>' +
-        '</div>';
+      if (status) status.textContent = "\u26a0\ufe0f \u041e\u0442\u0437\u044b\u0432\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430 \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445";
+      if (content) content.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">' +
+        '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043d\u0430\u0439\u0442\u0438 \u043e\u0442\u0437\u044b\u0432\u044b \u0434\u043b\u044f <b>' + uniName + '</b> \u0432 Google Maps.<br>' +
+        '\u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445 \u2699\ufe0f' +
+      '</div>';
     }
   } catch(e) {
-    if (status) status.textContent = "\u26A0\uFE0F " + e.message;
-    // Try cache fallback
-    var cached = await cacheRead("uni_reviews_2gis", CFG.name || "uni");
+    if (status) status.textContent = "\u26a0\ufe0f " + e.message;
+    // Try cache
+    var cached = await cacheRead("uni_reviews_gmaps", CFG.name || "uni");
     if (cached && cached.items && cached.items.length) {
       _allReviews = cached.items;
       renderReviewStats(_allReviews);
       renderReviewCards();
-      if (status) status.textContent = "\uD83D\uDCBE \u0418\u0437 \u043A\u0435\u0448\u0430: " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432";
+      if (status) status.textContent = "\uD83D\uDCBE \u0418\u0437 \u043a\u0435\u0448\u0430: " + _allReviews.length + " \u043e\u0442\u0437\u044b\u0432\u043e\u0432";
     }
   } finally {
     if (btn) btn.disabled = false;
@@ -1492,28 +1475,97 @@ async function loadGlobalTrends() {
 }
 
 function renderTrends(videos) {
-  var el=document.getElementById("trends-content"); if(!el) return;
-  if(!videos.length){el.innerHTML='<div style="text-align:center;padding:60px;color:#ccc">\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445</div>';return;}
-  el.innerHTML=videos.map(function(v){
-    var views=(v.stats&&v.stats.playCount)||v.playCount||0;
-    var likes=(v.stats&&v.stats.diggCount)||v.diggCount||0;
-    var desc=v.desc||v.text||v.description||"";
-    var author=(v.authorMeta&&v.authorMeta.name)||(v.author&&v.author.uniqueId)||v.author||"";
-    var url=v.webVideoUrl||v.url||"#";
-    var tags=v.hashtags||v.challenges||[];
-    if(typeof tags==="string"){try{tags=JSON.parse(tags);}catch(e){tags=[];}}
-    var tagArr=Array.isArray(tags)?tags.slice(0,4).map(function(h){return typeof h==="object"?(h.name||""):String(h);}).filter(Boolean):[];
-    return '<div class="trend-card">'+
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
-        '<div><div class="trend-views">'+fmtNum(views)+'</div><div class="trend-views-label">\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u043e\u0432</div></div>'+
-        '<div style="text-align:right"><div style="font-size:11px;font-weight:700;color:#555">@'+author+'</div><div style="font-size:10px;color:#aaa">\u2764 '+fmtNum(likes)+'</div></div>'+
-      '</div>'+
-      '<div class="trend-desc">'+(desc.substring(0,150)||'\u2014')+'</div>'+
-      (tagArr.length?'<div class="trend-tags">'+tagArr.map(function(t){return '<span class="trend-tag">#'+t+'</span>';}).join("")+'</div>':'')+
-      '<div style="margin-top:10px;text-align:right"><a href="'+url+'" target="_blank" style="font-size:11px;color:#EC4899;font-weight:700;text-decoration:none;padding:4px 10px;border:1.5px solid #FBCFE8;border-radius:6px">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a></div>'+
+  var el = document.getElementById("trends-content");
+  if (!el) return;
+  if (!videos.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px;color:#ccc">\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445</div>';
+    return;
+  }
+
+  var abbr = (CFG && CFG.abbr) ? CFG.abbr : (CFG && CFG.name ? CFG.name.split(" ")[0] : "");
+
+  function trendInsight(desc, views, likes) {
+    var d = (desc || "").toLowerCase();
+    var er = views > 0 ? ((likes / views) * 100).toFixed(1) : 0;
+    var erAvg = 2.1; // avg ER for #studytok
+    var erMulti = er > 0 ? (er / erAvg).toFixed(1) : null;
+
+    // Detect format
+    var fmt = "";
+    var idea = "";
+    if (d.indexOf("day in my life") >= 0 || d.indexOf("a day") >= 0 || d.indexOf("день") >= 0) {
+      fmt = "\u0424\u043e\u0440\u043c\u0430\u0442 \u00ab\u0434\u0435\u043d\u044c \u0438\u0437 \u0436\u0438\u0437\u043d\u0438\u00bb \u2014 \u21161 \u0432 #studytok";
+      idea = "\u0414\u0435\u043d\u044c \u0438\u0437 \u0436\u0438\u0437\u043d\u0438 \u0441\u0442\u0443\u0434\u0435\u043d\u0442\u0430 " + abbr + " \u2014 \u0443\u0442\u0440\u043e, \u043f\u0430\u0440\u044b, \u043a\u0430\u043c\u043f\u0443\u0441";
+    } else if (d.indexOf("campus") >= 0 || d.indexOf("\u043a\u0430\u043c\u043f\u0443\u0441") >= 0 || d.indexOf("tour") >= 0) {
+      fmt = "\u0422\u0443\u0440 \u043f\u043e \u043a\u0430\u043c\u043f\u0443\u0441\u0443 \u2014 \u0437\u0440\u0438\u0442\u0435\u043b\u044c \u0432\u0438\u0434\u0438\u0442 \u0441\u0435\u0431\u044f \u043d\u0430 \u043c\u0435\u0441\u0442\u0435 \u0441\u0442\u0443\u0434\u0435\u043d\u0442\u0430";
+      idea = "\u0422\u0443\u0440 \u043f\u043e \u043a\u0430\u043c\u043f\u0443\u0441\u0443 " + abbr + " \u2014 \u0430\u0443\u0434\u0438\u0442\u043e\u0440\u0438\u0438, \u043b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u0438\u0438";
+    } else if (d.indexOf("study") >= 0 || d.indexOf("exam") >= 0 || d.indexOf("hack") >= 0) {
+      fmt = "\u041b\u0430\u0439\u0444\u0445\u0430\u043a\u0438 \u2014 \u0432\u044b\u0441\u043e\u043a\u0430\u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u043c\u043e\u0441\u0442\u044c \u0432\u0438\u0434\u0435\u043e";
+      idea = "\u041b\u0430\u0439\u0444\u0445\u0430\u043a\u0438 \u0434\u043b\u044f \u0441\u0442\u0443\u0434\u0435\u043d\u0442\u043e\u0432 " + abbr + " \u2014 \u043a\u0430\u043a \u0443\u0447\u0438\u0442\u044c\u0441\u044f, \u0441\u0434\u0430\u0432\u0430\u0442\u044c";
+    } else if (d.indexOf("graduat") >= 0 || d.indexOf("\u0432\u044b\u043f\u0443\u0441\u043a") >= 0) {
+      fmt = "\u0412\u044b\u043f\u0443\u0441\u043a \u2014 \u044d\u043c\u043e\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442";
+      idea = "\u0412\u044b\u043f\u0443\u0441\u043a\u043d\u043e\u0439 \u0432\u0435\u0447\u0435\u0440 " + abbr + " 2026";
+    } else if (d.indexOf("professor") >= 0 || d.indexOf("teacher") >= 0 || d.indexOf("\u043f\u0440\u0435\u043f\u043e\u0434\u0430\u0432") >= 0) {
+      fmt = "\u041f\u0440\u0435\u043f\u043e\u0434\u0430\u0432\u0430\u0442\u0435\u043b\u044c \u0432 \u0440\u043e\u043b\u0438 \u0433\u0435\u0440\u043e\u044f \u2014 \u043e\u0447\u0435\u043d\u044c \u043f\u043e\u043f\u0443\u043b\u044f\u0440\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442";
+      idea = "\u0418\u043d\u0442\u0435\u0440\u0432\u044c\u044e \u0441 \u043f\u0440\u0435\u043f\u043e\u0434\u0430\u0432\u0430\u0442\u0435\u043b\u0435\u043c " + abbr;
+    } else {
+      fmt = "\u0412\u0438\u0440\u0443\u0441\u043d\u044b\u0439 \u043a\u043e\u043d\u0442\u0435\u043d\u0442 \u2014 \u0434\u043e \u043a\u043e\u043d\u0446\u0430 \u0441\u043c\u043e\u0442\u0440\u044f\u0442 90%+ \u0437\u0440\u0438\u0442\u0435\u043b\u0435\u0439";
+      idea = "\u0410\u0434\u0430\u043f\u0442\u0438\u0440\u0443\u0439\u0442\u0435 \u0444\u043e\u0440\u043c\u0430\u0442 \u0434\u043b\u044f " + abbr;
+    }
+
+    var insight = '<div style="background:#F9F0FF;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px">' +
+      '<div style="font-weight:700;color:#7C3AED;margin-bottom:6px">\ud83d\udcca \u041f\u043e\u0447\u0435\u043c\u0443 \u0432\u0438\u0440\u0443\u0441\u043d\u043e\u0435:</div>' +
+      '<div style="color:#555;margin-bottom:3px">\u2022 ' + fmt + '</div>' +
+      (erMulti && parseFloat(erMulti) > 1 ? '<div style="color:#555;margin-bottom:3px">\u2022 ER ' + er + '% \u2014 \u0432 ' + erMulti + '\u00d7 \u0432\u044b\u0448\u0435 \u0441\u0440\u0435\u0434\u043d\u0435\u0433\u043e \u043f\u043e \u043d\u0438\u0448\u0435</div>' : '') +
+      (views > 500000 ? '<div style="color:#555;margin-bottom:3px">\u2022 ' + (views > 1000000 ? "\u041c\u0438\u043b\u043b\u0438\u043e\u043d\u043d\u0438\u043a" : "\u041f\u043e\u043b\u0443\u043c\u0438\u043b\u043b\u0438\u043e\u043d\u043d\u0438\u043a") + ' \u2014 \u0432\u044b\u0448\u0435 \u043f\u043e\u0440\u043e\u0433\u0430 \u0432\u0438\u0440\u0443\u0441\u043d\u043e\u0441\u0442\u0438</div>' : '') +
+    '</div>' +
+    (idea && abbr ? '<div style="background:#ECFDF5;border-radius:8px;padding:10px 12px;margin-top:6px;font-size:11px">' +
+      '<div style="font-weight:700;color:#059669;margin-bottom:4px">\ud83d\udca1 \u0418\u0434\u0435\u044f \u0434\u043b\u044f ' + abbr + ':</div>' +
+      '<div style="color:#065F46">' + idea + '</div>' +
+    '</div>' : '');
+
+    return insight;
+  }
+
+  el.innerHTML = videos.map(function(v, i) {
+    var views = (v.stats && v.stats.playCount) || v.playCount || v.plays || 0;
+    var likes = (v.stats && v.stats.diggCount) || v.diggCount || v.likes || 0;
+    var desc  = v.desc || v.text || v.description || "";
+    var author = (v.authorMeta && v.authorMeta.name) || (v.author && v.author.uniqueId) || v.author || "";
+    var url   = v.webVideoUrl || v.url || ("https://www.tiktok.com/@" + author + "/video/" + (v.id || ""));
+    var tags  = v.hashtags || v.challenges || [];
+    if (typeof tags === "string") { try { tags = JSON.parse(tags); } catch(e) { tags = []; } }
+    var tagArr = Array.isArray(tags) ? tags.slice(0,5).map(function(h) {
+      return typeof h === "object" ? (h.name || h.title || "") : String(h);
+    }).filter(Boolean) : [];
+
+    var medal = i === 0 ? "\uD83E\uDD47" : i === 1 ? "\uD83E\uDD48" : i === 2 ? "\uD83E\uDD49" : ("#" + (i+1));
+
+    return '<div class="trend-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">' +
+        '<div>' +
+          '<div style="font-size:11px;color:#EC4899;font-weight:800;margin-bottom:2px">' + medal + '</div>' +
+          '<div class="trend-views">' + fmtNum(views) + '</div>' +
+          '<div class="trend-views-label">\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u043e\u0432</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:11px;font-weight:700;color:#555">@' + author + '</div>' +
+          '<div style="font-size:10px;color:#aaa">\u2764 ' + fmtNum(likes) + '</div>' +
+          (views > 0 ? '<div style="font-size:10px;color:#EC4899;font-weight:700">ER ' + ((likes/views)*100).toFixed(1) + '%</div>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="trend-desc">' + (desc.substring(0, 180) || "\u2014") + '</div>' +
+      (tagArr.length ? '<div class="trend-tags">' + tagArr.map(function(t) {
+        return '<span class="trend-tag">#' + t + '</span>';
+      }).join("") + '</div>' : '') +
+      trendInsight(desc, views, likes) +
+      '<div style="margin-top:10px;text-align:right">' +
+        '<a href="' + url + '" target="_blank" style="font-size:11px;color:#EC4899;font-weight:700;text-decoration:none;padding:5px 12px;border:1.5px solid #FBCFE8;border-radius:8px">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a>' +
+      '</div>' +
     '</div>';
   }).join("");
 }
+
 
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
