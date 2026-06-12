@@ -1344,75 +1344,121 @@ function renderReviewStats(reviews) {
 async function fetch2GISReviews() {
   var btn = document.getElementById("rev-fetch-btn");
   var status = document.getElementById("rev-status");
+  var content = document.getElementById("rev-content");
   if (btn) btn.disabled = true;
 
-  // Auto-detect university from name
-  var uni = detectUni2GIS(CFG.name || "");
-  var urls = [];
-
-  if (uni) {
-    urls = uni.branches.map(function(b) { return b.url; });
-    if (status) status.textContent = "\uD83D\uDD0D \u041D\u0430\u0439\u0434\u0435\u043D\u043E: " + uni.name + " (" + uni.branches.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430)";
-  } else if (CFG.gis2) {
-    urls = [CFG.gis2];
-    if (status) status.textContent = "\uD83D\uDD0D \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u043C URL \u0438\u0437 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043A";
-  } else {
-    if (status) status.textContent = "\u26A0\uFE0F \u0423\u043D\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u0432 \u0431\u0430\u0437\u0435. \u0423\u043A\u0430\u0436\u0438\u0442\u0435 2\u0413\u0418\u0421 \u0441\u0441\u044B\u043B\u043A\u0443 \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445";
+  var uniName = CFG.name || "";
+  if (!uniName) {
+    if (status) status.textContent = "\u26A0\uFE0F \u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0443\u043D\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430 \u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D\u043E";
     if (btn) btn.disabled = false;
     return;
   }
 
   try {
+    // ── STEP 1: Search 2GIS for university by name ──
+    if (status) status.textContent = "\uD83D\uDD0D \u0428\u0430\u0433 1: \u0418\u0449\u0435\u043C \u00AB" + uniName + "\u00BB \u0432 2\u0413\u0418\u0421...";
+    if (content) content.innerHTML = '<div style="text-align:center;padding:40px;color:#888">\uD83D\uDD0D \u041F\u043E\u0438\u0441\u043A \u0444\u0438\u043B\u0438\u0430\u043B\u043E\u0432...</div>';
+
+    var searchItems = await apifyRunCompetitor(
+      "__2gis_search__",
+      "\uD83D\uDD0D 2\u0413\u0418\u0421 \u043F\u043E\u0438\u0441\u043A",
+      function(msg) { if (status) status.textContent = "\uD83D\uDD0D \u0428\u0430\u0433 1: " + msg; },
+      {
+        actorId: "drobnikj/2gis-scraper",
+        input: {
+          startUrls: [{ url: "https://2gis.kz/search/" + encodeURIComponent(uniName) }],
+          maxItems: 20,
+          proxy: { useApifyProxy: true }
+        }
+      }
+    );
+
+    // Extract 2GIS firm URLs from search results
+    var branches = [];
+    searchItems.forEach(function(item) {
+      var url = item.url || item.link || item.firmUrl || "";
+      var name = item.name || item.title || item.firmName || "";
+      // Only keep results that look like the university
+      if (url && url.indexOf("2gis") >= 0 && url.indexOf("/firm/") >= 0) {
+        var nameL = name.toLowerCase();
+        var queryL = uniName.toLowerCase().split(" ");
+        var match = queryL.some(function(w) { return w.length > 3 && nameL.indexOf(w) >= 0; });
+        if (match || branches.length === 0) {
+          branches.push({ url: url, label: name || url });
+        }
+      }
+    });
+
+    if (!branches.length) {
+      // Fallback: use search URL directly as review source
+      branches = [{ url: "https://2gis.kz/search/" + encodeURIComponent(uniName), label: uniName }];
+    }
+
+    if (content) content.innerHTML = '<div style="text-align:center;padding:20px;color:#888">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043E: ' + branches.length + ' \u0444\u0438\u043B\u0438\u0430\u043B\u0430. \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u043E\u0442\u0437\u044B\u0432\u044B...</div>';
+    if (status) status.textContent = "\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043E " + branches.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430, \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043C \u043E\u0442\u0437\u044B\u0432\u044B...";
+
+    // ── STEP 2: Fetch reviews for each branch ──
     var allReviews = [];
-
-    for (var ui = 0; ui < urls.length; ui++) {
-      var branchUrl = urls[ui];
-      var branchLabel = uni ? uni.branches[ui].label : "\u0424\u0438\u043B\u0438\u0430\u043B";
-      if (status) status.textContent = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430: " + branchLabel + " (" + (ui+1) + "/" + urls.length + ")...";
-
+    for (var bi = 0; bi < Math.min(branches.length, 5); bi++) {
+      var branch = branches[bi];
+      if (status) status.textContent = "\u23F3 \u0428\u0430\u0433 2: \u041E\u0442\u0437\u044B\u0432\u044B \u00AB" + branch.label.substring(0, 30) + "\u00BB (" + (bi+1) + "/" + Math.min(branches.length, 5) + ")...";
       try {
-        var items = await apifyRunCompetitor("__2gis_" + ui + "__", branchLabel, function(msg) {
-          if (status) status.textContent = msg;
-        }, {
-          actorId: "eunit/2gis-reviews-scraper",
-          input: { startUrls: [{ url: branchUrl }], maxReviews: 500 }
-        });
-
-        // Add branch label to each review
-        items.forEach(function(r) { r._branch = branchLabel; });
-        allReviews = allReviews.concat(items);
+        var reviews = await apifyRunCompetitor(
+          "__2gis_rev_" + bi + "__",
+          "\u2B50 " + branch.label.substring(0, 20),
+          function(msg) { if (status) status.textContent = "\u23F3 \u0428\u0430\u0433 2 (" + (bi+1) + "): " + msg; },
+          {
+            actorId: "eunit/2gis-reviews-scraper",
+            input: { startUrls: [{ url: branch.url }], maxReviews: 500 }
+          }
+        );
+        reviews.forEach(function(r) { r._branch = branch.label; });
+        allReviews = allReviews.concat(reviews);
+        if (status) status.textContent = "\u2705 " + branch.label.substring(0, 25) + ": " + reviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432";
       } catch(e) {
-        console.warn("2GIS branch error [" + branchLabel + "]:", e.message);
+        console.warn("Reviews error for branch", branch.label, ":", e.message);
+        if (status) status.textContent = "\u26A0\uFE0F " + branch.label.substring(0, 20) + ": " + e.message.substring(0, 40);
       }
     }
 
+    // ── STEP 3: Render ──
     _allReviews = allReviews.filter(function(r) { return r.rating || r.text || r.body; });
 
     if (_allReviews.length > 0) {
       renderReviewStats(_allReviews);
       _revFilter = "all";
       renderReviewCards();
-      if (status) status.textContent = "\u2705 " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u0438\u0437 " + urls.length + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430";
+      if (status) status.textContent = "\u2705 " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u0438\u0437 " + Math.min(branches.length, 5) + " \u0444\u0438\u043B\u0438\u0430\u043B\u0430 | " + uniName;
       cacheWrite("uni_reviews_2gis", CFG.name || "uni", _allReviews);
     } else {
-      if (status) status.textContent = "\u26A0\uFE0F \u041E\u0442\u0437\u044B\u0432\u044B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u044B. \u0410\u043A\u0442\u043E\u0440 eunit/2gis-reviews-scraper \u043C\u043E\u0436\u0435\u0442 \u043D\u0435 \u0431\u044B\u0442\u044C \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D";
-      // Show branch info at least
-      if (uni) {
-        var el = document.getElementById("rev-content");
-        if (el) el.innerHTML = '<div style="padding:20px;background:white;border-radius:12px;border:1px solid #eee">' +
-          '<div style="font-size:12px;font-weight:700;margin-bottom:12px">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0435 \u0444\u0438\u043B\u0438\u0430\u043B\u044B ' + uni.name + ':</div>' +
-          uni.branches.map(function(b) {
-            return '<div style="padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:11px">' +
-              '<span style="font-weight:600">' + b.label + '</span> &nbsp;' +
-              '<a href="' + b.url + '" target="_blank" style="color:#10B981;font-size:10px">\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 2\u0413\u0418\u0421 \u2192</a>' +
+      // Both actors returned nothing — show found branches for manual check
+      if (status) status.textContent = "\u26A0\uFE0F \u041E\u0442\u0437\u044B\u0432\u044B \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u044B. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 Apify: eunit/2gis-reviews-scraper";
+      if (content) content.innerHTML =
+        '<div style="background:white;border-radius:12px;border:1px solid #eee;padding:20px">' +
+          '<div style="font-size:12px;font-weight:700;margin-bottom:12px">\uD83C\uDFE2 \u041D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0435 \u0444\u0438\u043B\u0438\u0430\u043B\u044B:</div>' +
+          branches.slice(0, 5).map(function(b) {
+            return '<div style="padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:11px;display:flex;justify-content:space-between">' +
+              '<span style="font-weight:600">' + b.label.substring(0, 50) + '</span>' +
+              '<a href="' + b.url + '" target="_blank" style="color:#10B981;font-weight:700;font-size:10px">\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u2192</a>' +
             '</div>';
           }).join("") +
-          '<div style="margin-top:12px;font-size:10px;color:#aaa">\u0410\u043A\u0442\u043E\u0440 eunit/2gis-reviews-scraper \u0434\u043E\u043B\u0436\u0435\u043D \u0431\u044B\u0442\u044C \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D \u0432 Apify. <a href="https://apify.com/eunit/2gis-reviews-scraper" target="_blank" style="color:#C57E33">\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u0430\u043A\u0442\u043E\u0440 \u2192</a></div>' +
+          '<div style="margin-top:14px;padding:12px;background:#FFF8EE;border-radius:8px;font-size:11px;color:#888">' +
+            '\u0414\u043B\u044F \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043E\u0442\u0437\u044B\u0432\u043E\u0432 \u043D\u0443\u0436\u0435\u043D Apify \u0430\u043A\u0442\u043E\u0440: ' +
+            '<a href="https://apify.com/eunit/2gis-reviews-scraper" target="_blank" style="color:#C57E33;font-weight:700">eunit/2gis-reviews-scraper</a>. ' +
+            '\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0441\u0441\u044B\u043B\u043A\u0443 \u0432 Apify Console \u0438 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u00AB\u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C\u00BB \u2014 \u043F\u043E\u0441\u043B\u0435 \u044D\u0442\u043E\u0433\u043E \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.' +
+          '</div>' +
         '</div>';
-      }
     }
   } catch(e) {
     if (status) status.textContent = "\u26A0\uFE0F " + e.message;
+    // Try cache fallback
+    var cached = await cacheRead("uni_reviews_2gis", CFG.name || "uni");
+    if (cached && cached.items && cached.items.length) {
+      _allReviews = cached.items;
+      renderReviewStats(_allReviews);
+      renderReviewCards();
+      if (status) status.textContent = "\uD83D\uDCBE \u0418\u0437 \u043A\u0435\u0448\u0430: " + _allReviews.length + " \u043E\u0442\u0437\u044B\u0432\u043E\u0432";
+    }
   } finally {
     if (btn) btn.disabled = false;
   }
