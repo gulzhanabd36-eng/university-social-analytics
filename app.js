@@ -11,6 +11,7 @@ window.onload = function() {
       if (c.ig) document.getElementById("igHandle").value = c.ig;
       if (c.tt) document.getElementById("ttHandle").value = c.tt;
       if (c.location && document.getElementById("uniLocation")) document.getElementById("uniLocation").value = c.location;
+      if (c.gis2 && document.getElementById("gis2Url")) document.getElementById("gis2Url").value = c.gis2;
     } catch(e) {}
   }
 };
@@ -29,8 +30,9 @@ function startDashboard() {
   if (!name) { alert("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0443\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442\u0430"); return; }
   if (!token) { alert("\u0412\u0432\u0435\u0434\u0438\u0442\u0435 Apify API Token"); return; }
   if (!ig && !tt) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u0438\u043d \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0438\u043b\u0438 \u0445\u044d\u0448\u0442\u0435\u0433"); return; }
-  CFG = {name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token, location: loc};
-  localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt, location: loc}));
+  var gis2 = (document.getElementById("gis2Url")||{value:""}).value.trim();
+  CFG = {name: name, abbr: abbr || name.charAt(0), ig: ig, tt: tt, token: token, location: loc, gis2: gis2};
+  localStorage.setItem("uni_cfg_v4", JSON.stringify({name: name, abbr: CFG.abbr, ig: ig, tt: tt, location: loc, gis2: gis2}));
   (function(){var _el=document.getElementById("headerTitle");if(_el)_el.textContent=name + " \u2014 Analytics";})();
   (function(){var _el=document.getElementById("headerAbbr");if(_el)_el.textContent=CFG.abbr.charAt(0).toUpperCase();})();
   var _ab=document.getElementById("genAbbrBig");if(_ab)_ab.textContent=CFG.abbr.charAt(0).toUpperCase();
@@ -908,11 +910,17 @@ function switchTab(tab, el) {
   if (tab === "analytics") {
     setTimeout(function() { renderActivityChart(_activeChart); }, 50);
   }
-  if (tab === "competitors") {
-    loadCompetitors();
-    renderCompChips();
-    renderComparisonTable();
-    renderCompCats();
+  if (tab === "reviews") {
+    if (_allReviews.length===0 && CFG && CFG.gis2) {
+      cacheRead("uni_reviews_2gis",CFG.gis2).then(function(c){
+        if(c&&c.items&&c.items.length){_allReviews=c.items;renderReviewStats(_allReviews);renderReviewCards();var s=document.getElementById("rev-status");if(s)s.textContent="\u0418\u0437 \u043a\u044d\u0448\u0430: "+_allReviews.length;}
+      });
+    }
+  }
+  if (tab === "trends") {
+    cacheRead("uni_trends_global","global").then(function(c){
+      if(c&&c.items&&c.items.length){renderTrends(c.items);var s=document.getElementById("trends-status");if(s)s.textContent="\u0418\u0437 \u043a\u044d\u0448\u0430";}
+    });
   }
 }
 
@@ -940,7 +948,7 @@ function saveCompetitors() {
 
 
 // Standalone Apify fetch for competitors (does NOT touch loading bar / isLoading)
-async function apifyRunCompetitor(ig, label, onStatus) {
+async function apifyRunCompetitor(ig, label, onStatus, override) {
   try {
     var token = CFG.token;
     onStatus("\u23F3 \u0417\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u043c Apify...");
@@ -950,12 +958,10 @@ async function apifyRunCompetitor(ig, label, onStatus) {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        actorId: "apify~instagram-scraper",
-        input: {
+        actorId: (override && override.actorId) ? override.actorId : "apify~instagram-scraper",
+        input: (override && override.input) ? override.input : {
           directUrls: ["https://www.instagram.com/" + ig + "/"],
-          resultsType: "posts",
-          resultsLimit: 1000,
-          addParentData: false
+          resultsType: "posts", resultsLimit: 1000, addParentData: false
         },
         token: token
       })
@@ -1194,6 +1200,148 @@ function renderCompCats() {
 
 // Store last TT videos for comparison
 var _lastTTVideos = [];
+
+
+// === REVIEWS 2GIS ===
+var _allReviews = [];
+var _revFilter = "all";
+
+function revSentiment(rating) {
+  if (rating >= 4) return "pos";
+  if (rating === 3) return "neu";
+  return "neg";
+}
+
+function starsHtml(n) {
+  var s = ""; for (var i=1;i<=5;i++) s += i<=n ? "\u2b50" : "\u2606"; return s;
+}
+
+function reviewCard(rv) {
+  var sent = revSentiment(rv.rating || 0);
+  var sentBg = sent==="pos"?"#ECFDF5":sent==="neg"?"#FEF2F2":"#F9FAFB";
+  var sentColor = sent==="pos"?"#10B981":sent==="neg"?"#EF4444":"#6B7280";
+  var sentLabel = sent==="pos"?"\u041f\u043e\u0437\u0438\u0442\u0438\u0432":sent==="neg"?"\u041d\u0435\u0433\u0430\u0442\u0438\u0432":"\u041d\u0435\u0439\u0442\u0440\u0430\u043b";
+  var author = (rv.author&&rv.author.name)||rv.authorName||rv.name||"\u0410\u043d\u043e\u043d\u0438\u043c";
+  var text = rv.text || rv.body || rv.comment || "";
+  var dateStr = "";
+  if (rv.dateCreated||rv.date||rv.created_at) { try { dateStr = new Date(rv.dateCreated||rv.date||rv.created_at).toLocaleDateString("ru",{day:"2-digit",month:"long",year:"numeric"}); } catch(e){} }
+  return '<div class="review-card '+sent+'">' +
+    '<div class="review-card-head">' +
+      '<div><div class="review-author">'+author+'</div><div style="display:flex;gap:6px;align-items:center;margin-top:3px"><span class="review-stars">'+starsHtml(rv.rating||0)+'</span>'+(dateStr?'<span class="review-date">'+dateStr+'</span>':'')+'</div></div>' +
+      '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;background:'+sentBg+';color:'+sentColor+'">'+sentLabel+'</span>' +
+    '</div>' +
+    (text?'<div class="review-text">'+text.substring(0,400)+(text.length>400?"...":"")+'</div>':'') +
+  '</div>';
+}
+
+function setRevFilter(f, btn) {
+  _revFilter = f;
+  document.querySelectorAll(".review-filter-btn").forEach(function(b){b.classList.remove("active");});
+  if (btn) btn.classList.add("active");
+  renderReviewCards();
+}
+
+function renderReviewCards() {
+  var filtered = _revFilter==="all" ? _allReviews : _allReviews.filter(function(rv){return revSentiment(rv.rating||0)===_revFilter;});
+  var el = document.getElementById("rev-content");
+  if (!el) return;
+  if (!filtered.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:#ccc">\u041d\u0435\u0442 \u043e\u0442\u0437\u044b\u0432\u043e\u0432</div>'; return; }
+  el.innerHTML = filtered.map(reviewCard).join("");
+}
+
+function renderReviewStats(reviews) {
+  var total=reviews.length;
+  var pos=reviews.filter(function(r){return (r.rating||0)>=4;}).length;
+  var neg=reviews.filter(function(r){return (r.rating||0)<=2;}).length;
+  var neu=total-pos-neg;
+  var avg=total?(reviews.reduce(function(s,r){return s+(r.rating||0);},0)/total).toFixed(1):0;
+  var ids={"rev-total":total,"rev-avg":avg,"rev-pos":pos,"rev-neg":neg,"rf-all":total,"rf-pos":pos,"rf-neu":neu,"rf-neg":neg};
+  Object.keys(ids).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=ids[id];});
+  var rs=document.getElementById("rev-stars"); if(rs) rs.textContent=starsHtml(Math.round(avg));
+  var starCounts={5:0,4:0,3:0,2:0,1:0};
+  reviews.forEach(function(r){var s=r.rating||0;if(starCounts[s]!==undefined)starCounts[s]++;});
+  var maxS=Math.max.apply(null,[5,4,3,2,1].map(function(s){return starCounts[s];}));
+  var colors={5:"#10B981",4:"#C57E33",3:"#F59E0B",2:"#F97316",1:"#EF4444"};
+  var barEl=document.getElementById("rev-bars-content");
+  if (barEl) barEl.innerHTML=[5,4,3,2,1].map(function(s){
+    var pct=maxS?Math.round((starCounts[s]/maxS)*100):0;
+    return '<div class="star-bar-row"><span style="font-size:11px;color:#888;min-width:36px">'+s+' \u2b50</span><div class="star-bar-track"><div class="star-bar-fill" style="width:'+pct+'%;background:'+colors[s]+'"></div></div><span class="star-bar-cnt">'+starCounts[s]+'</span></div>';
+  }).join("");
+  var bw=document.getElementById("rev-star-bars"); if(bw) bw.style.display="block";
+  var fb=document.getElementById("rev-filter-bar"); if(fb) fb.style.display="flex";
+}
+
+async function fetch2GISReviews() {
+  if (!CFG || !CFG.gis2) { alert("\u0423\u043a\u0430\u0436\u0438\u0442\u0435 \u0441\u0441\u044b\u043b\u043a\u0443 2\u0413\u0418\u0421 \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445"); openSettings(); return; }
+  var btn=document.getElementById("rev-fetch-btn"), status=document.getElementById("rev-status");
+  if (btn) btn.disabled=true;
+  try {
+    var items = await apifyRunCompetitor("__2gis__","\u041e\u0442\u0437\u044b\u0432\u044b", function(msg){if(status)status.textContent=msg;}, {
+      actorId: "eunit/2gis-reviews-scraper",
+      input: {startUrls:[{url:CFG.gis2}], maxReviews:500}
+    });
+    _allReviews = items.filter(function(r){return r.rating||r.text;});
+    renderReviewStats(_allReviews);
+    _revFilter="all";
+    renderReviewCards();
+    if(status) status.textContent="\u2705 "+_allReviews.length+" \u043e\u0442\u0437\u044b\u0432\u043e\u0432";
+    cacheWrite("uni_reviews_2gis", CFG.gis2, _allReviews);
+  } catch(e) {
+    if(status) status.textContent="\u26A0\uFE0F "+e.message;
+    var cached=await cacheRead("uni_reviews_2gis",CFG.gis2||"");
+    if(cached&&cached.items&&cached.items.length){_allReviews=cached.items;renderReviewStats(_allReviews);renderReviewCards();}
+  } finally { if(btn) btn.disabled=false; }
+}
+
+// === PHASE 5: GLOBAL TRENDS ===
+async function loadGlobalTrends() {
+  var btn=document.getElementById("trends-btn"), status=document.getElementById("trends-status");
+  if(btn) btn.disabled=true;
+  var tags=["universitytiktok","studytok","collegelife","universitylife","studentlife"];
+  var allVideos=[];
+  for(var hi=0;hi<tags.length;hi++){
+    if(status) status.textContent="\u23F3 #"+tags[hi]+" ("+( hi+1)+"/"+tags.length+")...";
+    try {
+      var items=await apifyRunCompetitor("__tr"+hi+"__","#"+tags[hi],function(msg){if(status)status.textContent=msg;},{
+        actorId:"clockworks/tiktok-hashtag-scraper",
+        input:{hashtags:[tags[hi]],resultsPerPage:30}
+      });
+      allVideos=allVideos.concat(items);
+    } catch(e){console.warn("trend err #"+tags[hi],e.message);}
+  }
+  var seen={};
+  var deduped=allVideos.filter(function(v){var id=v.id||v.url||"";if(seen[id])return false;seen[id]=true;return true;});
+  deduped.sort(function(a,b){return ((b.stats&&b.stats.playCount)||b.playCount||0)-((a.stats&&a.stats.playCount)||a.playCount||0);});
+  var top=deduped.slice(0,50);
+  if(status) status.textContent="\u2705 \u041d\u0430\u0439\u0434\u0435\u043d\u043e: "+top.length;
+  renderTrends(top);
+  cacheWrite("uni_trends_global","global",top);
+  if(btn) btn.disabled=false;
+}
+
+function renderTrends(videos) {
+  var el=document.getElementById("trends-content"); if(!el) return;
+  if(!videos.length){el.innerHTML='<div style="text-align:center;padding:60px;color:#ccc">\u041d\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0445</div>';return;}
+  el.innerHTML=videos.map(function(v){
+    var views=(v.stats&&v.stats.playCount)||v.playCount||0;
+    var likes=(v.stats&&v.stats.diggCount)||v.diggCount||0;
+    var desc=v.desc||v.text||v.description||"";
+    var author=(v.authorMeta&&v.authorMeta.name)||(v.author&&v.author.uniqueId)||v.author||"";
+    var url=v.webVideoUrl||v.url||"#";
+    var tags=v.hashtags||v.challenges||[];
+    if(typeof tags==="string"){try{tags=JSON.parse(tags);}catch(e){tags=[];}}
+    var tagArr=Array.isArray(tags)?tags.slice(0,4).map(function(h){return typeof h==="object"?(h.name||""):String(h);}).filter(Boolean):[];
+    return '<div class="trend-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
+        '<div><div class="trend-views">'+fmtNum(views)+'</div><div class="trend-views-label">\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u043e\u0432</div></div>'+
+        '<div style="text-align:right"><div style="font-size:11px;font-weight:700;color:#555">@'+author+'</div><div style="font-size:10px;color:#aaa">\u2764 '+fmtNum(likes)+'</div></div>'+
+      '</div>'+
+      '<div class="trend-desc">'+(desc.substring(0,150)||'\u2014')+'</div>'+
+      (tagArr.length?'<div class="trend-tags">'+tagArr.map(function(t){return '<span class="trend-tag">#'+t+'</span>';}).join("")+'</div>':'')+
+      '<div style="margin-top:10px;text-align:right"><a href="'+url+'" target="_blank" style="font-size:11px;color:#EC4899;font-weight:700;text-decoration:none;padding:4px 10px;border:1.5px solid #FBCFE8;border-radius:6px">\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u2192</a></div>'+
+    '</div>';
+  }).join("");
+}
 
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
