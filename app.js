@@ -938,6 +938,74 @@ function saveCompetitors() {
   localStorage.setItem("uni_competitors_v1", JSON.stringify(slim));
 }
 
+
+// Standalone Apify fetch for competitors (does NOT touch loading bar / isLoading)
+async function apifyRunCompetitor(ig, label, onStatus) {
+  try {
+    var token = CFG.token;
+    onStatus("\u23F3 \u0417\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u043c Apify...");
+
+    // Step 1: Start actor
+    var startResp = await fetch("/.netlify/functions/apify-start", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        actorId: "apify~instagram-scraper",
+        input: {
+          directUrls: ["https://www.instagram.com/" + ig + "/"],
+          resultsType: "posts",
+          resultsLimit: 1000,
+          addParentData: false
+        },
+        token: token
+      })
+    });
+
+    if (!startResp.ok) {
+      var errText = await startResp.text();
+      throw new Error("apify-start HTTP " + startResp.status + ": " + errText.substring(0, 100));
+    }
+
+    var startData = await startResp.json();
+    if (startData.error) throw new Error("Apify error: " + startData.error);
+
+    var runId = startData.runId;
+    onStatus("\u23F3 \u0417\u0430\u043f\u0443\u0449\u0435\u043d (" + runId.substring(0,8) + ")... \u0436\u0434\u0451\u043c");
+
+    // Step 2: Poll until done
+    for (var i = 0; i < 80; i++) {
+      await new Promise(function(res) { setTimeout(res, 5000); });
+      onStatus("\u23F3 " + ((i+1)*5) + "\u0441... (" + label + ")");
+
+      var pollResp = await fetch("/.netlify/functions/apify-poll", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({runId: runId, token: token, getItems: true})
+      });
+
+      if (!pollResp.ok) {
+        onStatus("\u26A0\uFE0F poll HTTP " + pollResp.status + " — \u043f\u043e\u0432\u0442\u043e\u0440...");
+        continue;
+      }
+
+      var pollData = await pollResp.json();
+      var status = pollData.status || "UNKNOWN";
+
+      if (status === "SUCCEEDED") {
+        var items = pollData.items || [];
+        onStatus("\u2705 \u041f\u043e\u043b\u0443\u0447\u0435\u043d\u043e: " + items.length + " \u0437\u0430\u043f\u0438\u0441\u0435\u0439");
+        return items;
+      }
+      if (["FAILED","ABORTED","TIMED-OUT"].indexOf(status) >= 0) {
+        throw new Error("Apify run " + status);
+      }
+    }
+    throw new Error("\u0422\u0430\u0439\u043c\u0430\u0443\u0442 10 \u043c\u0438\u043d");
+  } catch(e) {
+    throw e;
+  }
+}
+
 async function addCompetitor() {
   if (_competitors.length >= 3) {
     alert("\u041c\u0430\u043a\u0441\u0438\u043c\u0443\u043c 3 \u043a\u043e\u043d\u043a\u0443\u0440\u0435\u043d\u0442\u0430");
@@ -955,30 +1023,24 @@ async function addCompetitor() {
   saveCompetitors();
   renderCompChips();
 
-  // Fetch IG — identical to main university fetch
+  // Fetch IG — standalone (bypasses apifyRun state)
   if (ig) {
-    comp._igStatus = "\u23F3 \u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 Instagram...";
-    renderCompChips();
     try {
-      var igItems = await apifyRun("apify~instagram-scraper", {
-        directUrls: ["https://www.instagram.com/" + ig + "/"],
-        resultsType: "posts",
-        resultsLimit: 1000,
-        addParentData: false
-      }, "comp", "\uD83D\uDCF8 " + name + " Instagram");
-
-      // Filter 2026 posts, fallback to all if none found
+      var igItems = await apifyRunCompetitor(ig, name, function(msg) {
+        comp._igStatus = msg;
+        renderCompChips();
+      });
       var igFiltered = igItems.filter(function(p) {
         var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp;
         return is2026(ts);
       });
       comp.igPosts = (igFiltered.length > 0) ? igFiltered : igItems.slice(0, 500);
-      comp._igStatus = "\u2705 " + comp.igPosts.length + " \u043F\u043E\u0441\u0442\u043E\u0432 (2026)";
+      comp._igStatus = "✅ " + comp.igPosts.length + " постов (2026)";
       renderCompChips();
     } catch(e) {
-      console.warn("Competitor IG error:", e.message);
+      console.error("Competitor IG error:", e);
       comp.igPosts = [];
-      comp._igStatus = "\u26A0\uFE0F \u041E\u0448\u0438\u0431\u043A\u0430: " + e.message.substring(0, 60);
+      comp._igStatus = "⚠️ " + e.message.substring(0, 80);
       renderCompChips();
     }
   }
