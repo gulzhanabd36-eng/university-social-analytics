@@ -1364,7 +1364,7 @@ async function fetch2GISReviews() {
       "\u2b50 Google Maps",
       function(msg) { if (status) status.textContent = msg; },
       {
-        actorId: "apify~crawler-google-places",
+        actorId: "compass~crawler-google-places",
         input: {
           searchStringsArray: [uniName],
           maxCrawledPlacesPerSearch: 5,
