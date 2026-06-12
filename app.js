@@ -1364,15 +1364,16 @@ async function fetch2GISReviews() {
       "\u2b50 Google Maps",
       function(msg) { if (status) status.textContent = msg; },
       {
-        actorId: "apify~google-maps-scraper",
+        actorId: "apify~crawler-google-places",
         input: {
-          searchStringsArray: [uniName + " university"],
-          maxCrawledPlacesPerSearch: 10,
+          searchStringsArray: [uniName],
+          maxCrawledPlacesPerSearch: 5,
           language: "ru",
           reviewsSort: "newest",
-          maxReviews: 500,
+          maxReviews: 300,
+          scrapeReviewerInfo: true,
           reviewsTranslation: "originalAndTranslated",
-          scrapeReviewerInfo: true
+          includeReviews: true
         }
       }
     );
