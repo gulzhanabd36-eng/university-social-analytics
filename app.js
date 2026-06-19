@@ -192,7 +192,7 @@ async function apifyRun(actorId, input, stepId, label) {
   try { sd = await r.json(); } catch(e) { throw new Error(label + ": \u043d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u043e\u0442\u0432\u0435\u0442"); }
   if (!r.ok || sd.error) throw new Error(label + ": " + (sd.error || sd.detail || r.status));
   var runId = sd.runId;
-  for (var i = 0; i < 72; i++) {
+  for (var i = 0; i < 180; i++) {
     await sleep(5000);
     (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " \u2014 " + ((i+1)*5) + "\u0441...";})();
     var pr = await fetch("/.netlify/functions/apify-poll", {
@@ -205,7 +205,7 @@ async function apifyRun(actorId, input, stepId, label) {
     if (pd.status === "SUCCEEDED") { setStep(stepId, "done"); return pd.items || []; }
     if (["FAILED","ABORTED","TIMED-OUT"].indexOf(pd.status) >= 0) throw new Error(label + ": \u0430\u043a\u0442\u043e\u0440 " + pd.status);
   }
-  throw new Error(label + ": timeout 6 \u043c\u0438\u043d");
+  throw new Error(label + ": timeout 15 \u043c\u0438\u043d");
 }
 
 
@@ -304,7 +304,7 @@ async function realRefresh() {
         var inp = {
           directUrls: ["https://www.instagram.com/" + igHandle + "/"],
           resultsType: "posts",
-          resultsLimit: igAllItems.length > 0 ? 1000 : 30,
+          resultsLimit: 1000,
           addParentData: false
         };
         if (igLatestTs) inp.onlyPostsNewerThan = igLatestTs.substring(0, 10); // YYYY-MM-DD
