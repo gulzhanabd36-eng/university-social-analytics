@@ -1568,6 +1568,111 @@ function renderTrends(videos) {
 }
 
 
+
+// ═══════════════════════════════════════════════
+// EXCEL EXPORT
+// ═══════════════════════════════════════════════
+function exportToExcel() {
+  if (typeof XLSX === "undefined") {
+    alert("\u0411\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430 XLSX \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u0430");
+    return;
+  }
+
+  var wb = XLSX.utils.book_new();
+  var uniName = (CFG && CFG.name) ? CFG.name : "\u0423\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442";
+  var dateStr = new Date().toLocaleDateString("ru", {day:"2-digit", month:"2-digit", year:"numeric"});
+
+  // ── Sheet 1: Instagram ──
+  var igPosts = (typeof _igAllPosts !== "undefined" && _igAllPosts) ? _igAllPosts : [];
+  if (igPosts.length > 0) {
+    var igRows = igPosts.map(function(p) {
+      var ts = p.timestamp || p.taken_at_timestamp || p.takenAtTimestamp || "";
+      var date = "";
+      if (ts) { try { date = new Date(typeof ts === "number" ? (ts > 2e10 ? ts : ts * 1000) : ts).toLocaleDateString("ru"); } catch(e){} }
+      var sc = p.shortCode || p.shortcode || "";
+      return {
+        "\u0414\u0430\u0442\u0430": date,
+        "\u0410\u0432\u0442\u043e\u0440": "@" + (p.ownerUsername || p.username || ""),
+        "\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f": (function(){var ci=catInfo(categorize(p.caption||p.alt||p.text||""));return ci.emoji+" "+ci.label;})(),
+        "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435": (p.caption || p.alt || p.text || "").substring(0, 300),
+        "\u041b\u0430\u0439\u043a\u0438": p.likesCount || p.likes || 0,
+        "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0438": p.commentsCount || p.comments || 0,
+        "\u0421\u0441\u044b\u043b\u043a\u0430": sc ? "https://www.instagram.com/p/" + sc + "/" : (p.url || "")
+      };
+    });
+    var wsIg = XLSX.utils.json_to_sheet(igRows);
+    wsIg["!cols"] = [{wch:12},{wch:20},{wch:22},{wch:60},{wch:10},{wch:14},{wch:45}];
+    XLSX.utils.book_append_sheet(wb, wsIg, "Instagram");
+  }
+
+  // ── Sheet 2: TikTok ──
+  var ttVideos = (typeof _lastTTVideos !== "undefined" && _lastTTVideos) ? _lastTTVideos : [];
+  if (ttVideos.length > 0) {
+    var ttRows = ttVideos.map(function(v) {
+      var ts = v.createTime || v.createTimeISO || v.timestamp || "";
+      var date = "";
+      if (ts) { try { date = new Date(typeof ts === "number" ? (ts > 2e10 ? ts : ts * 1000) : ts).toLocaleDateString("ru"); } catch(e){} }
+      var views = (v.stats && v.stats.playCount) || v.playCount || 0;
+      var likes = (v.stats && v.stats.diggCount) || v.diggCount || 0;
+      var author = (v.authorMeta && v.authorMeta.name) || (v.author && v.author.uniqueId) || v.author || "";
+      return {
+        "\u0414\u0430\u0442\u0430": date,
+        "\u0410\u0432\u0442\u043e\u0440": "@" + author,
+        "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435": (v.desc || v.text || v.description || "").substring(0, 300),
+        "\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u044b": views,
+        "\u041b\u0430\u0439\u043a\u0438": likes,
+        "\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0438": (v.stats && v.stats.commentCount) || v.commentCount || 0,
+        "ER%": views > 0 ? ((likes / views) * 100).toFixed(2) : 0,
+        "\u0421\u0441\u044b\u043b\u043a\u0430": v.webVideoUrl || v.url || ""
+      };
+    });
+    var wsTt = XLSX.utils.json_to_sheet(ttRows);
+    wsTt["!cols"] = [{wch:12},{wch:20},{wch:60},{wch:12},{wch:10},{wch:14},{wch:8},{wch:50}];
+    XLSX.utils.book_append_sheet(wb, wsTt, "TikTok");
+  }
+
+  // ── Sheet 3: Reviews ──
+  if (typeof _allReviews !== "undefined" && _allReviews && _allReviews.length > 0) {
+    var revRows = _allReviews.map(function(rv) {
+      var date = "";
+      if (rv.dateCreated || rv.date || rv.publishedAtDate) {
+        try { date = new Date(rv.dateCreated || rv.date || rv.publishedAtDate).toLocaleDateString("ru"); } catch(e){}
+      }
+      var sent = (rv.rating||0) >= 4 ? "\u041f\u043e\u0437\u0438\u0442\u0438\u0432" : (rv.rating||0) <= 2 ? "\u041d\u0435\u0433\u0430\u0442\u0438\u0432" : "\u041d\u0435\u0439\u0442\u0440\u0430\u043b";
+      return {
+        "\u0414\u0430\u0442\u0430": date,
+        "\u0410\u0432\u0442\u043e\u0440": (rv.author && rv.author.name) || rv.authorName || rv.name || "\u0410\u043d\u043e\u043d\u0438\u043c",
+        "\u041e\u0446\u0435\u043d\u043a\u0430": rv.rating || 0,
+        "\u0422\u043e\u043d": sent,
+        "\u0424\u0438\u043b\u0438\u0430\u043b": rv._branch || rv._place || "",
+        "\u0422\u0435\u043a\u0441\u0442": (rv.text || rv.body || rv.comment || rv.textTranslated || "").substring(0, 500)
+      };
+    });
+    var wsRev = XLSX.utils.json_to_sheet(revRows);
+    wsRev["!cols"] = [{wch:12},{wch:25},{wch:8},{wch:12},{wch:30},{wch:80}];
+    XLSX.utils.book_append_sheet(wb, wsRev, "\u041e\u0442\u0437\u044b\u0432\u044b");
+  }
+
+  // ── Sheet 4: Summary ──
+  var summaryRows = [
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u0423\u043d\u0438\u0432\u0435\u0440\u0441\u0438\u0442\u0435\u0442", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": uniName},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u0414\u0430\u0442\u0430 \u044d\u043a\u0441\u043f\u043e\u0440\u0442\u0430", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": dateStr},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "---"},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u041f\u043e\u0441\u0442\u043e\u0432 Instagram", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": igPosts.length},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u041b\u0430\u0439\u043a\u043e\u0432 Instagram", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": igPosts.reduce(function(s,p){return s+(p.likesCount||p.likes||0);},0)},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u0412\u0438\u0434\u0435\u043e TikTok", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": ttVideos.length},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u043e\u0432 TikTok", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": ttVideos.reduce(function(s,v){return s+((v.stats&&v.stats.playCount)||v.playCount||0);},0)},
+    {"\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c": "\u041e\u0442\u0437\u044b\u0432\u043e\u0432 Google Maps", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435": (typeof _allReviews !== "undefined" && _allReviews) ? _allReviews.length : 0}
+  ];
+  var wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+  wsSummary["!cols"] = [{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, wsSummary, "\u0421\u0432\u043e\u0434\u043a\u0430");
+
+  // Download
+  var filename = uniName.replace(/\s+/g, "_") + "_analytics_" + dateStr.replace(/\./g, "-") + ".xlsx";
+  XLSX.writeFile(wb, filename);
+}
+
 function loadIGFromExcel(input) {
   var file = input.files[0]; if (!file) return;
   if (typeof XLSX === "undefined") { showError("\u0411\u0438\u0431\u043b\u0438\u043e\u0442\u0435\u043a\u0430 Excel \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u043b\u0430\u0441\u044c."); return; }
