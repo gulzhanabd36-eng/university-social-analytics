@@ -304,7 +304,7 @@ async function realRefresh() {
         var inp = {
           directUrls: ["https://www.instagram.com/" + igHandle + "/"],
           resultsType: "posts",
-          resultsLimit: 1000,
+          resultsLimit: igAllItems.length > 0 ? 1000 : 30,
           addParentData: false
         };
         if (igLatestTs) inp.onlyPostsNewerThan = igLatestTs.substring(0, 10); // YYYY-MM-DD
