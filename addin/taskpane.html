@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>University Social Analytics</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #FAFAF8; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 28px; }
+    .logo { width: 48px; height: 48px; background: #C57E33; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: white; margin-bottom: 16px; }
+    h1 { font-size: 16px; font-weight: 800; color: #1a1a1a; margin-bottom: 6px; text-align: center; }
+    p { font-size: 12px; color: #888; margin-bottom: 28px; text-align: center; line-height: 1.5; }
+    .btn { background: #C57E33; color: white; border: none; padding: 13px 24px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 10px; }
+    .btn:hover { background: #a86828; }
+    .btn-sec { background: white; color: #C57E33; border: 1.5px solid #C57E33; padding: 11px 24px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; }
+    .sep { font-size: 10px; color: #ccc; margin: 16px 0 12px; text-align: center; text-transform: uppercase; letter-spacing: .5px; }
+    .info { font-size: 11px; color: #aaa; text-align: center; margin-top: 20px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="logo">A</div>
+  <h1>University Social Analytics</h1>
+  <p>Дашборд аналитики социальных сетей и отзывов университета</p>
+
+  <button class="btn" onclick="openDashboard()">🚀 Открыть дашборд</button>
+  <button class="btn-sec" onclick="openInTaskPane()">📌 Открыть в панели Excel</button>
+
+  <div class="sep">Что включает дашборд</div>
+  <div style="width:100%;font-size:11px;color:#555;line-height:2">
+    📸 Instagram — посты, лайки, категории<br>
+    🎵 TikTok — видео, просмотры, ER%<br>
+    🌐 Интернет-мониторинг<br>
+    ⭐ Отзывы Google Maps<br>
+    🌍 Глобальные тренды<br>
+    📈 Аналитика и графики
+  </div>
+
+  <div class="info">Данные обновляются через Apify<br>Instagram · TikTok · Google</div>
+
+  <script>
+    Office.onReady(function(info) {
+      // Office is ready
+    });
+
+    function openDashboard() {
+      Office.context.ui.openBrowserWindow("https://university-social-analytics.netlify.app");
+    }
+
+    function openInTaskPane() {
+      // Show iframe in expanded task pane
+      document.body.innerHTML = '<iframe src="https://university-social-analytics.netlify.app" style="width:100%;height:100vh;border:none;position:fixed;top:0;left:0"></iframe>';
+    }
+  </script>
+</body>
+</html>
