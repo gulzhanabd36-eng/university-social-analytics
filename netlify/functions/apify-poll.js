@@ -21,7 +21,7 @@ exports.handler = async (event) => {
 
     // Poll with 20s server-side wait (safe for Netlify 26s limit)
     const r = await fetch(
-      'https://api.apify.com/v2/actor-runs/' + runId + '?token=' + token + '&waitForFinish=20'
+      'https://api.apify.com/v2/actor-runs/' + runId + '?token=' + token
     );
     const data = await r.json();
     const status = (data.data && data.data.status) || 'UNKNOWN';
