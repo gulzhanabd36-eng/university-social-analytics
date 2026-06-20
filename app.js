@@ -198,11 +198,33 @@ async function apifyRun(actorId, input, stepId, label) {
     var pr = await fetch("/.netlify/functions/apify-poll", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({runId: runId, token: CFG.token, getItems: true})
+      body: JSON.stringify({runId: runId, token: CFG.token, getItems: false})
     });
     var pd;
     try { pd = await pr.json(); } catch(e) { continue; }
-    if (pd.status === "SUCCEEDED") { setStep(stepId, "done"); return pd.items || []; }
+    if (pd.status === "SUCCEEDED") {
+      // Fetch items DIRECTLY from Apify in browser (no Netlify size limit)
+      (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " — загружаем...";})();
+      var allItems = [];
+      var offset = 0;
+      var keepFetching = true;
+      while (keepFetching) {
+        var ir = await fetch(
+          "https://api.apify.com/v2/actor-runs/" + runId +
+          "/dataset/items?token=" + CFG.token +
+          "&limit=200&offset=" + offset + "&clean=true"
+        );
+        var page = await ir.json();
+        if (Array.isArray(page) && page.length > 0) {
+          allItems = allItems.concat(page);
+          offset += page.length;
+          if (page.length < 200) keepFetching = false;
+          if (allItems.length >= 2000) keepFetching = false;
+        } else { keepFetching = false; }
+      }
+      setStep(stepId, "done");
+      return allItems;
+    }
     if (["FAILED","ABORTED","TIMED-OUT"].indexOf(pd.status) >= 0) throw new Error(label + ": \u0430\u043a\u0442\u043e\u0440 " + pd.status);
   }
   throw new Error(label + ": timeout 15 \u043c\u0438\u043d");
