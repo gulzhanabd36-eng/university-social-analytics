@@ -307,7 +307,13 @@ async function realRefresh() {
           resultsLimit: 1000,
           addParentData: false
         };
-        if (igLatestTs) inp.onlyPostsNewerThan = igLatestTs.substring(0, 10); // YYYY-MM-DD
+        if (igLatestTs) {
+          // Incremental: only fetch newer than last saved post
+          inp.onlyPostsNewerThan = igLatestTs.substring(0, 10);
+        } else {
+          // First load for ANY university: only 2026 posts (not all history!)
+          inp.onlyPostsNewerThan = "2026-01-01";
+        }
         return inp;
       })();
 
