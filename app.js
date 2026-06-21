@@ -203,22 +203,23 @@ async function apifyRun(actorId, input, stepId, label) {
     var pd;
     try { pd = await pr.json(); } catch(e) { continue; }
     if (pd.status === "SUCCEEDED") {
-      // Fetch items DIRECTLY from Apify in browser (no Netlify size limit)
-      (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " — загружаем...";})();
+      // Fetch items via Netlify proxy in pages of 100 (avoids CORS + size limits)
+      (function(){var _el=document.getElementById("loadingText");if(_el)_el.textContent=label + " — загружаем посты...";})();
       var allItems = [];
       var offset = 0;
       var keepFetching = true;
       while (keepFetching) {
-        var ir = await fetch(
-          "https://api.apify.com/v2/actor-runs/" + runId +
-          "/dataset/items?token=" + CFG.token +
-          "&limit=200&offset=" + offset + "&clean=true"
-        );
-        var page = await ir.json();
-        if (Array.isArray(page) && page.length > 0) {
+        var ir = await fetch("/.netlify/functions/apify-items", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({runId: runId, token: CFG.token, offset: offset, limit: 100})
+        });
+        var pageData = await ir.json();
+        var page = pageData.items || [];
+        if (page.length > 0) {
           allItems = allItems.concat(page);
           offset += page.length;
-          if (page.length < 200) keepFetching = false;
+          if (page.length < 100) keepFetching = false;
           if (allItems.length >= 2000) keepFetching = false;
         } else { keepFetching = false; }
       }
